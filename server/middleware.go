@@ -18,55 +18,18 @@ import (
 func (s *Server) Authorize() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		secret := s.Config.JWTSecret
-		accToken := services.GetTokenFromHeader(c)
-		accessToken, accessClaims, err := services.AuthorizeToken(&accToken, &secret)
+		accessToken := services.GetTokenFromHeader(c)
+		verifiedToken, accessClaims, err := services.TokenChecker(&accessToken, &secret)
 		if err != nil {
 			respondAndAbort(c, "", http.StatusUnauthorized, nil, errs.New("unauthorized", http.StatusUnauthorized))
 			return
 		}
 
-		//TODO find a way to make sure accesstoken wont be nil, because we allow
-		//a token is epired error to reach here accessToken will be nill
+		//TODO find a way to make sure accessToken wont be nil, because we allow
+		//a token is expired error to reach here accessToken will be nil
 		//when that happens
-		if s.AuthRepository.TokenInBlacklist(&accessToken.Raw) || isTokenExpired(accessClaims) {
-			rt := &struct {
-				RefreshToken string `json:"refresh_token,omitempty" binding:"required"`
-			}{}
-
-			if err := c.ShouldBindJSON(rt); err != nil {
-				respondAndAbort(c, "", http.StatusBadRequest, nil, errs.New("unauthorized", http.StatusBadRequest))
-				return
-			}
-
-			if s.AuthRepository.TokenInBlacklist(&rt.RefreshToken) {
-				respondAndAbort(c, "", http.StatusUnauthorized, nil, errs.New("refresh token is invalid", http.StatusUnauthorized))
-				return
-			}
-
-			_, rtClaims, err := services.AuthorizeToken(&rt.RefreshToken, &secret)
-			if err != nil {
-				respondAndAbort(c, "", http.StatusUnauthorized, nil, errs.New("refresh token is invalid", http.StatusUnauthorized))
-				return
-			}
-
-			if isTokenExpired(rtClaims) {
-				respondAndAbort(c, "", http.StatusUnauthorized, nil, errs.New("refresh token is invalid", http.StatusUnauthorized))
-				return
-			}
-
-			if sub, ok := rtClaims["sub"].(float64); ok && sub != 1 {
-				respondAndAbort(c, "", http.StatusUnauthorized, nil, errs.New("refresh token is invalid", http.StatusUnauthorized))
-				return
-			}
-
-			//generate a new access token, and rest its exp time
-			accessClaims["exp"] = time.Now().Add(services.AccessTokenValidity).Unix()
-			newAccessToken, err := services.GenerateToken(jwt.SigningMethodHS256, accessClaims, &secret)
-			if err != nil {
-				respondAndAbort(c, "", http.StatusUnauthorized, nil, errs.New("can't generate new access token", http.StatusUnauthorized))
-				return
-			}
-			respondAndAbort(c, "new access token generated", http.StatusOK, gin.H{"access_token": *newAccessToken}, nil)
+		if s.AuthRepository.TokenInBlacklist(&verifiedToken.Raw) || isTokenExpired(accessClaims) {
+			respondAndAbort(c, "expired token", http.StatusUnauthorized, nil, errs.New("expired token", http.StatusUnauthorized))
 			return
 		}
 
@@ -77,7 +40,7 @@ func (s *Server) Authorize() gin.HandlerFunc {
 		}
 
 		var user *models.User
-		if user, err = s.AuthRepository.FindUserByUsername(email); err != nil {
+		if user, err = s.AuthRepository.FindUserByEmail(email); err != nil {
 			if errors.Is(errs.InActiveUserError, err) {
 				respondAndAbort(c, "", http.StatusBadRequest, nil, errs.New(err.Error(), http.StatusUnauthorized))
 				return
@@ -88,7 +51,6 @@ func (s *Server) Authorize() gin.HandlerFunc {
 		}
 
 		c.Set("user", user)
-		c.Set("access_token", accessToken.Raw)
 
 		c.Next()
 	}

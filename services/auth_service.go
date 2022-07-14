@@ -2,13 +2,12 @@ package services
 
 import (
 	"fmt"
-	"time"
-
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
+	"time"
 )
 
-const AccessTokenValidity = time.Minute * 20
+const AccessTokenValidity = time.Hour * 24 * 7
 const RefreshTokenValidity = time.Hour * 24
 
 // GetTokenFromHeader returns the token string in the authorization header
@@ -27,12 +26,14 @@ func verifyToken(tokenString *string, claims jwt.MapClaims, secret *string) (*jw
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
+		// dereferenced secret string
 		return []byte(*secret), nil
 	})
 }
 
 // AuthorizeToken check if a refresh token is valid
-func AuthorizeToken(token *string, secret *string) (*jwt.Token, jwt.MapClaims, error) {
+// Why do we have string pointer type
+func TokenChecker(token *string, secret *string) (*jwt.Token, jwt.MapClaims, error) {
 	if token != nil && *token != "" && secret != nil && *secret != "" {
 		claims := jwt.MapClaims{}
 		token, err := verifyToken(token, claims, secret)

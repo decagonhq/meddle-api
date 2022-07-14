@@ -10,21 +10,21 @@ import (
 // DB provides access to the different db
 type AuthRepository interface {
 	CreateUser(user *models.User) (*models.User, error)
-	FindUserByUsername(username string) (*models.User, error)
+	FindUserByEmail(email string) (*models.User, error)
 	UpdateUser(user *models.User) error
 	AddToBlackList(blacklist *models.BlackList) error
 	TokenInBlacklist(token *string) bool
 }
 
-type AuthRepo struct {
+type authRepo struct {
 	DB *gorm.DB
 }
 
 func NewAuthRepo(db *GormDB) AuthRepository {
-	return &AuthRepo{db.DB}
+	return &authRepo{db.DB}
 }
 
-func (a *AuthRepo) CreateUser(user *models.User) (*models.User, error) {
+func (a *authRepo) CreateUser(user *models.User) (*models.User, error) {
 	db := a.DB
 	err := db.Create(user).Error
 	if err != nil {
@@ -33,7 +33,7 @@ func (a *AuthRepo) CreateUser(user *models.User) (*models.User, error) {
 	return user, nil
 }
 
-func (a *AuthRepo) FindUserByUsername(username string) (*models.User, error) {
+func (a *authRepo) FindUserByUsername(username string) (*models.User, error) {
 	db := a.DB
 	user := &models.User{}
 	err := db.Where("email = ? OR username = ?", username, username).First(user).Error
@@ -43,18 +43,23 @@ func (a *AuthRepo) FindUserByUsername(username string) (*models.User, error) {
 	return user, nil
 }
 
-func (a *AuthRepo) FindUserByEmail(email string) (*models.User, error) {
-	return nil, nil
+func (a *authRepo) FindUserByEmail(email string) (*models.User, error) {
+	var user *models.User
+	err := a.DB.Where("email = ? ", email).First(user).Error
+	if err != nil {
+		return nil, fmt.Errorf("could not find user: %v", err)
+	}
+	return user, nil
 }
 
-func (a *AuthRepo) UpdateUser(user *models.User) error {
+func (a *authRepo) UpdateUser(user *models.User) error {
 	return nil
 }
 
-func (a *AuthRepo) AddToBlackList(blacklist *models.BlackList) error {
+func (a *authRepo) AddToBlackList(blacklist *models.BlackList) error {
 	return nil
 }
 
-func (a *AuthRepo) TokenInBlacklist(token *string) bool {
+func (a *authRepo) TokenInBlacklist(token *string) bool {
 	return false
 }
