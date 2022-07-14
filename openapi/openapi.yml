@@ -1,6 +1,6 @@
 swagger: "2.0"
 info:
-  description: "This is a sample meddle app server used to track medications"
+  description: "This is a sample meddle app server used to track medication notifications."
   version: "3.0.0"
   title: "Meddle"
   contact:
