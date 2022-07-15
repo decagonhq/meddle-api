@@ -10,6 +10,7 @@ import (
 // DB provides access to the different db
 type AuthRepository interface {
 	CreateUser(user *models.User) (*models.User, error)
+	FindUserByEmail(email string) (*models.User, error)
 	FindUserByUsername(username string) (*models.User, error)
 	UpdateUser(user *models.User) error
 	AddToBlackList(blacklist *models.BlackList) error
@@ -44,7 +45,9 @@ func (a *AuthRepo) FindUserByUsername(username string) (*models.User, error) {
 }
 
 func (a *AuthRepo) FindUserByEmail(email string) (*models.User, error) {
-	return nil, nil
+	var user *models.User
+	userEmail := a.DB.Where("email = ?", email).First(&user)
+	return user, userEmail.Error
 }
 
 func (a *AuthRepo) UpdateUser(user *models.User) error {

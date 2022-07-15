@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"golang.org/x/crypto/bcrypt"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -55,4 +56,8 @@ func GenerateToken(signMethod *jwt.SigningMethodHMAC, claims jwt.MapClaims, secr
 		return nil, err
 	}
 	return &tokenString, nil
+}
+
+func GenerateHashPassword(password string) ([]byte, error) {
+	return bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 }
