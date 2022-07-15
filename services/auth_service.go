@@ -20,21 +20,19 @@ func GetTokenFromHeader(c *gin.Context) string {
 }
 
 // verifyAccessToken verifies a token
-func verifyToken(tokenString *string, claims jwt.MapClaims, secret *string) (*jwt.Token, error) {
+func verifyToken(tokenString string, claims jwt.MapClaims, secret string) (*jwt.Token, error) {
 	parser := &jwt.Parser{SkipClaimsValidation: true}
-	return parser.ParseWithClaims(*tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+	return parser.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		// dereferenced secret string
-		return []byte(*secret), nil
+		return []byte(secret), nil
 	})
 }
 
-// AuthorizeToken check if a refresh token is valid
-// Why do we have string pointer type
-func TokenChecker(token *string, secret *string) (*jwt.Token, jwt.MapClaims, error) {
-	if token != nil && *token != "" && secret != nil && *secret != "" {
+// TokenValidator check if a refresh token is valid
+func TokenValidator(token string, secret string) (*jwt.Token, jwt.MapClaims, error) {
+	if token != "" && secret != "" {
 		claims := jwt.MapClaims{}
 		token, err := verifyToken(token, claims, secret)
 		if err != nil {
@@ -46,14 +44,14 @@ func TokenChecker(token *string, secret *string) (*jwt.Token, jwt.MapClaims, err
 }
 
 // GenerateToken generates only an access token
-func GenerateToken(signMethod *jwt.SigningMethodHMAC, claims jwt.MapClaims, secret *string) (*string, error) {
+func GenerateToken(signMethod *jwt.SigningMethodHMAC, claims jwt.MapClaims, secret string) (string, error) {
 	// Create a new token object, specifying signing method and the claims
 	// you would like it to contain.
 	token := jwt.NewWithClaims(signMethod, claims)
 	// Sign and get the complete encoded token as a string using the secret
-	tokenString, err := token.SignedString([]byte(*secret))
+	tokenString, err := token.SignedString([]byte(secret))
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return &tokenString, nil
+	return tokenString, nil
 }

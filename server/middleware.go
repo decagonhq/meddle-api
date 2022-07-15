@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"gorm.io/gorm"
 	"log"
 	"net/http"
 	"time"
@@ -19,16 +20,13 @@ func (s *Server) Authorize() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		secret := s.Config.JWTSecret
 		accessToken := services.GetTokenFromHeader(c)
-		verifiedToken, accessClaims, err := services.TokenChecker(&accessToken, &secret)
+		validatedToken, accessClaims, err := services.TokenValidator(accessToken, secret)
 		if err != nil {
 			respondAndAbort(c, "", http.StatusUnauthorized, nil, errs.New("unauthorized", http.StatusUnauthorized))
 			return
 		}
-
-		//TODO find a way to make sure accessToken wont be nil, because we allow
-		//a token is expired error to reach here accessToken will be nil
-		//when that happens
-		if s.AuthRepository.TokenInBlacklist(&verifiedToken.Raw) || isTokenExpired(accessClaims) {
+		
+		if s.AuthRepository.TokenInBlacklist(validatedToken.Raw) || isTokenExpired(accessClaims) {
 			respondAndAbort(c, "expired token", http.StatusUnauthorized, nil, errs.New("expired token", http.StatusUnauthorized))
 			return
 		}
@@ -41,13 +39,18 @@ func (s *Server) Authorize() gin.HandlerFunc {
 
 		var user *models.User
 		if user, err = s.AuthRepository.FindUserByEmail(email); err != nil {
-			if errors.Is(errs.InActiveUserError, err) {
-				respondAndAbort(c, "", http.StatusBadRequest, nil, errs.New(err.Error(), http.StatusUnauthorized))
+			switch {
+			case errors.Is(err, errs.InActiveUserError):
+				respondAndAbort(c, "", http.StatusUnauthorized, nil, errs.New(err.Error(), http.StatusUnauthorized))
 				return
-			}
+			case errors.Is(err, gorm.ErrRecordNotFound):
+				respondAndAbort(c, "", http.StatusUnauthorized, nil, errs.New(err.Error(), http.StatusUnauthorized))
+				return
+			default:
+				respondAndAbort(c, "", http.StatusInternalServerError, nil, errs.New("internal server error", http.StatusInternalServerError))
+				return
 
-			respondAndAbort(c, "", http.StatusNotFound, nil, errs.New("user not found", http.StatusUnauthorized))
-			return
+			}
 		}
 
 		c.Set("user", user)

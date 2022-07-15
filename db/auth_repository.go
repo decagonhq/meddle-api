@@ -13,7 +13,7 @@ type AuthRepository interface {
 	FindUserByEmail(email string) (*models.User, error)
 	UpdateUser(user *models.User) error
 	AddToBlackList(blacklist *models.BlackList) error
-	TokenInBlacklist(token *string) bool
+	TokenInBlacklist(token string) bool
 }
 
 type authRepo struct {
@@ -60,6 +60,7 @@ func (a *authRepo) AddToBlackList(blacklist *models.BlackList) error {
 	return nil
 }
 
-func (a *authRepo) TokenInBlacklist(token *string) bool {
-	return false
+func (a *authRepo) TokenInBlacklist(token string) bool {
+	result := a.DB.Where("token = ?", token).Find(&models.BlackList{})
+	return result.Error != nil
 }
