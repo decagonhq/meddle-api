@@ -1,26 +1,25 @@
 swagger: "2.0"
 info:
-  description: "This is a sample meddle app server used to track medication notifications."
+  description: "This is meddle, an app that keeps track of medications with notification feature."
   version: "3.0.0"
   title: "Meddle"
   contact:
-    email: "spankie@gmail.com"
-host: "meddle.heroku.com"
-basePath: "/"
+    email: "davido@decagonhq.com"
+host: "meddle.herokuapp.com"
+basePath: "/api/v1"
 schemes:
   - "https"
   - "http"
 paths:
 
-  /user:
+  /auth/user:
     post:
       tags:
         - "user"
       summary: "Create user"
-      description: "This can only be done by the logged in user."
+      description: "This creates a new user entry in the data."
       operationId: "createUser"
       produces:
-        - "application/xml"
         - "application/json"
       parameters:
         - in: "body"
@@ -33,20 +32,19 @@ paths:
         default:
           description: "successful operation"
 
-  /user/login:
-    get:
+  /auth/login:
+    post:
       tags:
         - "user"
       summary: "Logs user into the system"
       description: ""
       operationId: "loginUser"
       produces:
-        - "application/xml"
         - "application/json"
       parameters:
-        - name: "username"
+        - name: "email"
           in: "query"
-          description: "The user name for login"
+          description: "The user email for login"
           required: true
           type: "string"
         - name: "password"
@@ -70,7 +68,7 @@ paths:
               description: "date in UTC when token expires"
         "400":
           description: "Invalid username/password supplied"
-  /user/logout:
+  /logout:
     get:
       tags:
         - "user"
@@ -78,24 +76,22 @@ paths:
       description: ""
       operationId: "logoutUser"
       produces:
-        - "application/xml"
         - "application/json"
       parameters: []
       responses:
         default:
           description: "successful operation"
-  /user/{username}:
+  /user/{email}:
     get:
       tags:
         - "user"
-      summary: "Get user by user name"
+      summary: "Get user by user email"
       description: ""
-      operationId: "getUserByName"
+      operationId: "getUserByEmail"
       produces:
-        - "application/xml"
         - "application/json"
       parameters:
-        - name: "username"
+        - name: "email"
           in: "path"
           description: "The name that needs to be fetched. Use user1 for testing. "
           required: true
@@ -116,10 +112,9 @@ paths:
       description: "This can only be done by the logged in user."
       operationId: "updateUser"
       produces:
-        - "application/xml"
         - "application/json"
       parameters:
-        - name: "username"
+        - name: "email"
           in: "path"
           description: "name that need to be updated"
           required: true
@@ -142,30 +137,22 @@ paths:
       description: "This can only be done by the logged in user."
       operationId: "deleteUser"
       produces:
-        - "application/xml"
         - "application/json"
       parameters:
-        - name: "username"
+        - name: "email"
           in: "path"
-          description: "The name that needs to be deleted"
+          description: "The email that needs to be deleted"
           required: true
           type: "string"
       responses:
         "400":
-          description: "Invalid username supplied"
+          description: "Invalid email supplied"
         "404":
           description: "User not found"
 securityDefinitions:
-  petstore_auth:
-    type: "oauth2"
-    authorizationUrl: "http://petstore.swagger.io/oauth/dialog"
-    flow: "implicit"
-    scopes:
-      write:pets: "modify pets in your account"
-      read:pets: "read your pets"
-  api_key:
+  bearerAuth:
     type: "apiKey"
-    name: "api_key"
+    name: "Authorization"
     in: "header"
 definitions:
   User:
@@ -174,8 +161,6 @@ definitions:
       id:
         type: "integer"
         format: "int64"
-      username:
-        type: "string"
       firstName:
         type: "string"
       lastName:

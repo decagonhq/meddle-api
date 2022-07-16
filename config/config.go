@@ -12,7 +12,7 @@ type Config struct {
 	Debug            bool   `envconfig:"debug"`
 	Port             int    `envconfig:"port"`
 	Env              string `envconfig:"env"`
-	PostgresHost     string `envconfig:"postgres_host"`
+	PostgresHost     string `envconfig:"MEDDLE_POSTGRES_HOST"`
 	PostgresPort     int    `envconfig:"postgres_port"`
 	PostgresUser     string `envconfig:"postgres_user"`
 	PostgresPassword string `envconfig:"postgres_password"`
@@ -23,7 +23,7 @@ type Config struct {
 func Load() (*Config, error) {
 	env := os.Getenv("GIN_MODE")
 	if env != "release" {
-		if err := godotenv.Load("../.env"); err != nil {
+		if err := godotenv.Load("./.env"); err != nil {
 			log.Printf("couldn't load env vars: %v", err)
 		}
 	}

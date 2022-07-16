@@ -31,6 +31,9 @@ func (g *GormDB) Init(c *config.Config) {
 
 func getPostgresDB(c *config.Config) *gorm.DB {
 	log.Printf("Connecting to postgres: %+v", c)
+
+
+	//log.Println("Connecting to postgres: am here", c.PostgresHost, c.PostgresPort, c.PostgresUser, c.PostgresPassword, c.PostgresDB)
 	postgresDSN := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=Africa/Lagos",
 		c.PostgresHost, c.PostgresUser, c.PostgresPassword, c.PostgresDB, c.PostgresPort)
 	postgresDB, err := gorm.Open(postgres.Open(postgresDSN), &gorm.Config{
