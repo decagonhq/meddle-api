@@ -25,7 +25,7 @@ func (s *Server) Authorize() gin.HandlerFunc {
 			respondAndAbort(c, "", http.StatusUnauthorized, nil, errs.New("unauthorized", http.StatusUnauthorized))
 			return
 		}
-		
+
 		if s.AuthRepository.TokenInBlacklist(validatedToken.Raw) || isTokenExpired(accessClaims) {
 			respondAndAbort(c, "expired token", http.StatusUnauthorized, nil, errs.New("expired token", http.StatusUnauthorized))
 			return
@@ -62,7 +62,7 @@ func (s *Server) Authorize() gin.HandlerFunc {
 // respondAndAbort calls response.JSON
 //and aborts the Context
 func respondAndAbort(c *gin.Context, message string, status int, data interface{}, e *errs.Error) {
-	response.JSON(c, message, status, data, e)
+	response.JSON(c, message, status, data, e.Message)
 	c.Abort()
 }
 
