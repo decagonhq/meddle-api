@@ -30,8 +30,8 @@ func verifyToken(tokenString string, claims jwt.MapClaims, secret string) (*jwt.
 	})
 }
 
-// TokenValidator check if a refresh token is valid
-func TokenValidator(token string, secret string) (*jwt.Token, jwt.MapClaims, error) {
+// ValidateToken check if a token is valid
+func ValidateToken(token string, secret string) (*jwt.Token, jwt.MapClaims, error) {
 	if token != "" && secret != "" {
 		claims := jwt.MapClaims{}
 		token, err := verifyToken(token, claims, secret)

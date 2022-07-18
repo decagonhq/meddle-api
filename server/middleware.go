@@ -20,7 +20,7 @@ func (s *Server) Authorize() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		secret := s.Config.JWTSecret
 		accessToken := services.GetTokenFromHeader(c)
-		validatedToken, accessClaims, err := services.TokenValidator(accessToken, secret)
+		validatedToken, accessClaims, err := services.ValidateToken(accessToken, secret)
 		if err != nil {
 			respondAndAbort(c, "", http.StatusUnauthorized, nil, errs.New("unauthorized", http.StatusUnauthorized))
 			return
