@@ -6,6 +6,7 @@ type User struct {
 	PhoneNumber    string `json:"phone_number"`
 	Email          string `json:"email"`
 	Password       string `json:"password"`
-	HashedPassword string `json:"hashed_password"`
+	HashedPassword string `json:"-"`
+	IsEmailActive  bool   `json:"-"`
 	IsAgree        bool   `json:"is_agree"`
 }

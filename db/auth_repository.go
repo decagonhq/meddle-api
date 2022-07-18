@@ -11,6 +11,8 @@ import (
 type AuthRepository interface {
 	CreateUser(user *models.User) (*models.User, error)
 	FindUserByEmail(email string) (*models.User, error)
+	FindUserByPhoneNumber(email string) (*models.User, error)
+	CheckEmailVerificationStatus(email string) (*models.User, error)
 	FindUserByUsername(username string) (*models.User, error)
 	UpdateUser(user *models.User) error
 	AddToBlackList(blacklist *models.BlackList) error
@@ -47,6 +49,17 @@ func (a *AuthRepo) FindUserByUsername(username string) (*models.User, error) {
 func (a *AuthRepo) FindUserByEmail(email string) (*models.User, error) {
 	var user *models.User
 	userEmail := a.DB.Where("email = ?", email).First(&user)
+	return user, userEmail.Error
+}
+
+func (a *AuthRepo) FindUserByPhoneNumber(phone string) (*models.User, error) {
+	var user *models.User
+	phoneNumber := a.DB.Where("phone_number = ?", phone).First(&user)
+	return user, phoneNumber.Error
+}
+func (a *AuthRepo) CheckEmailVerificationStatus(email string) (*models.User, error) {
+	var user *models.User
+	userEmail := a.DB.Where("is_email_verified = ?", true).First(&user)
 	return user, userEmail.Error
 }
 

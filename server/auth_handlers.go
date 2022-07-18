@@ -27,16 +27,28 @@ func (s *Server) handleSignup() gin.HandlerFunc {
 		}
 		_, err = s.AuthRepository.FindUserByEmail(user.Email)
 		if err == nil {
-			response.JSON(c, "email already exists", http.StatusNotFound, nil, nil)
+			response.JSON(c, "email already exists", http.StatusNotFound, err, nil)
 			return
 		}
+		_, err = s.AuthRepository.FindUserByPhoneNumber(user.PhoneNumber)
+		if err == nil {
+			response.JSON(c, "phone number already exists", http.StatusNotFound, err, nil)
+			return
+		}
+
+		_, err = s.AuthRepository.FindUserByPhoneNumber(user.PhoneNumber)
+		if err == nil {
+			response.JSON(c, "phone number already exists", http.StatusNotFound, err, nil)
+			return
+		}
+
 		_, err = s.AuthRepository.CreateUser(&user)
 		if err != nil {
 			log.Printf("create user err: %v\n", err)
-			response.JSON(c, "", http.StatusInternalServerError, nil, nil)
+			response.JSON(c, "", http.StatusInternalServerError, err, nil)
 			return
 		}
-		response.JSON(c, "user created successfully", http.StatusOK, nil, nil)
+		response.JSON(c, "user created successfully", http.StatusOK, user, nil)
 	}
 }
 
