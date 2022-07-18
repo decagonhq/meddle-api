@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func JSON(c *gin.Context, message string, status int, data interface{}, err string) {
+func JSON(c *gin.Context, message string, status int, data interface{}, err error) {
 	responsedata := gin.H{
 		"message": message,
 		"data":    data,
@@ -43,7 +43,7 @@ func HandleErrors(c *gin.Context, err error) {
 }
 
 func respond(c *gin.Context, e *errors.Error) {
-	JSON(c, "", e.Status, nil, e.Message)
+	JSON(c, "", e.Status, nil, e)
 }
 
 func InternalServerError(c *gin.Context) {

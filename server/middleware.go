@@ -62,7 +62,7 @@ func (s *Server) Authorize() gin.HandlerFunc {
 // respondAndAbort calls response.JSON
 //and aborts the Context
 func respondAndAbort(c *gin.Context, message string, status int, data interface{}, e *errs.Error) {
-	response.JSON(c, message, status, data, e.Message)
+	response.JSON(c, message, status, data, e)
 	c.Abort()
 }
 
