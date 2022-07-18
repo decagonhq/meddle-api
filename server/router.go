@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+
 func (s *Server) defineRoutes(router *gin.Engine) {
 	apirouter := router.Group("/api/v1")
 	apirouter.POST("/auth/signup", s.handleSignup())
@@ -29,8 +30,9 @@ func (s *Server) setupRouter() *gin.Engine {
 		s.defineRoutes(r)
 		return r
 	}
-
 	r := gin.New()
+
+	r.Static("/swagger/", "./swagger")
 
 	// LoggerWithFormatter middleware will write the logs to gin.DefaultWriter
 	// By default gin.DefaultWriter = os.Stdout

@@ -22,3 +22,5 @@ Step 3: Make sure the credentials in the .env matches your DB credentials and ru
 ```bash
   go run main.go
 ```
+### Link to api documentation
+http://localhost:8080/openapi/
