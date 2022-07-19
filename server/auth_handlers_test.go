@@ -20,7 +20,6 @@ func TestHandleSignup(t *testing.T) {
 	r := h.setupRouter()
 
 	user := models.User{
-		Model:         models.Model{},
 		Email:         "TOLU@gmail.com",
 		PhoneNumber:   "08166677888",
 		Password:      "password",
