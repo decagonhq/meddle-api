@@ -1,47 +1,12 @@
 package services
 
 import (
-	"fmt"
-	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 	"time"
 )
 
 const AccessTokenValidity = time.Hour * 24 * 7
 const RefreshTokenValidity = time.Hour * 24
-
-// GetTokenFromHeader returns the token string in the authorization header
-func GetTokenFromHeader(c *gin.Context) string {
-	authHeader := c.Request.Header.Get("Authorization")
-	if len(authHeader) > 8 {
-		return authHeader[7:]
-	}
-	return ""
-}
-
-// verifyAccessToken verifies a token
-func verifyToken(tokenString string, claims jwt.MapClaims, secret string) (*jwt.Token, error) {
-	parser := &jwt.Parser{SkipClaimsValidation: true}
-	return parser.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-		return []byte(secret), nil
-	})
-}
-
-// ValidateToken check if a token is valid
-func ValidateToken(token string, secret string) (*jwt.Token, jwt.MapClaims, error) {
-	if token != "" && secret != "" {
-		claims := jwt.MapClaims{}
-		token, err := verifyToken(token, claims, secret)
-		if err != nil {
-			return nil, nil, err
-		}
-		return token, claims, nil
-	}
-	return nil, nil, fmt.Errorf("empty token or secret")
-}
 
 // GenerateToken generates only an access token
 func GenerateToken(signMethod *jwt.SigningMethodHMAC, claims jwt.MapClaims, secret string) (string, error) {
@@ -54,4 +19,12 @@ func GenerateToken(signMethod *jwt.SigningMethodHMAC, claims jwt.MapClaims, secr
 		return "", err
 	}
 	return tokenString, nil
+}
+
+func GenerateClaims(email string) jwt.MapClaims {
+	accessClaims := jwt.MapClaims{
+		"user_email": email,
+		"exp":        time.Now().Add(AccessTokenValidity).Unix(),
+	}
+	return accessClaims
 }
