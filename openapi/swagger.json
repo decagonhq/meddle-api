@@ -1,5 +1,5 @@
 {
-  "swagger": "2.0",
+  "swagger": "2.0.0",
   "info": {
     "description": "This is meddle, an app that keeps track of medications with notification feature.",
     "version": "3.0.0",
@@ -189,7 +189,7 @@
       },
       "delete": {
         "tags": [
-          "user
+          "user"
         ],
         "summary": "Delete user",
         "description": "This can only be done by the logged in user.",

@@ -7,7 +7,7 @@ you have docker installed on your pc and docker-compose.yml, use the command bel
 things working
 
 ```bash
-  git clone url
+  git clone git@github.com:decagonhq/meddle-api.git
   cd my-project
   docker compose up --build
 ```
