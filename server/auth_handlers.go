@@ -15,7 +15,12 @@ func (s *Server) handleSignup() gin.HandlerFunc {
 		var user models.User
 		err := c.ShouldBindJSON(&user)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			response.JSON(c, "error", http.StatusBadRequest, err, nil)
+			return
+		}
+		_, err = s.AuthRepository.FindUserByEmailOrPhoneNumber(user.Email, user.PhoneNumber)
+		if err == nil {
+			response.JSON(c, "email or phone already exists", http.StatusNotFound, err, nil)
 			return
 		}
 		HashedPassword, err := services.GenerateHashPassword(user.Password)
@@ -25,29 +30,15 @@ func (s *Server) handleSignup() gin.HandlerFunc {
 			response.JSON(c, "hashed password was not be generated successfully", http.StatusInternalServerError, nil, nil)
 			return
 		}
-		_, err = s.AuthRepository.FindUserByEmail(user.Email)
-		if err == nil {
-			response.JSON(c, "email already exists", http.StatusNotFound, err, nil)
-			return
-		}
-		_, err = s.AuthRepository.FindUserByPhoneNumber(user.PhoneNumber)
-		if err == nil {
-			response.JSON(c, "phone number already exists", http.StatusNotFound, err, nil)
-			return
-		}
-
-		_, err = s.AuthRepository.FindUserByPhoneNumber(user.PhoneNumber)
-		if err == nil {
-			response.JSON(c, "phone number already exists", http.StatusNotFound, err, nil)
-			return
-		}
 
 		_, err = s.AuthRepository.CreateUser(&user)
+
 		if err != nil {
 			log.Printf("create user err: %v\n", err)
 			response.JSON(c, "", http.StatusInternalServerError, err, nil)
 			return
 		}
+
 		response.JSON(c, "user created successfully", http.StatusOK, user, nil)
 	}
 }

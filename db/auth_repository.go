@@ -12,6 +12,7 @@ type AuthRepository interface {
 	CreateUser(user *models.User) (*models.User, error)
 	FindUserByEmail(email string) (*models.User, error)
 	FindUserByPhoneNumber(email string) (*models.User, error)
+	FindUserByEmailOrPhoneNumber(email string, phoneNumber string) (*models.User, error)
 	FindUserByUsername(username string) (*models.User, error)
 	UpdateUser(user *models.User) error
 	AddToBlackList(blacklist *models.BlackList) error
@@ -47,14 +48,28 @@ func (a *AuthRepo) FindUserByUsername(username string) (*models.User, error) {
 
 func (a *AuthRepo) FindUserByEmail(email string) (*models.User, error) {
 	var user *models.User
-	userEmail := a.DB.Where("email = ?", email).First(&user)
-	return user, userEmail.Error
+	err := a.DB.Where("email = ?", email).First(&user).Error
+	if err != nil {
+		return nil, fmt.Errorf("could not find user: %v", err)
+	}
+	return user, nil
 }
 
 func (a *AuthRepo) FindUserByPhoneNumber(phone string) (*models.User, error) {
 	var user *models.User
-	phoneNumber := a.DB.Where("phone_number = ?", phone).First(&user)
-	return user, phoneNumber.Error
+	err := a.DB.Where("phone_number = ?", phone).First(&user).Error
+	if err != nil {
+		return nil, fmt.Errorf("could not find user: %v", err)
+	}
+	return user, nil
+}
+func (a *AuthRepo) FindUserByEmailOrPhoneNumber(email string, phoneNumber string) (*models.User, error) {
+	var user *models.User
+	err := a.DB.Where("email = ? OR phone_number = ?", email, phoneNumber).First(&user).Error
+	if err != nil {
+		return nil, fmt.Errorf("could not find user: %v", err)
+	}
+	return user, nil
 }
 
 func (a *AuthRepo) UpdateUser(user *models.User) error {

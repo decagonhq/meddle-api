@@ -48,21 +48,6 @@ func (mr *MockAuthRepositoryMockRecorder) AddToBlackList(blacklist interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddToBlackList", reflect.TypeOf((*MockAuthRepository)(nil).AddToBlackList), blacklist)
 }
 
-// CheckEmailVerificationStatus mocks base method.
-func (m *MockAuthRepository) CheckEmailVerificationStatus(email string) (*models.User, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CheckEmailVerificationStatus", email)
-	ret0, _ := ret[0].(*models.User)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CheckEmailVerificationStatus indicates an expected call of CheckEmailVerificationStatus.
-func (mr *MockAuthRepositoryMockRecorder) CheckEmailVerificationStatus(email interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckEmailVerificationStatus", reflect.TypeOf((*MockAuthRepository)(nil).CheckEmailVerificationStatus), email)
-}
-
 // CreateUser mocks base method.
 func (m *MockAuthRepository) CreateUser(user *models.User) (*models.User, error) {
 	m.ctrl.T.Helper()
@@ -91,6 +76,21 @@ func (m *MockAuthRepository) FindUserByEmail(email string) (*models.User, error)
 func (mr *MockAuthRepositoryMockRecorder) FindUserByEmail(email interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserByEmail", reflect.TypeOf((*MockAuthRepository)(nil).FindUserByEmail), email)
+}
+
+// FindUserByEmailOrPhoneNumber mocks base method.
+func (m *MockAuthRepository) FindUserByEmailOrPhoneNumber(email, phoneNumber string) (*models.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindUserByEmailOrPhoneNumber", email, phoneNumber)
+	ret0, _ := ret[0].(*models.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindUserByEmailOrPhoneNumber indicates an expected call of FindUserByEmailOrPhoneNumber.
+func (mr *MockAuthRepositoryMockRecorder) FindUserByEmailOrPhoneNumber(email, phoneNumber interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserByEmailOrPhoneNumber", reflect.TypeOf((*MockAuthRepository)(nil).FindUserByEmailOrPhoneNumber), email, phoneNumber)
 }
 
 // FindUserByPhoneNumber mocks base method.

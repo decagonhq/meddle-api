@@ -8,5 +8,4 @@ type User struct {
 	Password       string `json:"password"`
 	HashedPassword string `json:"-"`
 	IsEmailActive  bool   `json:"-"`
-	IsAgree        bool   `json:"is_agree"`
 }
