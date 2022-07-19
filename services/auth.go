@@ -2,6 +2,8 @@ package services
 
 import (
 	"fmt"
+	"github.com/decagonhq/meddle-api/db"
+	"github.com/decagonhq/meddle-api/dto"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -10,6 +12,50 @@ import (
 
 const AccessTokenValidity = time.Minute * 20
 const RefreshTokenValidity = time.Hour * 24
+
+//go:generate mockgen -destination=../mocks/auth_mock.go -package=mocks github.com/decagonhq/meddle-api/services AuthService
+
+// AuthService interface
+type AuthService interface {
+	LoginUser(request *dto.LoginRequest, secret string) (*dto.LoginResponse, error)
+}
+
+// authService struct
+type authService struct {
+	authRepo db.AuthRepository
+}
+
+// NewAuthService instantiate an authService
+func NewAuthService(authRepo db.AuthRepository) AuthService {
+	return &authService{
+		authRepo,
+	}
+}
+
+func (a *authService) LoginUser(loginRequest *dto.LoginRequest, secret string) (*dto.LoginResponse, error) {
+	foundUser, err := a.authRepo.FindUserByUsername(loginRequest.Email)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := foundUser.VerifyPassword(loginRequest.Password); err != nil {
+		return nil, err
+	}
+
+	accessToken, err := GenerateToken(foundUser.Email, &secret)
+	if err != nil {
+		return nil, err
+	}
+
+	userResponse := dto.UserResponse{
+		ID:          foundUser.ID,
+		Name:        foundUser.Name,
+		PhoneNumber: foundUser.PhoneNumber,
+		Email:       foundUser.Email,
+	}
+
+	return foundUser.LoginUserToDto(userResponse, *accessToken), nil
+}
 
 // GetTokenFromHeader returns the token string in the authorization header
 func GetTokenFromHeader(c *gin.Context) string {
@@ -45,14 +91,28 @@ func AuthorizeToken(token *string, secret *string) (*jwt.Token, jwt.MapClaims, e
 }
 
 // GenerateToken generates only an access token
-func GenerateToken(signMethod *jwt.SigningMethodHMAC, claims jwt.MapClaims, secret *string) (*string, error) {
+func GenerateToken(email string, secret *string) (*string, error) {
+	// Generate claims
+	claims := GenerateClaims(email)
+
 	// Create a new token object, specifying signing method and the claims
 	// you would like it to contain.
-	token := jwt.NewWithClaims(signMethod, claims)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
 	// Sign and get the complete encoded token as a string using the secret
 	tokenString, err := token.SignedString([]byte(*secret))
 	if err != nil {
 		return nil, err
 	}
 	return &tokenString, nil
+}
+
+func GenerateClaims(email string) jwt.MapClaims {
+
+	accessClaims := jwt.MapClaims{
+		"email":   email,
+		"expired": time.Now().Add(AccessTokenValidity).Unix(),
+	}
+
+	return accessClaims
 }

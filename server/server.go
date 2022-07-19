@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"github.com/decagonhq/meddle-api/services"
 	"log"
 	"net/http"
 	"os"
@@ -18,6 +19,7 @@ import (
 type Server struct {
 	Config         *config.Config
 	AuthRepository db.AuthRepository
+	AuthService    services.AuthService
 }
 
 func (s *Server) Start() {

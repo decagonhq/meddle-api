@@ -3,6 +3,7 @@ package errors
 import (
 	"errors"
 	"fmt"
+	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"strings"
 )
@@ -25,6 +26,9 @@ func New(message string, status int) *Error {
 
 // InActiveUserError defines an inactive user error
 var InActiveUserError = errors.New("user is inactive")
+
+// InValidPasswordError
+var InValidPasswordError = bcrypt.ErrMismatchedHashAndPassword
 
 func GetUniqueContraintError(err error) *Error {
 	fields := strings.Split(err.Error(), "UNIQUE constraint failed: ")
