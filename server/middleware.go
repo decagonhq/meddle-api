@@ -70,11 +70,11 @@ func (s *Server) Authorize() gin.HandlerFunc {
 }
 
 func isJWTSecretEmpty(secret string) bool {
-	return secret == "" || len(secret) == 0
+	return secret == ""
 }
 
 func isAccessTokenEmpty(token string) bool {
-	return token == "" || len(token) == 0
+	return token == ""
 }
 
 // respondAndAbort calls response.JSON

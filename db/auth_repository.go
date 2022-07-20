@@ -44,12 +44,12 @@ func (a *authRepo) FindUserByUsername(username string) (*models.User, error) {
 }
 
 func (a *authRepo) FindUserByEmail(email string) (*models.User, error) {
-	var user *models.User
-	err := a.DB.Where("email = ? ", email).First(user).Error
+	var user models.User
+	err := a.DB.Where("email = ?", email).First(&user).Error
 	if err != nil {
-		return nil, fmt.Errorf("could not find user: %v", err)
+		return nil, err
 	}
-	return user, nil
+	return &user, nil
 }
 
 func (a *authRepo) UpdateUser(user *models.User) error {
