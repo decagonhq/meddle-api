@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/decagonhq/meddle-api/services"
 	"log"
 
 	"github.com/decagonhq/meddle-api/config"
@@ -16,9 +17,11 @@ func main() {
 
 	gormDB := db.GetDB(conf)
 	authRepo := db.NewAuthRepo(gormDB)
+	service := services.NewAuthService(authRepo)
 	s := &server.Server{
 		Config:         conf,
 		AuthRepository: authRepo,
+		AuthService:    service,
 	}
 	s.Start()
 }

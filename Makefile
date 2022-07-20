@@ -3,3 +3,6 @@ up:
 
 test:
 	API_ENV=test go test ./...
+
+generate-mock:
+	go generate ./...

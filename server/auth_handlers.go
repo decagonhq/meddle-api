@@ -18,13 +18,13 @@ func (s *Server) handleSignup() gin.HandlerFunc {
 
 func (s *Server) handleLogin() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var loginRequest *dto.LoginRequest
-		if err := c.ShouldBindJSON(loginRequest); err != nil {
+		var loginRequest dto.LoginRequest
+		if err := c.ShouldBindJSON(&loginRequest); err != nil {
 			response.JSON(c, "", http.StatusBadRequest, nil, err)
 			return
 		}
 
-		userResponse, err := s.AuthService.LoginUser(loginRequest, s.Config.JWTSecret)
+		userResponse, err := s.AuthService.LoginUser(&loginRequest, s.Config.JWTSecret)
 		if err != nil {
 			switch err {
 			case gorm.ErrRecordNotFound:
