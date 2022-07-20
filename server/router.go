@@ -32,6 +32,7 @@ func (s *Server) setupRouter() *gin.Engine {
 	}
 
 	r := gin.New()
+	r.Static("/openapi", "./openapi")
 
 	// LoggerWithFormatter middleware will write the logs to gin.DefaultWriter
 	// By default gin.DefaultWriter = os.Stdout
