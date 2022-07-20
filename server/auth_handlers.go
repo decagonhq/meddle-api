@@ -20,7 +20,7 @@ func (s *Server) handleLogin() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var loginRequest dto.LoginRequest
 		if err := c.ShouldBindJSON(&loginRequest); err != nil {
-			response.JSON(c, "", http.StatusBadRequest, nil, err)
+			response.JSON(c, "", http.StatusBadRequest, nil, nil)
 			return
 		}
 
@@ -28,13 +28,13 @@ func (s *Server) handleLogin() gin.HandlerFunc {
 		if err != nil {
 			switch err {
 			case gorm.ErrRecordNotFound:
-				response.JSON(c, "user not found", http.StatusNotFound, nil, err)
+				response.JSON(c, "user not found", http.StatusNotFound, nil, nil)
 				return
 			case errors.InValidPasswordError:
-				response.JSON(c, "invalid password", http.StatusUnauthorized, nil, err)
+				response.JSON(c, "invalid password", http.StatusUnauthorized, nil, nil)
 				return
 			default:
-				response.JSON(c, "internal server error", http.StatusInternalServerError, nil, err)
+				response.JSON(c, "internal server error", http.StatusInternalServerError, nil, nil)
 				return
 			}
 		}
