@@ -1,7 +1,11 @@
 package server
 
 import (
+	"github.com/decagonhq/meddle-api/errors"
+	"github.com/decagonhq/meddle-api/models"
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/decagonhq/meddle-api/server/response"
 	"github.com/gin-gonic/gin"
@@ -9,7 +13,32 @@ import (
 
 func (s *Server) handleSignup() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		response.JSON(c, "successful", http.StatusOK, nil, nil)
+
+		if tokenI, exists := c.Get("access_token"); exists {
+			if userI, exists := c.Get("user"); exists {
+				if user, ok := userI.(*models.User); ok {
+					if accessToken, ok := tokenI.(string); ok {
+						accBlacklist := &models.BlackList{
+							Email:     user.Email,
+							CreatedAt: time.Now(),
+							Token:     accessToken,
+						}
+
+						err := s.AuthRepository.AddToBlackList(accBlacklist)
+						if err != nil {
+							log.Printf("can't add access token to blacklist: %v\n", err)
+							response.JSON(c, "logout failed", http.StatusInternalServerError, nil, errors.New("can't add access token to blacklist", http.StatusInternalServerError))
+							return
+						}
+						response.JSON(c, "logout successful", http.StatusOK, nil, nil)
+						return
+					}
+				}
+			}
+		}
+		log.Printf("can't get info from context\n")
+		response.JSON(c, "", http.StatusInternalServerError, nil, errors.New("can't get info from context", http.StatusInternalServerError))
+		return
 	}
 }
 
