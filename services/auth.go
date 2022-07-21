@@ -2,7 +2,13 @@ package services
 
 import (
 	"fmt"
+	"github.com/decagonhq/meddle-api/db"
+	"github.com/decagonhq/meddle-api/dto"
+	"github.com/decagonhq/meddle-api/errors"
+	"github.com/decagonhq/meddle-api/models"
 	"golang.org/x/crypto/bcrypt"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -11,6 +17,72 @@ import (
 
 const AccessTokenValidity = time.Minute * 20
 const RefreshTokenValidity = time.Hour * 24
+
+// AuthService interface
+type AuthService interface {
+	SignupUser(request *dto.SignupRequest) (*dto.SignupResponse, error)
+}
+
+// authService struct
+type authService struct {
+	authRepo db.AuthRepository
+}
+
+// NewAuthService instantiate an authService
+func NewAuthService(authRepo db.AuthRepository) AuthService {
+	return &authService{
+		authRepo,
+	}
+}
+
+func (a *authService) SignupUser(request *dto.SignupRequest) (*dto.SignupResponse, error) {
+	var user models.User
+	if strings.TrimSpace(request.Name) == "" {
+		return nil, errors.New("name cannot be spaces", http.StatusBadRequest)
+	}
+	if strings.TrimSpace(request.Email) == "" {
+		return nil, errors.New("email cannot be spaces", http.StatusBadRequest)
+	}
+	if strings.TrimSpace(request.Password) == "" {
+		return nil, errors.New("password cannot be spaces", http.StatusBadRequest)
+	}
+	if strings.TrimSpace(request.PhoneNumber) == "" {
+		return nil, errors.New("phone cannot be spaces", http.StatusBadRequest)
+	}
+	exist, err := a.authRepo.IsEmailExist(request.Email)
+	if exist {
+		return nil, errors.New("email already exist", http.StatusBadRequest)
+	}
+	exist, err = a.authRepo.IsPhoneExist(request.PhoneNumber)
+	if exist {
+		return nil, errors.New("phone already exist", http.StatusBadRequest)
+	}
+	hashedPassword, err := GenerateHashPassword(request.Password)
+	if err != nil {
+		return nil, err
+	}
+	user.HashedPassword = string(hashedPassword)
+	user.Password = ""
+	newUser := models.User{
+		Email:          request.Email,
+		PhoneNumber:    request.PhoneNumber,
+		Name:           request.Name,
+		HashedPassword: string(hashedPassword),
+		Password:       "",
+		IsEmailActive:  false,
+	}
+	val, err := a.authRepo.CreateUser(&newUser)
+	if err != nil {
+		return nil, err
+	}
+	userResponse := &dto.SignupResponse{
+		ID:          val.ID,
+		Name:        val.Name,
+		PhoneNumber: val.PhoneNumber,
+		Email:       val.Email,
+	}
+	return userResponse, nil
+}
 
 // GetTokenFromHeader returns the token string in the authorization header
 func GetTokenFromHeader(c *gin.Context) string {

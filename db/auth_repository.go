@@ -2,16 +2,16 @@ package db
 
 import (
 	"fmt"
-
 	"github.com/decagonhq/meddle-api/models"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
 // DB provides access to the different db
 type AuthRepository interface {
 	CreateUser(user *models.User) (*models.User, error)
-	FindUserByEmail(email string) (*models.User, error)
-	FindUserByPhoneNumber(email string) (*models.User, error)
+	IsEmailExist(email string) (bool, error)
+	IsPhoneExist(email string) (bool, error)
 	FindUserByEmailOrPhoneNumber(email string, phoneNumber string) (*models.User, error)
 	FindUserByUsername(username string) (*models.User, error)
 	UpdateUser(user *models.User) error
@@ -28,8 +28,7 @@ func NewAuthRepo(db *GormDB) AuthRepository {
 }
 
 func (a *AuthRepo) CreateUser(user *models.User) (*models.User, error) {
-	db := a.DB
-	err := db.Create(user).Error
+	err := a.DB.Create(user).Error
 	if err != nil {
 		return nil, fmt.Errorf("could not create user: %v", err)
 	}
@@ -46,22 +45,28 @@ func (a *AuthRepo) FindUserByUsername(username string) (*models.User, error) {
 	return user, nil
 }
 
-func (a *AuthRepo) FindUserByEmail(email string) (*models.User, error) {
-	var user *models.User
-	err := a.DB.Where("email = ?", email).First(&user).Error
+func (a *AuthRepo) IsEmailExist(email string) (bool, error) {
+	var id int64
+	err := a.DB.Model(&models.User{}).Where("email = ?", email).Count(&id).Error
 	if err != nil {
-		return nil, fmt.Errorf("could not find user: %v", err)
+		return false, errors.Wrap(err, "gorm.count error")
 	}
-	return user, nil
+	if id > 0 {
+		return true, nil
+	}
+	return false, nil
 }
 
-func (a *AuthRepo) FindUserByPhoneNumber(phone string) (*models.User, error) {
-	var user *models.User
-	err := a.DB.Where("phone_number = ?", phone).First(&user).Error
+func (a *AuthRepo) IsPhoneExist(phone string) (bool, error) {
+	var id int64
+	err := a.DB.Model(&models.User{}).Where("phone_number = ?", phone).Count(&id).Error
 	if err != nil {
-		return nil, fmt.Errorf("could not find user: %v", err)
+		return false, errors.Wrap(err, "gorm.count error")
 	}
-	return user, nil
+	if id > 0 {
+		return true, nil
+	}
+	return false, nil
 }
 func (a *AuthRepo) FindUserByEmailOrPhoneNumber(email string, phoneNumber string) (*models.User, error) {
 	var user *models.User

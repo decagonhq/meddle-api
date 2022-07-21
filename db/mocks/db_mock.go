@@ -63,21 +63,6 @@ func (mr *MockAuthRepositoryMockRecorder) CreateUser(user interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockAuthRepository)(nil).CreateUser), user)
 }
 
-// FindUserByEmail mocks base method.
-func (m *MockAuthRepository) FindUserByEmail(email string) (*models.User, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindUserByEmail", email)
-	ret0, _ := ret[0].(*models.User)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindUserByEmail indicates an expected call of FindUserByEmail.
-func (mr *MockAuthRepositoryMockRecorder) FindUserByEmail(email interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserByEmail", reflect.TypeOf((*MockAuthRepository)(nil).FindUserByEmail), email)
-}
-
 // FindUserByEmailOrPhoneNumber mocks base method.
 func (m *MockAuthRepository) FindUserByEmailOrPhoneNumber(email, phoneNumber string) (*models.User, error) {
 	m.ctrl.T.Helper()
@@ -93,21 +78,6 @@ func (mr *MockAuthRepositoryMockRecorder) FindUserByEmailOrPhoneNumber(email, ph
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserByEmailOrPhoneNumber", reflect.TypeOf((*MockAuthRepository)(nil).FindUserByEmailOrPhoneNumber), email, phoneNumber)
 }
 
-// FindUserByPhoneNumber mocks base method.
-func (m *MockAuthRepository) FindUserByPhoneNumber(email string) (*models.User, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindUserByPhoneNumber", email)
-	ret0, _ := ret[0].(*models.User)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindUserByPhoneNumber indicates an expected call of FindUserByPhoneNumber.
-func (mr *MockAuthRepositoryMockRecorder) FindUserByPhoneNumber(email interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserByPhoneNumber", reflect.TypeOf((*MockAuthRepository)(nil).FindUserByPhoneNumber), email)
-}
-
 // FindUserByUsername mocks base method.
 func (m *MockAuthRepository) FindUserByUsername(username string) (*models.User, error) {
 	m.ctrl.T.Helper()
@@ -121,6 +91,36 @@ func (m *MockAuthRepository) FindUserByUsername(username string) (*models.User, 
 func (mr *MockAuthRepositoryMockRecorder) FindUserByUsername(username interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserByUsername", reflect.TypeOf((*MockAuthRepository)(nil).FindUserByUsername), username)
+}
+
+// IsEmailExist mocks base method.
+func (m *MockAuthRepository) IsEmailExist(email string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsEmailExist", email)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsEmailExist indicates an expected call of IsEmailExist.
+func (mr *MockAuthRepositoryMockRecorder) IsEmailExist(email interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsEmailExist", reflect.TypeOf((*MockAuthRepository)(nil).IsEmailExist), email)
+}
+
+// IsPhoneExist mocks base method.
+func (m *MockAuthRepository) IsPhoneExist(email string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsPhoneExist", email)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsPhoneExist indicates an expected call of IsPhoneExist.
+func (mr *MockAuthRepositoryMockRecorder) IsPhoneExist(email interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsPhoneExist", reflect.TypeOf((*MockAuthRepository)(nil).IsPhoneExist), email)
 }
 
 // TokenInBlacklist mocks base method.
