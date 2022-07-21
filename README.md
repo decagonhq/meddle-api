@@ -1,5 +1,5 @@
 
-## Installation Guidlines
+## Installation Guidelines
 
 ### Provision app using docker
 To get this app working using docker, make sure
@@ -8,7 +8,7 @@ things working
 
 ```bash
   git clone git@github.com:decagonhq/meddle-api.git
-  cd my-project
+  cd meddle-api
   docker compose up --build
 ```
 ### Provision app locally with pg-sql
@@ -17,8 +17,9 @@ Step 1: Install and configure pgAdmin locally.
 
 Step 2: Create a new database.
 
-Step 3: Make sure the credentials in the .env matches your DB credentials and run the following command.
+Step 3: Ask someone in the team for the .env credentials.
 
+Step 3: Run the command below.
 ```bash
   go run main.go
 ```
