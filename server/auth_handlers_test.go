@@ -79,7 +79,7 @@ func Test_LoginHandler(t *testing.T) {
 				AccessToken: "",
 			},
 			buildStubs: func(service *mocks.MockAuthService, request *dto.LoginRequest, secret string, response *dto.LoginResponse) {
-				service.EXPECT().LoginUser(request, secret).Times(1).Return(nil, errors.ErrUnauthorized)
+				service.EXPECT().LoginUser(request, secret).Times(1).Return(nil, errors.ErrInvalidPassword)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusUnauthorized, recorder.Code)
