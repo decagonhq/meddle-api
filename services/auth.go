@@ -7,6 +7,7 @@ import (
 	"github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/models"
 	"golang.org/x/crypto/bcrypt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -36,6 +37,7 @@ func NewAuthService(authRepo db.AuthRepository) AuthService {
 }
 
 func (a *authService) SignupUser(request *dto.SignupRequest) (*dto.SignupResponse, error) {
+	log.Println("request: ", request)
 	var user models.User
 	if strings.TrimSpace(request.Name) == "" {
 		return nil, errors.New("name cannot be spaces", http.StatusBadRequest)

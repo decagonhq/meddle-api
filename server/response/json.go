@@ -8,15 +8,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func JSON(c *gin.Context, message string, status int, data interface{}, err *errors.Error) {
-	var e string
-	if err != nil {
-		e = err.Message
-	}
+func JSON(c *gin.Context, message string, status int, data interface{}, err error) {
+	//var e string
+	//if err != nil {
+	//	e = err.Message
+	//}
 	responsedata := gin.H{
 		"message": message,
 		"data":    data,
-		"errors":  e,
+		"errors":  err,
 		"status":  http.StatusText(status),
 	}
 

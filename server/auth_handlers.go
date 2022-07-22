@@ -19,9 +19,12 @@ func (s *Server) HandleSignup() gin.HandlerFunc {
 			response.JSON(c, "bad request", http.StatusBadRequest, err.Error(), nil)
 			return
 		}
+		log.Println("signupRequest: ", signupRequest)
+		log.Println("auth service: ", s.AuthService)
+		log.Println("config: ", s.Config)
 		userResponse, err := s.AuthService.SignupUser(&signupRequest)
 		if err != nil {
-			response.JSON(c, "", http.StatusBadRequest, nil, &errors.Error{Message: err.Error(), Status: http.StatusBadRequest})
+			response.JSON(c, err.Error(), http.StatusBadRequest, nil, &errors.Error{Message: err.Error(), Status: http.StatusBadRequest})
 			return
 		}
 		response.JSON(c, "user created successfully", http.StatusCreated, userResponse, nil)
