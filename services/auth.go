@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/decagonhq/meddle-api/db"
 	"github.com/decagonhq/meddle-api/dto"
+	"github.com/decagonhq/meddle-api/errors"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -17,7 +18,7 @@ const RefreshTokenValidity = time.Hour * 24
 
 // AuthService interface
 type AuthService interface {
-	LoginUser(request *dto.LoginRequest, secret string) (*dto.LoginResponse, error)
+	LoginUser(request *dto.LoginRequest, secret string) (*dto.LoginResponse, *errors.Error)
 }
 
 // authService struct
@@ -32,19 +33,20 @@ func NewAuthService(authRepo db.AuthRepository) AuthService {
 	}
 }
 
-func (a *authService) LoginUser(loginRequest *dto.LoginRequest, secret string) (*dto.LoginResponse, error) {
-	foundUser, err := a.authRepo.FindUserByUsername(loginRequest.Email)
+func (a *authService) LoginUser(loginRequest *dto.LoginRequest, secret string) (*dto.LoginResponse, *errors.Error) {
+	foundUser, err := a.authRepo.FindUserByEmail(loginRequest.Email)
 	if err != nil {
-		return nil, err
+		return nil, errors.ErrNotFound
 	}
 
 	if err := foundUser.VerifyPassword(loginRequest.Password); err != nil {
-		return nil, err
+		//errors.New()
+		return nil, errors.ErrUnauthorized
 	}
 
 	accessToken, err := GenerateToken(foundUser.Email, &secret)
 	if err != nil {
-		return nil, err
+		return nil, errors.ErrInternalServerError
 	}
 
 	userResponse := dto.UserResponse{
