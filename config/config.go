@@ -1,11 +1,10 @@
 package config
 
 import (
-	"log"
-	"os"
-
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
+	"log"
+	"os"
 )
 
 type Config struct {
