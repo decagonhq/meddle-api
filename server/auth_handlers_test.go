@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/decagonhq/meddle-api/dto"
+	"github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/mocks"
 	"github.com/decagonhq/meddle-api/models"
-	"github.com/decagonhq/meddle-api/services"
+	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/bcrypt"
@@ -18,75 +19,155 @@ import (
 	"time"
 )
 
-func Test_loginHandler(t *testing.T) {
-
+func Test_LoginHandler(t *testing.T) {
+	testSecret := testServer.handler.Config.JWTSecret
 	// generate a random user
 	user, password := randomUser(t)
-	// generate a token from a secret
-	testSecret := "testSecret"
-	token, err := services.GenerateToken(user.Email, &testSecret)
-	require.NoError(t, err)
-	//declare test cases
+
+	// test cases
 	testCases := []struct {
-		name             string
-		testRequest      dto.LoginRequest
-		expectedResponse dto.LoginResponse
-		buildStubs       func(service *mocks.MockAuthService, inputRequest dto.LoginRequest, secret string, response interface{})
+		name          string
+		reqBody       interface{}
+		loginRequest  *dto.LoginRequest
+		loginResponse *dto.LoginResponse
+		buildStubs    func(service *mocks.MockAuthService, request *dto.LoginRequest, secret string, response *dto.LoginResponse)
+		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
 		{
-			name: "success",
-			testRequest: dto.LoginRequest{
+			name: "success case",
+			reqBody: gin.H{
+				"email":    user.Email,
+				"password": password,
+			},
+			loginRequest: &dto.LoginRequest{
 				Email:    user.Email,
 				Password: password,
 			},
-			expectedResponse: dto.LoginResponse{
+			loginResponse: &dto.LoginResponse{
 				UserResponse: dto.UserResponse{
-					ID:          "",
+					ID:          user.ID,
 					Name:        user.Name,
 					PhoneNumber: user.PhoneNumber,
 					Email:       user.Email,
 				},
-				AccessToken: *token,
+				AccessToken: "",
 			},
-			buildStubs: func(service *mocks.MockAuthService, inputRequest dto.LoginRequest, secret string, response interface{}) {
-				service.EXPECT().LoginUser(&inputRequest, secret).Times(1).Return(response, nil)
+			buildStubs: func(service *mocks.MockAuthService, request *dto.LoginRequest, secret string, response *dto.LoginResponse) {
+				service.EXPECT().LoginUser(request, secret).Times(1).Return(response, nil)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
 			},
 		},
-		//{
-		//	name: "bad request",
-		//	testRequest: dto.LoginRequest{
-		//		Email:    "example@gmail.com",
-		//		Password: "",
-		//	},
-		//	expectedResponse: dto.LoginResponse{
-		//		UserResponse: dto.UserResponse{},
-		//		AccessToken:  "",
-		//	},
-		//	buildStubs: func(service *mocks.MockAuthService, inputRequest dto.LoginRequest, secret string) {
-		//		service.EXPECT().LoginUser(&inputRequest, secret).Times(0).Return(gomock.Any(), nil)
-		//	},
-		//},
+		{
+			name: "invalid password case",
+			reqBody: gin.H{
+				"email":    user.Email,
+				"password": "invalid password",
+			},
+			loginRequest: &dto.LoginRequest{
+				Email:    user.Email,
+				Password: "invalid password",
+			},
+			loginResponse: &dto.LoginResponse{
+				UserResponse: dto.UserResponse{
+					ID:          user.ID,
+					Name:        user.Name,
+					PhoneNumber: user.PhoneNumber,
+					Email:       user.Email,
+				},
+				AccessToken: "",
+			},
+			buildStubs: func(service *mocks.MockAuthService, request *dto.LoginRequest, secret string, response *dto.LoginResponse) {
+				service.EXPECT().LoginUser(request, secret).Times(1).Return(nil, errors.ErrUnauthorized)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+		{
+			name: "bad request case",
+			reqBody: gin.H{
+				"email":    user.Email,
+				"password": "",
+			},
+			loginRequest:  nil,
+			loginResponse: nil,
+			buildStubs: func(service *mocks.MockAuthService, request *dto.LoginRequest, secret string, response *dto.LoginResponse) {
+				service.EXPECT().LoginUser(request, secret).Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "not found case",
+			reqBody: gin.H{
+				"email":    "user@email.com",
+				"password": password,
+			},
+			loginRequest: &dto.LoginRequest{
+				Email:    "user@email.com",
+				Password: password,
+			},
+			loginResponse: &dto.LoginResponse{
+				UserResponse: dto.UserResponse{
+					ID:          user.ID,
+					Name:        user.Name,
+					PhoneNumber: user.PhoneNumber,
+					Email:       user.Email,
+				},
+				AccessToken: "",
+			},
+			buildStubs: func(service *mocks.MockAuthService, request *dto.LoginRequest, secret string, response *dto.LoginResponse) {
+				service.EXPECT().LoginUser(request, secret).Times(1).Return(nil, errors.ErrNotFound)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusNotFound, recorder.Code)
+			},
+		},
+		{
+			name: "internal server error case",
+			reqBody: gin.H{
+				"email":    user.Email,
+				"password": password,
+			},
+			loginRequest: &dto.LoginRequest{
+				Email:    user.Email,
+				Password: password,
+			},
+			loginResponse: &dto.LoginResponse{
+				UserResponse: dto.UserResponse{
+					ID:          user.ID,
+					Name:        user.Name,
+					PhoneNumber: user.PhoneNumber,
+					Email:       user.Email,
+				},
+				AccessToken: "",
+			},
+			buildStubs: func(service *mocks.MockAuthService, request *dto.LoginRequest, secret string, response *dto.LoginResponse) {
+				service.EXPECT().LoginUser(request, secret).Times(1).Return(nil, errors.ErrInternalServerError)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			},
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			mockService := mocks.NewMockAuthService(ctrl)
-			tc.buildStubs(mockService, tc.testRequest, testSecret, tc.expectedResponse)
-			server := &Server{
-				AuthService: mockService,
-			}
+			testServer.handler.AuthService = mockService
+			tc.buildStubs(mockService, tc.loginRequest, testSecret, tc.loginResponse)
 
-			router := server.setupRouter()
-			jsonFile, err := json.Marshal(tc.testRequest)
+			jsonFile, err := json.Marshal(tc.reqBody)
 			require.NoError(t, err)
-			w := httptest.NewRecorder()
+			recorder := httptest.NewRecorder()
 			req, err := http.NewRequest(http.MethodPost, "/api/v1/auth/login", strings.NewReader(string(jsonFile)))
 			require.NoError(t, err)
-			router.ServeHTTP(w, req)
-
-			require.Equal(t, http.StatusOK, w.Code)
-			require.Contains(t, tc.expectedResponse.AccessToken, w.Body)
+			testServer.router.ServeHTTP(recorder, req)
+			tc.checkResponse(t, recorder)
 		})
 	}
 }
@@ -97,10 +178,17 @@ func randomUser(t *testing.T) (user models.User, password string) {
 	require.NoError(t, err)
 
 	user = models.User{
+		Model: models.Model{
+			ID:        RandomString(6),
+			CreatedAt: RandomInt(1, 100),
+			UpdatedAt: RandomInt(1, 100),
+			DeletedAt: RandomInt(1, 100),
+		},
 		Name:           RandomOwnerName(),
 		HashedPassword: string(hashedPassword),
 		PhoneNumber:    RandomOwnerName(),
 		Email:          RandomEmail(),
+		IsAgree:        true,
 	}
 	return
 }
