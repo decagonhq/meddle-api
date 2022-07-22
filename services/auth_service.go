@@ -41,7 +41,7 @@ func (a *authService) LoginUser(loginRequest *dto.LoginRequest, secret string) (
 
 	if err := foundUser.VerifyPassword(loginRequest.Password); err != nil {
 		//errors.New()
-		return nil, errors.ErrUnauthorized
+		return nil, errors.ErrInvalidPassword
 	}
 
 	accessToken, err := GenerateToken(foundUser.Email, &secret)
