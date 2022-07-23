@@ -5,17 +5,12 @@ import (
 	"github.com/decagonhq/meddle-api/db"
 	"github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/models"
+	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"strings"
-	"time"
-
-	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt"
 )
-
-const AccessTokenValidity = time.Minute * 20
-const RefreshTokenValidity = time.Hour * 24
 
 // AuthService interface
 type AuthService interface {
@@ -108,19 +103,6 @@ func AuthorizeToken(token *string, secret *string) (*jwt.Token, jwt.MapClaims, e
 		return token, claims, nil
 	}
 	return nil, nil, fmt.Errorf("empty token or secret")
-}
-
-// GenerateToken generates only an access token
-func GenerateToken(signMethod *jwt.SigningMethodHMAC, claims jwt.MapClaims, secret *string) (*string, error) {
-	// Create a new token object, specifying signing method and the claims
-	// you would like it to contain.
-	token := jwt.NewWithClaims(signMethod, claims)
-	// Sign and get the complete encoded token as a string using the secret
-	tokenString, err := token.SignedString([]byte(*secret))
-	if err != nil {
-		return nil, err
-	}
-	return &tokenString, nil
 }
 
 func GenerateHashPassword(password string) ([]byte, error) {

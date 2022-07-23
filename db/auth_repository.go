@@ -13,9 +13,10 @@ type AuthRepository interface {
 	IsEmailExist(email string) (bool, error)
 	IsPhoneExist(email string) (bool, error)
 	FindUserByUsername(username string) (*models.User, error)
+	FindUserByEmail(email string) (*models.User, error)
 	UpdateUser(user *models.User) error
 	AddToBlackList(blacklist *models.BlackList) error
-	TokenInBlacklist(token *string) bool
+	TokenInBlacklist(token string) bool
 }
 
 type authRepo struct {
@@ -62,6 +63,15 @@ func (a *authRepo) IsPhoneExist(phone string) (bool, error) {
 	return count > 0, nil
 }
 
+func (a *authRepo) FindUserByEmail(email string) (*models.User, error) {
+	var user models.User
+	err := a.DB.Where("email = ?", email).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 func (a *authRepo) UpdateUser(user *models.User) error {
 	return nil
 }
@@ -70,6 +80,7 @@ func (a *authRepo) AddToBlackList(blacklist *models.BlackList) error {
 	return nil
 }
 
-func (a *authRepo) TokenInBlacklist(token *string) bool {
-	return false
+func (a *authRepo) TokenInBlacklist(token string) bool {
+	result := a.DB.Where("token = ?", token).Find(&models.BlackList{})
+	return result.Error != nil
 }
