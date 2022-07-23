@@ -12,7 +12,6 @@ type AuthRepository interface {
 	CreateUser(user *models.User) (*models.User, error)
 	IsEmailExist(email string) (bool, error)
 	IsPhoneExist(email string) (bool, error)
-	FindUserByEmailOrPhoneNumber(email string, phoneNumber string) (*models.User, error)
 	FindUserByUsername(username string) (*models.User, error)
 	UpdateUser(user *models.User) error
 	AddToBlackList(blacklist *models.BlackList) error
@@ -46,35 +45,21 @@ func (a *AuthRepo) FindUserByUsername(username string) (*models.User, error) {
 }
 
 func (a *AuthRepo) IsEmailExist(email string) (bool, error) {
-	var id int64
-	err := a.DB.Model(&models.User{}).Where("email = ?", email).Count(&id).Error
+	var count int64
+	err := a.DB.Model(&models.User{}).Where("email = ?", email).Count(&count).Error
 	if err != nil {
 		return false, errors.Wrap(err, "gorm.count error")
 	}
-	if id > 0 {
-		return true, nil
-	}
-	return false, nil
+	return count > 0, nil
 }
 
 func (a *AuthRepo) IsPhoneExist(phone string) (bool, error) {
-	var id int64
-	err := a.DB.Model(&models.User{}).Where("phone_number = ?", phone).Count(&id).Error
+	var count int64
+	err := a.DB.Model(&models.User{}).Where("phone_number = ?", phone).Count(&count).Error
 	if err != nil {
 		return false, errors.Wrap(err, "gorm.count error")
 	}
-	if id > 0 {
-		return true, nil
-	}
-	return false, nil
-}
-func (a *AuthRepo) FindUserByEmailOrPhoneNumber(email string, phoneNumber string) (*models.User, error) {
-	var user *models.User
-	err := a.DB.Where("email = ? OR phone_number = ?", email, phoneNumber).First(&user).Error
-	if err != nil {
-		return nil, fmt.Errorf("could not find user: %v", err)
-	}
-	return user, nil
+	return count > 0, nil
 }
 
 func (a *AuthRepo) UpdateUser(user *models.User) error {

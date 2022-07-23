@@ -1,11 +1,8 @@
 package server
 
 import (
-	"github.com/decagonhq/meddle-api/dto"
 	"github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/models"
-	"github.com/decagonhq/meddle-api/services"
-	"log"
 	"net/http"
 
 	"github.com/decagonhq/meddle-api/server/response"
@@ -14,53 +11,17 @@ import (
 
 func (s *Server) HandleSignup() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var signupRequest dto.SignupRequest
-		if err := c.ShouldBindJSON(&signupRequest); err != nil {
+		var user models.User
+		if err := c.ShouldBindJSON(&user); err != nil {
 			response.JSON(c, "bad request", http.StatusBadRequest, err.Error(), nil)
 			return
 		}
-		log.Println("signupRequest: ", signupRequest)
-		log.Println("auth service: ", s.AuthService)
-		log.Println("config: ", s.Config)
-		userResponse, err := s.AuthService.SignupUser(&signupRequest)
+		userResponse, err := s.AuthService.SignupUser(&user)
 		if err != nil {
 			response.JSON(c, err.Error(), http.StatusBadRequest, nil, &errors.Error{Message: err.Error(), Status: http.StatusBadRequest})
 			return
 		}
 		response.JSON(c, "user created successfully", http.StatusCreated, userResponse, nil)
-	}
-}
-
-func (s *Server) handleSignup() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var user models.User
-		err := c.ShouldBindJSON(&user)
-		if err != nil {
-			response.JSON(c, "error", http.StatusBadRequest, err, nil)
-			return
-		}
-		_, err = s.AuthRepository.FindUserByEmailOrPhoneNumber(user.Email, user.PhoneNumber)
-		if err == nil {
-			response.JSON(c, "email or phone already exists", http.StatusNotFound, err, nil)
-			return
-		}
-		HashedPassword, err := services.GenerateHashPassword(user.Password)
-		user.HashedPassword = string(HashedPassword)
-		if err != nil {
-			log.Printf("hash password err: %v\n", err)
-			response.JSON(c, "hashed password was not be generated successfully", http.StatusInternalServerError, nil, nil)
-			return
-		}
-
-		_, err = s.AuthRepository.CreateUser(&user)
-
-		if err != nil {
-			log.Printf("create user err: %v\n", err)
-			response.JSON(c, "", http.StatusInternalServerError, err, nil)
-			return
-		}
-
-		response.JSON(c, "user created successfully", http.StatusOK, user, nil)
 	}
 }
 

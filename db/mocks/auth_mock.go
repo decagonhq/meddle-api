@@ -7,7 +7,7 @@ package mocks
 import (
 	reflect "reflect"
 
-	dto "github.com/decagonhq/meddle-api/dto"
+	models "github.com/decagonhq/meddle-api/models"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -35,10 +35,10 @@ func (m *MockAuthService) EXPECT() *MockAuthServiceMockRecorder {
 }
 
 // SignupUser mocks base method.
-func (m *MockAuthService) SignupUser(request *dto.SignupRequest) (*dto.SignupResponse, error) {
+func (m *MockAuthService) SignupUser(request *models.User) (*models.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SignupUser", request)
-	ret0, _ := ret[0].(*dto.SignupResponse)
+	ret0, _ := ret[0].(*models.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

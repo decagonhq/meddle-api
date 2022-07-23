@@ -9,10 +9,6 @@ import (
 )
 
 func JSON(c *gin.Context, message string, status int, data interface{}, err error) {
-	//var e string
-	//if err != nil {
-	//	e = err.Message
-	//}
 	responsedata := gin.H{
 		"message": message,
 		"data":    data,

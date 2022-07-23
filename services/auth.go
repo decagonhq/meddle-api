@@ -3,11 +3,9 @@ package services
 import (
 	"fmt"
 	"github.com/decagonhq/meddle-api/db"
-	"github.com/decagonhq/meddle-api/dto"
 	"github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/models"
 	"golang.org/x/crypto/bcrypt"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -21,7 +19,7 @@ const RefreshTokenValidity = time.Hour * 24
 
 // AuthService interface
 type AuthService interface {
-	SignupUser(request *dto.SignupRequest) (*dto.SignupResponse, error)
+	SignupUser(request *models.User) (*models.User, error)
 }
 
 // authService struct
@@ -36,9 +34,8 @@ func NewAuthService(authRepo db.AuthRepository) AuthService {
 	}
 }
 
-func (a *authService) SignupUser(request *dto.SignupRequest) (*dto.SignupResponse, error) {
-	log.Println("request: ", request)
-	var user models.User
+func (a *authService) SignupUser(request *models.User) (*models.User, error) {
+	var user = &models.User{}
 	if strings.TrimSpace(request.Name) == "" {
 		return nil, errors.New("name cannot be spaces", http.StatusBadRequest)
 	}
@@ -73,17 +70,11 @@ func (a *authService) SignupUser(request *dto.SignupRequest) (*dto.SignupRespons
 		Password:       "",
 		IsEmailActive:  false,
 	}
-	val, err := a.authRepo.CreateUser(&newUser)
+	user, err = a.authRepo.CreateUser(&newUser)
 	if err != nil {
 		return nil, err
 	}
-	userResponse := &dto.SignupResponse{
-		ID:          val.ID,
-		Name:        val.Name,
-		PhoneNumber: val.PhoneNumber,
-		Email:       val.Email,
-	}
-	return userResponse, nil
+	return user, nil
 }
 
 // GetTokenFromHeader returns the token string in the authorization header
