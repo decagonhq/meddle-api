@@ -18,15 +18,15 @@ type AuthRepository interface {
 	TokenInBlacklist(token *string) bool
 }
 
-type AuthRepo struct {
+type authRepo struct {
 	DB *gorm.DB
 }
 
 func NewAuthRepo(db *GormDB) AuthRepository {
-	return &AuthRepo{db.DB}
+	return &authRepo{db.DB}
 }
 
-func (a *AuthRepo) CreateUser(user *models.User) (*models.User, error) {
+func (a *authRepo) CreateUser(user *models.User) (*models.User, error) {
 	err := a.DB.Create(user).Error
 	if err != nil {
 		return nil, fmt.Errorf("could not create user: %v", err)
@@ -34,7 +34,7 @@ func (a *AuthRepo) CreateUser(user *models.User) (*models.User, error) {
 	return user, nil
 }
 
-func (a *AuthRepo) FindUserByUsername(username string) (*models.User, error) {
+func (a *authRepo) FindUserByUsername(username string) (*models.User, error) {
 	db := a.DB
 	user := &models.User{}
 	err := db.Where("email = ? OR username = ?", username, username).First(user).Error
@@ -44,7 +44,7 @@ func (a *AuthRepo) FindUserByUsername(username string) (*models.User, error) {
 	return user, nil
 }
 
-func (a *AuthRepo) IsEmailExist(email string) (bool, error) {
+func (a *authRepo) IsEmailExist(email string) (bool, error) {
 	var count int64
 	err := a.DB.Model(&models.User{}).Where("email = ?", email).Count(&count).Error
 	if err != nil {
@@ -53,7 +53,7 @@ func (a *AuthRepo) IsEmailExist(email string) (bool, error) {
 	return count > 0, nil
 }
 
-func (a *AuthRepo) IsPhoneExist(phone string) (bool, error) {
+func (a *authRepo) IsPhoneExist(phone string) (bool, error) {
 	var count int64
 	err := a.DB.Model(&models.User{}).Where("phone_number = ?", phone).Count(&count).Error
 	if err != nil {
@@ -62,14 +62,14 @@ func (a *AuthRepo) IsPhoneExist(phone string) (bool, error) {
 	return count > 0, nil
 }
 
-func (a *AuthRepo) UpdateUser(user *models.User) error {
+func (a *authRepo) UpdateUser(user *models.User) error {
 	return nil
 }
 
-func (a *AuthRepo) AddToBlackList(blacklist *models.BlackList) error {
+func (a *authRepo) AddToBlackList(blacklist *models.BlackList) error {
 	return nil
 }
 
-func (a *AuthRepo) TokenInBlacklist(token *string) bool {
+func (a *authRepo) TokenInBlacklist(token *string) bool {
 	return false
 }
