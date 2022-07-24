@@ -11,10 +11,10 @@ import (
 
 type User struct {
 	Model
-	Name           string `json:"name" validate:"required,min=2,max=15" conform:"name"`
+	Name           string `json:"name" conform:"trim" validate:"required,min=2,max=15"`
 	Email          string `json:"email" gorm:"unique;not null" validate:"required,email"`
 	PhoneNumber    string `json:"phone_number" gorm:"unique" validate:"required,e164"`
-	Password       string `json:"password" binding:"required" validate:"required,min=8,max=15" conform:"name"`
+	Password       string `json:"password" conform:"trim" binding:"required" validate:"required,min=8,max=15"`
 	HashedPassword string `json:"-" gorm:"password"`
 	IsEmailActive  bool   `json:"-"`
 }
@@ -33,11 +33,7 @@ func ValidateStruct(req interface{}) []error {
 }
 
 func validateWhiteSpaces(data interface{}) error {
-	err := conform.Strings(data)
-	if err != nil {
-		return err
-	}
-	return err
+	return conform.Strings(data)
 }
 
 func translateError(err error, trans ut.Translator) (errs []error) {
