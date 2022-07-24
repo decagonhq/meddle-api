@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/decagonhq/meddle-api/dto"
+	"github.com/decagonhq/meddle-api/errors"
 	"net/http"
 
 	"github.com/decagonhq/meddle-api/server/response"
@@ -18,7 +19,7 @@ func (s *Server) handleLogin() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var loginRequest dto.LoginRequest
 		if err := c.ShouldBindJSON(&loginRequest); err != nil {
-			response.JSON(c, "", http.StatusBadRequest, nil, err)
+			response.JSON(c, errors.ErrBadRequest.Message, errors.ErrBadRequest.Status, nil, err)
 			return
 		}
 		userResponse, err := s.AuthService.LoginUser(&loginRequest, s.Config.JWTSecret)
