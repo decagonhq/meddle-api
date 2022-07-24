@@ -83,6 +83,7 @@ func Test_LoginHandler(t *testing.T) {
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+				require.Contains(t, recorder.Body.String(), "invalid password")
 			},
 		},
 		{
@@ -98,6 +99,7 @@ func Test_LoginHandler(t *testing.T) {
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
+				require.Contains(t, recorder.Body.String(), "bad request")
 			},
 		},
 		{
@@ -124,6 +126,7 @@ func Test_LoginHandler(t *testing.T) {
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusNotFound, recorder.Code)
+				require.Contains(t, recorder.Body.String(), "not found")
 			},
 		},
 		{
@@ -150,6 +153,7 @@ func Test_LoginHandler(t *testing.T) {
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+				require.Contains(t, recorder.Body.String(), "internal server error")
 			},
 		},
 	}

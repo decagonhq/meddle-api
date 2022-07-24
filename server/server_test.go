@@ -10,11 +10,6 @@ import (
 	"testing"
 )
 
-//var (
-//	server     *Server
-//	testRouter *gin.Engine
-//)
-
 var testServer struct {
 	router  *gin.Engine
 	handler *Server
@@ -32,7 +27,6 @@ func TestMain(m *testing.M) {
 	testServer.handler = &Server{
 		Config: c,
 	}
-	testServer.handler.Config.JWTSecret = "testSecret"
 	testServer.router = testServer.handler.setupRouter()
 	exitCode := m.Run()
 	os.Exit(exitCode)
