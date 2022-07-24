@@ -24,5 +24,4 @@ jobs:
     - name: Test
       run: |
         go install github.com/golang/mock/mockgen@v1.6.0
-        make generate-mock
-        go test -v ./...
+        make test
