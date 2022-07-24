@@ -9,7 +9,6 @@ import (
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
-	"strings"
 )
 
 // AuthService interface
@@ -31,17 +30,9 @@ func NewAuthService(authRepo db.AuthRepository) AuthService {
 
 func (a *authService) SignupUser(request *models.User) (*models.User, error) {
 	var user = &models.User{}
-	if strings.TrimSpace(request.Name) == "" {
-		return nil, errors.New("name cannot be spaces", http.StatusBadRequest)
-	}
-	if strings.TrimSpace(request.Email) == "" {
-		return nil, errors.New("email cannot be spaces", http.StatusBadRequest)
-	}
-	if strings.TrimSpace(request.Password) == "" {
-		return nil, errors.New("password cannot be spaces", http.StatusBadRequest)
-	}
-	if strings.TrimSpace(request.PhoneNumber) == "" {
-		return nil, errors.New("phone cannot be spaces", http.StatusBadRequest)
+	errs := models.ValidateStruct(request)
+	if len(errs) > 0 {
+		return nil, errors.New(fmt.Sprintf("%s", errs), http.StatusBadRequest)
 	}
 	exist, err := a.authRepo.IsEmailExist(request.Email)
 	if exist {

@@ -1,36 +1,53 @@
 package models
 
 import (
-	"github.com/decagonhq/meddle-api/errors"
+	"fmt"
+	"github.com/go-playground/locales/en"
+	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
-	"net/http"
-	"strings"
+	enTranslations "github.com/go-playground/validator/v10/translations/en"
+	"github.com/leebenson/conform"
 )
 
 type User struct {
 	Model
-	Name           string `json:"name" gorm:"not null" binding:"required"`
-	Email          string `json:"email" gorm:"unique;not null" binding:"required,email"`
-	PhoneNumber    string `json:"phone_number" binding:"required,e164" gorm:"not null" gorm:"unique"`
-	Password       string `json:"password" binding:"required" gorm:"not null"`
+	Name           string `json:"name" validate:"required,min=2,max=15" conform:"name"`
+	Email          string `json:"email" gorm:"unique;not null" validate:"required,email"`
+	PhoneNumber    string `json:"phone_number" gorm:"unique" validate:"required,e164"`
+	Password       string `json:"password" binding:"required" validate:"required,min=8,max=15" conform:"name"`
 	HashedPassword string `json:"-" gorm:"password"`
 	IsEmailActive  bool   `json:"-"`
 }
 
-func (u *User) Validate() *errors.Error {
-	err := validator.New().Struct(u)
+func ValidateStruct(req interface{}) []error {
+	validate := validator.New()
+	english := en.New()
+	uni := ut.New(english, english)
+	trans, _ := uni.GetTranslator("en")
+	_ = enTranslations.RegisterDefaultTranslations(validate, trans)
+	err := validateWhiteSpaces(req)
+	errs := translateError(err, trans)
+	err = validate.Struct(req)
+	errs = translateError(err, trans)
+	return errs
+}
+
+func validateWhiteSpaces(data interface{}) error {
+	err := conform.Strings(data)
 	if err != nil {
-		validationErrors := err.(validator.ValidationErrors)
-
-		var s []string
-		for _, v := range validationErrors {
-			s = append(s, errors.NewFieldError(v).String())
-		}
-		return &errors.Error{
-			Message: strings.Join(s, ","),
-			Status:  http.StatusBadRequest,
-		}
+		return err
 	}
+	return err
+}
 
-	return nil
+func translateError(err error, trans ut.Translator) (errs []error) {
+	if err == nil {
+		return nil
+	}
+	validatorErrs := err.(validator.ValidationErrors)
+	for _, e := range validatorErrs {
+		translatedErr := fmt.Errorf(e.Translate(trans) + "; ")
+		errs = append(errs, translatedErr)
+	}
+	return errs
 }
