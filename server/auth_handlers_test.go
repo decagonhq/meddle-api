@@ -42,11 +42,11 @@ func TestSignup(t *testing.T) {
 			ExpectedError:   "",
 		},
 		{
-			Name:            "Test Signup without no email",
-			Request:         &models.User{Name: "Tolu", PhoneNumber: "+2348163608141", Password: "12345678"},
+			Name:            "Test Signup with no email",
+			Request:         &models.User{Name: "Tolu", PhoneNumber: "08141636082"},
 			ExpectedCode:    http.StatusBadRequest,
 			ExpectedMessage: "",
-			ExpectedError:   "Email is invalid: ",
+			ExpectedError:   "Email is invalid: toluwase.tt.com",
 		},
 		{
 			Name:            "Test Signup with invalid fields",

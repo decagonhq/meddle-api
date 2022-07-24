@@ -5,4 +5,4 @@ test:
 	API_ENV=test go test ./...
 
 mock:
-	mockgen -source=services/auth.go -destination=db/mocks/auth_mock.go -package=mocks
+	mockgen -source=services/signup.go -destination=db/mocks/auth_service_mock.go -package=mocks

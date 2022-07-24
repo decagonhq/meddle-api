@@ -32,7 +32,7 @@ func (a *authService) SignupUser(request *models.User) (*models.User, error) {
 	var user = &models.User{}
 	errs := models.ValidateStruct(request)
 	if len(errs) > 0 {
-		return nil, errors.New(fmt.Sprintf("%s", errs), http.StatusBadRequest)
+		return nil, errors.New(fmt.Sprintf("%s", errs), 3001)
 	}
 	exist, err := a.authRepo.IsEmailExist(request.Email)
 	if exist {
