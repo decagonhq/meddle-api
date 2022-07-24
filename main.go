@@ -17,11 +17,11 @@ func main() {
 
 	gormDB := db.GetDB(conf)
 	authRepo := db.NewAuthRepo(gormDB)
-	service := services.NewAuthService(authRepo)
+	authService := services.NewAuthService(authRepo)
 	s := &server.Server{
 		Config:         conf,
 		AuthRepository: authRepo,
-		AuthService:    service,
+		AuthService:    authService,
 	}
 	s.Start()
 }
