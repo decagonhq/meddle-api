@@ -64,12 +64,12 @@ func (s *Server) handleLogout() gin.HandlerFunc {
 				}
 				err := s.AuthRepository.AddToBlackList(accBlacklist)
 				if err != nil {
-			log.Printf("can't add access token to blacklist: %v\n", err)
-				response.JSON(c, "logout failed", http.StatusInternalServerError, nil, errors.New("can't add access token to blacklist", http.StatusInternalServerError))
+					log.Printf("can't add access token to blacklist: %v\n", err)
+					response.JSON(c, "logout failed", http.StatusInternalServerError, nil, errors.New("can't add access token to blacklist", http.StatusInternalServerError))
+						return
+					}
+					response.JSON(c, "logout successful", http.StatusOK, nil, nil)
 					return
-				}
-				response.JSON(c, "logout successful", http.StatusOK, nil, nil)
-				return
 			}
 		response.JSON(c, "", http.StatusInternalServerError, nil, errors.New("can't get info from context", http.StatusInternalServerError))
 		return
