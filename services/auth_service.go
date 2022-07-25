@@ -2,10 +2,12 @@ package services
 
 import (
 	"errors"
-	"github.com/decagonhq/meddle-api/db"
-	"github.com/decagonhq/meddle-api/dto"
-	apiError "github.com/decagonhq/meddle-api/errors"
 	"time"
+
+	"github.com/decagonhq/meddle-api/config"
+	"github.com/decagonhq/meddle-api/db"
+	apiError "github.com/decagonhq/meddle-api/errors"
+	"github.com/decagonhq/meddle-api/models"
 
 	"github.com/golang-jwt/jwt"
 )
@@ -17,22 +19,24 @@ const RefreshTokenValidity = time.Hour * 24
 
 // AuthService interface
 type AuthService interface {
-	LoginUser(request *dto.LoginRequest, secret string) (*dto.LoginResponse, *apiError.Error)
+	LoginUser(request *models.LoginRequest) (*models.LoginResponse, *apiError.Error)
 }
 
 // authService struct
 type authService struct {
+	Config   *config.Config
 	authRepo db.AuthRepository
 }
 
 // NewAuthService instantiate an authService
-func NewAuthService(authRepo db.AuthRepository) AuthService {
+func NewAuthService(authRepo db.AuthRepository, conf *config.Config) AuthService {
 	return &authService{
-		authRepo,
+		Config:   conf,
+		authRepo: authRepo,
 	}
 }
 
-func (a *authService) LoginUser(loginRequest *dto.LoginRequest, secret string) (*dto.LoginResponse, *apiError.Error) {
+func (a *authService) LoginUser(loginRequest *models.LoginRequest) (*models.LoginResponse, *apiError.Error) {
 	foundUser, err := a.authRepo.FindUserByEmail(loginRequest.Email)
 	if err != nil {
 		return nil, apiError.ErrNotFound
@@ -42,19 +46,12 @@ func (a *authService) LoginUser(loginRequest *dto.LoginRequest, secret string) (
 		return nil, apiError.ErrInvalidPassword
 	}
 
-	accessToken, err := GenerateToken(foundUser.Email, secret)
+	accessToken, err := GenerateToken(foundUser.Email, a.Config.JWTSecret)
 	if err != nil {
 		return nil, apiError.ErrInternalServerError
 	}
 
-	userResponse := dto.UserResponse{
-		ID:          foundUser.ID,
-		Name:        foundUser.Name,
-		PhoneNumber: foundUser.PhoneNumber,
-		Email:       foundUser.Email,
-	}
-
-	return foundUser.LoginUserToDto(userResponse, accessToken), nil
+	return foundUser.LoginUserToDto(accessToken), nil
 }
 
 // GenerateToken generates only an access token
@@ -80,8 +77,8 @@ func GenerateToken(email string, secret string) (string, error) {
 func GenerateClaims(email string) jwt.MapClaims {
 
 	accessClaims := jwt.MapClaims{
-		"email":   email,
-		"expired": time.Now().Add(AccessTokenValidity).Unix(),
+		"email": email,
+		"exp":   time.Now().Add(AccessTokenValidity).Unix(),
 	}
 
 	return accessClaims
