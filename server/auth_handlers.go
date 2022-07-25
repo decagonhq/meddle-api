@@ -58,7 +58,10 @@ func (s *Server) handleLogout() gin.HandlerFunc {
 			return
 		}
 		secret := s.Config.JWTSecret
-		_, claims, _ := services.AuthorizeToken(token, secret)
+		if claims, errr := getClaims(token, secret); errr != nil {
+			response.JSON(c, "", http.StatusInternalServerError, nil, errr)
+			return
+		}
 		if claims.exp < time.Now().Unix() {
 			response.JSON(c, "successfully logged out", http.StatusOK, nil, nil)
 			return
