@@ -3,6 +3,7 @@ package server
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/models"
@@ -57,9 +58,11 @@ func (s *Server) handleLogout() gin.HandlerFunc {
 			return
 		}
 		// TODO: check if token has not expired
-		// if the token has expired return a successful response
-		// if the token has not expired then store in the blacklist
-		accBlacklist := &models.BlackList{
+		if token.exp < time.Now() {
+			response.JSON(c, "successfully logged out", http.StatusOK, nil, nil)
+			return
+		} else {
+			accBlacklist := &models.BlackList{
 			Email: user.Email,
 			Token: token,
 		}
@@ -70,6 +73,7 @@ func (s *Server) handleLogout() gin.HandlerFunc {
 		}
 		response.JSON(c, "logout successful", http.StatusOK, nil, nil)
 	}
+  }
 }
 
 func (s *Server) handleGetUsers() gin.HandlerFunc {
