@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"gorm.io/gorm"
 	"log"
 	"time"
 
@@ -40,7 +41,12 @@ func NewAuthService(authRepo db.AuthRepository, conf *config.Config) AuthService
 func (a *authService) LoginUser(loginRequest *models.LoginRequest) (*models.LoginResponse, *apiError.Error) {
 	foundUser, err := a.authRepo.FindUserByEmail(loginRequest.Email)
 	if err != nil {
-		return nil, apiError.ErrNotFound
+		switch err {
+		case gorm.ErrRecordNotFound:
+			return nil, apiError.ErrNotFound
+		default:
+			return nil, apiError.ErrInternalServerError
+		}
 	}
 
 	if err := foundUser.VerifyPassword(loginRequest.Password); err != nil {
