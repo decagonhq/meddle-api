@@ -23,5 +23,6 @@ jobs:
 
     - name: Test
       run: |
+        export MEDDLE_JWT_SECRET=veryLONGsecret
         go install github.com/golang/mock/mockgen@v1.6.0
         make test
