@@ -20,7 +20,7 @@ func (s *Server) handleSignup() gin.HandlerFunc {
 					if accessToken, ok := tokenI.(string); ok {
 						accBlacklist := &models.BlackList{
 							Email:     user.Email,
-							CreatedAt: time.Now(),
+							Model: models.Model{CreatedAt: time.Now().Unix()},
 							Token:     accessToken,
 						}
 
@@ -36,7 +36,6 @@ func (s *Server) handleSignup() gin.HandlerFunc {
 				}
 			}
 		}
-		log.Printf("can't get info from context\n")
 		response.JSON(c, "", http.StatusInternalServerError, nil, errors.New("can't get info from context", http.StatusInternalServerError))
 		return
 	}
@@ -51,8 +50,29 @@ func (s *Server) handleLogin() gin.HandlerFunc {
 
 func (s *Server) handleLogout() gin.HandlerFunc {
 	return func(c *gin.Context) {
-
-		response.JSON(c, "successful", http.StatusOK, nil, nil)
+		tokenI , _:= c.Get("access_token")
+		userI, _ := c.Get("user")
+		 if tokenI == "access_token" && userI == "user" {
+			 return
+		 }
+		user := userI.(*models.User)
+		if accessToken, ok := tokenI.(string); ok {
+			accBlacklist := &models.BlackList{
+				Email:     user.Email,
+				Token:     accessToken,
+				Model:  models.Model{CreatedAt: time.Now().Unix()},
+				}
+				err := s.AuthRepository.AddToBlackList(accBlacklist)
+				if err != nil {
+			log.Printf("can't add access token to blacklist: %v\n", err)
+				response.JSON(c, "logout failed", http.StatusInternalServerError, nil, errors.New("can't add access token to blacklist", http.StatusInternalServerError))
+					return
+				}
+				response.JSON(c, "logout successful", http.StatusOK, nil, nil)
+				return
+			}
+		response.JSON(c, "", http.StatusInternalServerError, nil, errors.New("can't get info from context", http.StatusInternalServerError))
+		return
 	}
 }
 
