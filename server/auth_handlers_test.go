@@ -3,7 +3,6 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/decagonhq/meddle-api/dto"
 	"github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/mocks"
 	"github.com/decagonhq/meddle-api/models"
@@ -20,7 +19,6 @@ import (
 )
 
 func Test_LoginHandler(t *testing.T) {
-	testSecret := testServer.handler.Config.JWTSecret
 	// generate a random user
 	user, password := randomUser(t)
 
@@ -28,9 +26,9 @@ func Test_LoginHandler(t *testing.T) {
 	testCases := []struct {
 		name          string
 		reqBody       interface{}
-		loginRequest  *dto.LoginRequest
-		loginResponse *dto.LoginResponse
-		buildStubs    func(service *mocks.MockAuthService, request *dto.LoginRequest, secret string, response *dto.LoginResponse)
+		loginRequest  *models.LoginRequest
+		loginResponse *models.LoginResponse
+		buildStubs    func(service *mocks.MockAuthService, request *models.LoginRequest, response *models.LoginResponse)
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
 		{
@@ -39,12 +37,12 @@ func Test_LoginHandler(t *testing.T) {
 				"email":    user.Email,
 				"password": password,
 			},
-			loginRequest: &dto.LoginRequest{
+			loginRequest: &models.LoginRequest{
 				Email:    user.Email,
 				Password: password,
 			},
-			loginResponse: &dto.LoginResponse{
-				UserResponse: dto.UserResponse{
+			loginResponse: &models.LoginResponse{
+				UserResponse: models.UserResponse{
 					ID:          user.ID,
 					Name:        user.Name,
 					PhoneNumber: user.PhoneNumber,
@@ -52,8 +50,8 @@ func Test_LoginHandler(t *testing.T) {
 				},
 				AccessToken: "",
 			},
-			buildStubs: func(service *mocks.MockAuthService, request *dto.LoginRequest, secret string, response *dto.LoginResponse) {
-				service.EXPECT().LoginUser(request, secret).Times(1).Return(response, nil)
+			buildStubs: func(service *mocks.MockAuthService, request *models.LoginRequest, response *models.LoginResponse) {
+				service.EXPECT().LoginUser(request).Times(1).Return(response, nil)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
@@ -65,12 +63,12 @@ func Test_LoginHandler(t *testing.T) {
 				"email":    user.Email,
 				"password": "invalid password",
 			},
-			loginRequest: &dto.LoginRequest{
+			loginRequest: &models.LoginRequest{
 				Email:    user.Email,
 				Password: "invalid password",
 			},
-			loginResponse: &dto.LoginResponse{
-				UserResponse: dto.UserResponse{
+			loginResponse: &models.LoginResponse{
+				UserResponse: models.UserResponse{
 					ID:          user.ID,
 					Name:        user.Name,
 					PhoneNumber: user.PhoneNumber,
@@ -78,8 +76,8 @@ func Test_LoginHandler(t *testing.T) {
 				},
 				AccessToken: "",
 			},
-			buildStubs: func(service *mocks.MockAuthService, request *dto.LoginRequest, secret string, response *dto.LoginResponse) {
-				service.EXPECT().LoginUser(request, secret).Times(1).Return(nil, errors.ErrInvalidPassword)
+			buildStubs: func(service *mocks.MockAuthService, request *models.LoginRequest, response *models.LoginResponse) {
+				service.EXPECT().LoginUser(request).Times(1).Return(nil, errors.ErrInvalidPassword)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusUnauthorized, recorder.Code)
@@ -89,17 +87,16 @@ func Test_LoginHandler(t *testing.T) {
 		{
 			name: "bad request case",
 			reqBody: gin.H{
-				"email":    user.Email,
-				"password": "",
+				"email": user.Email,
 			},
 			loginRequest:  nil,
 			loginResponse: nil,
-			buildStubs: func(service *mocks.MockAuthService, request *dto.LoginRequest, secret string, response *dto.LoginResponse) {
-				service.EXPECT().LoginUser(request, secret).Times(0)
+			buildStubs: func(service *mocks.MockAuthService, request *models.LoginRequest, response *models.LoginResponse) {
+				service.EXPECT().LoginUser(request).Times(0)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
-				require.Contains(t, recorder.Body.String(), "bad request")
+				require.Contains(t, recorder.Body.String(), "Bad Request")
 			},
 		},
 		{
@@ -108,12 +105,12 @@ func Test_LoginHandler(t *testing.T) {
 				"email":    "user@email.com",
 				"password": password,
 			},
-			loginRequest: &dto.LoginRequest{
+			loginRequest: &models.LoginRequest{
 				Email:    "user@email.com",
 				Password: password,
 			},
-			loginResponse: &dto.LoginResponse{
-				UserResponse: dto.UserResponse{
+			loginResponse: &models.LoginResponse{
+				UserResponse: models.UserResponse{
 					ID:          user.ID,
 					Name:        user.Name,
 					PhoneNumber: user.PhoneNumber,
@@ -121,8 +118,8 @@ func Test_LoginHandler(t *testing.T) {
 				},
 				AccessToken: "",
 			},
-			buildStubs: func(service *mocks.MockAuthService, request *dto.LoginRequest, secret string, response *dto.LoginResponse) {
-				service.EXPECT().LoginUser(request, secret).Times(1).Return(nil, errors.ErrNotFound)
+			buildStubs: func(service *mocks.MockAuthService, request *models.LoginRequest, response *models.LoginResponse) {
+				service.EXPECT().LoginUser(request).Times(1).Return(nil, errors.ErrNotFound)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusNotFound, recorder.Code)
@@ -135,12 +132,12 @@ func Test_LoginHandler(t *testing.T) {
 				"email":    user.Email,
 				"password": password,
 			},
-			loginRequest: &dto.LoginRequest{
+			loginRequest: &models.LoginRequest{
 				Email:    user.Email,
 				Password: password,
 			},
-			loginResponse: &dto.LoginResponse{
-				UserResponse: dto.UserResponse{
+			loginResponse: &models.LoginResponse{
+				UserResponse: models.UserResponse{
 					ID:          user.ID,
 					Name:        user.Name,
 					PhoneNumber: user.PhoneNumber,
@@ -148,8 +145,8 @@ func Test_LoginHandler(t *testing.T) {
 				},
 				AccessToken: "",
 			},
-			buildStubs: func(service *mocks.MockAuthService, request *dto.LoginRequest, secret string, response *dto.LoginResponse) {
-				service.EXPECT().LoginUser(request, secret).Times(1).Return(nil, errors.ErrInternalServerError)
+			buildStubs: func(service *mocks.MockAuthService, request *models.LoginRequest, response *models.LoginResponse) {
+				service.EXPECT().LoginUser(request).Times(1).Return(nil, errors.ErrInternalServerError)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
@@ -163,7 +160,7 @@ func Test_LoginHandler(t *testing.T) {
 			defer ctrl.Finish()
 			mockService := mocks.NewMockAuthService(ctrl)
 			testServer.handler.AuthService = mockService
-			tc.buildStubs(mockService, tc.loginRequest, testSecret, tc.loginResponse)
+			tc.buildStubs(mockService, tc.loginRequest, tc.loginResponse)
 
 			jsonFile, err := json.Marshal(tc.reqBody)
 			require.NoError(t, err)

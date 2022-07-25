@@ -1,19 +1,15 @@
-package server
+package services
 
 import (
 	"fmt"
 	"github.com/decagonhq/meddle-api/config"
-	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"log"
 	"os"
 	"testing"
 )
 
-var testServer struct {
-	router  *gin.Engine
-	handler *Server
-}
+var testConfig *config.Config
 
 func TestMain(m *testing.M) {
 	fmt.Println("Starting server tests")
@@ -21,14 +17,12 @@ func TestMain(m *testing.M) {
 		log.Printf("couldn't load env vars: %v", err)
 	}
 	c, err := config.Load()
-	fmt.Println(c)
 	if err != nil {
 		log.Fatal(err)
 	}
-	testServer.handler = &Server{
-		Config: c,
-	}
-	testServer.router = testServer.handler.setupRouter()
+
+	testConfig = c
+	fmt.Println(testConfig)
 	exitCode := m.Run()
 	os.Exit(exitCode)
 }
