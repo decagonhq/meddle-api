@@ -3,8 +3,6 @@ package config
 import (
 	"log"
 	"os"
-	"path/filepath"
-	"runtime"
 
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
@@ -22,16 +20,10 @@ type Config struct {
 	JWTSecret        string `envconfig:"jwt_secret"`
 }
 
-var (
-	// Get current file full path from runtime
-	_, b, _, _ = runtime.Caller(0)
-	ProjectRootPath = filepath.Join(filepath.Dir(b), "../")
-)
-
 func Load() (*Config, error) {
 	env := os.Getenv("GIN_MODE")
 	if env != "release" {
-		if err := godotenv.Load(ProjectRootPath + "/meddle.env"); err != nil {
+		if err := godotenv.Load(".env"); err != nil {
 			log.Printf("couldn't load env vars: %v", err)
 		}
 	}
