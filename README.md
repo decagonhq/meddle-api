@@ -10,6 +10,7 @@ To run this app using docker, follow the command below
   docker compose up --build
 ```
 ### Provision app locally with pg-sql
+To run this locally, follow the steps below
 
 Step 1: Install and configure pgAdmin locally.
 
