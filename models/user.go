@@ -1,10 +1,25 @@
 package models
 
 import (
-	"errors"
-	"github.com/decagonhq/meddle-api/dto"
 	"golang.org/x/crypto/bcrypt"
 )
+
+type UserResponse struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	PhoneNumber string `json:"phone_number"`
+	Email       string `json:"email"`
+}
+
+type LoginRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required"`
+}
+
+type LoginResponse struct {
+	UserResponse
+	AccessToken string
+}
 
 type User struct {
 	Model
@@ -18,18 +33,18 @@ type User struct {
 
 // VerifyPassword verifies the collected password with the user's hashed password
 func (u *User) VerifyPassword(password string) error {
-	if u.HashedPassword != "" && len(u.HashedPassword) == 0 {
-		// Internal Server
-		return errors.New("password is not set")
-	}
-	// Wrong Password
 	return bcrypt.CompareHashAndPassword([]byte(u.HashedPassword), []byte(password))
 }
 
 // LoginUserToDto responsible for creating a response object for the handleLogin handler
-func (u *User) LoginUserToDto(user dto.UserResponse, token string) *dto.LoginResponse {
-	return &dto.LoginResponse{
-		UserResponse: user,
-		AccessToken:  token,
+func (u *User) LoginUserToDto(token string) *LoginResponse {
+	return &LoginResponse{
+		UserResponse: UserResponse{
+			ID:          u.ID,
+			Name:        u.Name,
+			PhoneNumber: u.PhoneNumber,
+			Email:       u.Email,
+		},
+		AccessToken: token,
 	}
 }
