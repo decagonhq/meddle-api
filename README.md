@@ -2,7 +2,7 @@
 ## Installation Guidelines
 
 ### Provision app using docker
-To run this app using docker, you first of all need to make sure you have docker installed on your system.
+To run this app using docker, you first of all need to make sure you have docker installed on your system. If you have done that already then go ahead and run the following commands to start the application and all needed services.
 
 ```bash
   git clone git@github.com:decagonhq/meddle-api.git
