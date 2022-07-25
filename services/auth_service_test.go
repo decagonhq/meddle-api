@@ -46,12 +46,12 @@ func Test_AuthLoginService(t *testing.T) {
 	require.NoError(t, err)
 	user.HashedPassword = string(hashedPassword)
 	testCases := []struct {
-		name     string
-		input    models.LoginRequest
-		dbOutput *models.User
-		dbError  error
-		output1  *models.LoginResponse
-		output2  *errors.Error
+		name          string
+		input         models.LoginRequest
+		dbOutput      *models.User
+		dbError       error
+		loginResponse *models.LoginResponse
+		loginError    *errors.Error
 	}{
 		{
 			name: "login successful case",
@@ -61,7 +61,7 @@ func Test_AuthLoginService(t *testing.T) {
 			},
 			dbOutput: user,
 			dbError:  nil,
-			output1: &models.LoginResponse{
+			loginResponse: &models.LoginResponse{
 				UserResponse: models.UserResponse{
 					ID:          user.ID,
 					Name:        user.Name,
@@ -69,7 +69,7 @@ func Test_AuthLoginService(t *testing.T) {
 					Email:       user.Email,
 				},
 			},
-			output2: nil,
+			loginError: nil,
 		},
 		{
 			name: "not found",
@@ -77,10 +77,10 @@ func Test_AuthLoginService(t *testing.T) {
 				Email:    "",
 				Password: "password",
 			},
-			dbOutput: nil,
-			dbError:  gorm.ErrRecordNotFound,
-			output1:  nil,
-			output2:  errors.ErrNotFound,
+			dbOutput:      nil,
+			dbError:       gorm.ErrRecordNotFound,
+			loginResponse: nil,
+			loginError:    errors.ErrNotFound,
 		},
 		{
 			name: "invalid password",
@@ -88,10 +88,10 @@ func Test_AuthLoginService(t *testing.T) {
 				Email:    user.Email,
 				Password: "wrongpassword",
 			},
-			dbOutput: user,
-			dbError:  nil,
-			output1:  nil,
-			output2:  errors.ErrInvalidPassword,
+			dbOutput:      user,
+			dbError:       nil,
+			loginResponse: nil,
+			loginError:    errors.ErrInvalidPassword,
 		},
 		{
 			name: "internal server error case",
@@ -99,24 +99,27 @@ func Test_AuthLoginService(t *testing.T) {
 				Email:    user.Email,
 				Password: user.Password,
 			},
-			dbOutput: nil,
-			dbError:  gorm.ErrInvalidDB,
-			output1:  nil,
-			output2:  errors.ErrInternalServerError,
+			dbOutput:      nil,
+			dbError:       gorm.ErrInvalidDB,
+			loginResponse: nil,
+			loginError:    errors.ErrInternalServerError,
 		},
 	}
+	teardown := setup(t)
+	defer teardown()
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			teardown := setup(t)
-			defer teardown()
+
 			mockRepository.EXPECT().FindUserByEmail(tc.input.Email).Times(1).Return(tc.dbOutput, tc.dbError)
 
 			loginResponse, err := testLoginService.LoginUser(&tc.input)
-			if loginResponse != nil {
-				tc.output1.AccessToken = loginResponse.AccessToken
+			if tc.name != "login successful case" {
+				require.Equal(t, tc.loginResponse, loginResponse)
+				require.Equal(t, tc.loginError, err)
+			} else {
+				require.NotZero(t, loginResponse.AccessToken)
+				require.Equal(t, tc.loginError, err)
 			}
-			require.Equal(t, tc.output1, loginResponse)
-			require.Equal(t, tc.output2, err)
 
 		})
 	}
