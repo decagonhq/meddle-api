@@ -1,14 +1,13 @@
 package server
 
 import (
-	"github.com/golang-jwt/jwt"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/models"
-
+	"github.com/decagonhq/meddle-api/services"
 	"github.com/decagonhq/meddle-api/server/response"
 	"github.com/gin-gonic/gin"
 )
