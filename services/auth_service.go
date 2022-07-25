@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"log"
 	"time"
 
 	"github.com/decagonhq/meddle-api/config"
@@ -48,6 +49,7 @@ func (a *authService) LoginUser(loginRequest *models.LoginRequest) (*models.Logi
 
 	accessToken, err := GenerateToken(foundUser.Email, a.Config.JWTSecret)
 	if err != nil {
+		log.Printf("error generating token %s", err)
 		return nil, apiError.ErrInternalServerError
 	}
 
