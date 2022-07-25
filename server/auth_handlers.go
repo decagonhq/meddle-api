@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/golang-jwt/jwt"
 	"log"
 	"net/http"
 	"time"
@@ -57,8 +58,9 @@ func (s *Server) handleLogout() gin.HandlerFunc {
 			response.JSON(c, "", err.Status, nil, err)
 			return
 		}
-		// TODO: check if token has not expired
-		if token.exp < time.Now() {
+		secret := s.Config.JWTSecret
+		_, claims, _ := services.AuthorizeToken(token, secret)
+		if claims.exp < time.Now().Unix() {
 			response.JSON(c, "successfully logged out", http.StatusOK, nil, nil)
 			return
 		} else {
