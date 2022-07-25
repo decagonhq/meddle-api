@@ -6,7 +6,7 @@ info:
   version: 3.0.0
   title: Meddle
   contact:
-    email: davido@decagonhq.com
+    email: info@decagonhq.com
 host: meddle.herokuapp.com
 basePath: /api/v1
 schemes:
