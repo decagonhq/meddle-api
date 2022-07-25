@@ -2,9 +2,7 @@
 ## Installation Guidelines
 
 ### Provision app using docker
-To get this app working using docker, make sure
-you have docker installed on your pc and docker-compose.yml, use the command below to get
-things working
+To run this app using docker, follow the command below 
 
 ```bash
   git clone git@github.com:decagonhq/meddle-api.git
