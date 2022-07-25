@@ -13,7 +13,7 @@ var testConfig *config.Config
 
 func TestMain(m *testing.M) {
 	fmt.Println("Starting server tests")
-	if err := godotenv.Load("../.env"); err != nil {
+	if err := godotenv.Load(".env"); err != nil {
 		log.Printf("couldn't load env vars: %v", err)
 	}
 	c, err := config.Load()
