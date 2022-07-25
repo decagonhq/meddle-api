@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+
 	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
@@ -11,10 +12,10 @@ import (
 
 type User struct {
 	Model
-	Name           string `json:"name" conform:"trim" validate:"required,min=2,max=15"`
-	Email          string `json:"email" gorm:"unique;not null" validate:"required,email"`
-	PhoneNumber    string `json:"phone_number" gorm:"unique" validate:"required,e164"`
-	Password       string `json:"password" conform:"trim" binding:"required" validate:"required,min=8,max=15"`
+	Name           string `json:"name" binding:"required,min=2"`
+	Email          string `json:"email" gorm:"unique;not null" binding:"required,email"`
+	PhoneNumber    string `json:"phone_number" gorm:"unique" binding:"required,e164"`
+	Password       string `json:"password,omitempty" gorm:"-" binding:"required,min=8,max=15"`
 	HashedPassword string `json:"-" gorm:"password"`
 	IsEmailActive  bool   `json:"-"`
 }
