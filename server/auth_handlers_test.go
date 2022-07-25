@@ -3,14 +3,15 @@ package server
 import (
 	"bytes"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/decagonhq/meddle-api/db/mocks"
 	"github.com/decagonhq/meddle-api/models"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 func TestSignup(t *testing.T) {
@@ -63,11 +64,14 @@ func TestSignup(t *testing.T) {
 			ExpectedError:   "user already exists",
 		},
 	}
+
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockAuthService := mocks.NewMockAuthService(ctrl)
+
 	for _, c := range cases {
 		t.Run(c.Name, func(t *testing.T) {
+			// FIXME: refactor this test
 			mockAuthService.EXPECT().SignupUser(c.Request).AnyTimes().Return(newResp, nil)
 			testServer.handler.AuthService = mockAuthService
 			data, err := json.Marshal(c.Request)
