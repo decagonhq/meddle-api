@@ -42,8 +42,6 @@ func Test_AuthLoginService(t *testing.T) {
 		HashedPassword: "",
 		IsAgree:        true,
 	}
-	secret := testConfig.JWTSecret
-	token, err := GenerateToken(user.Email, secret)
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	require.NoError(t, err)
 	user.HashedPassword = string(hashedPassword)
@@ -70,7 +68,6 @@ func Test_AuthLoginService(t *testing.T) {
 					PhoneNumber: user.PhoneNumber,
 					Email:       user.Email,
 				},
-				AccessToken: token,
 			},
 			output2: nil,
 		},
@@ -96,6 +93,17 @@ func Test_AuthLoginService(t *testing.T) {
 			output1:  nil,
 			output2:  errors.ErrInvalidPassword,
 		},
+		{
+			name: "internal server error case",
+			input: models.LoginRequest{
+				Email:    user.Email,
+				Password: user.Password,
+			},
+			dbOutput: nil,
+			dbError:  gorm.ErrInvalidDB,
+			output1:  nil,
+			output2:  errors.ErrInternalServerError,
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -104,13 +112,12 @@ func Test_AuthLoginService(t *testing.T) {
 			mockRepository.EXPECT().FindUserByEmail(tc.input.Email).Times(1).Return(tc.dbOutput, tc.dbError)
 
 			loginResponse, err := testLoginService.LoginUser(&tc.input)
+			if loginResponse != nil {
+				tc.output1.AccessToken = loginResponse.AccessToken
+			}
 			require.Equal(t, tc.output1, loginResponse)
 			require.Equal(t, tc.output2, err)
 
-			if tc.name == "login successful case" {
-				require.Equal(t, tc.output1.AccessToken, loginResponse.AccessToken)
-			}
 		})
 	}
-
 }
