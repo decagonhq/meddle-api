@@ -7,7 +7,6 @@ import (
 
 	"github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/models"
-	"github.com/decagonhq/meddle-api/services"
 	"github.com/decagonhq/meddle-api/server/response"
 	"github.com/gin-gonic/gin"
 )
@@ -58,11 +57,13 @@ func (s *Server) handleLogout() gin.HandlerFunc {
 			return
 		}
 		secret := s.Config.JWTSecret
-		if claims, errr := getClaims(token, secret); errr != nil {
+		claims, errr := getClaims(token, secret)
+		if errr != nil {
 			response.JSON(c, "", http.StatusInternalServerError, nil, errr)
 			return
 		}
-		if claims.exp < time.Now().Unix() {
+		convertClaims, _ := claims["exp"].(int64)
+		if convertClaims < time.Now().Unix() {
 			response.JSON(c, "successfully logged out", http.StatusOK, nil, nil)
 			return
 		} else {
@@ -75,7 +76,7 @@ func (s *Server) handleLogout() gin.HandlerFunc {
 			response.JSON(c, "logout failed", http.StatusInternalServerError, nil, errors.New("can't add access token to blacklist", http.StatusInternalServerError))
 			return
 		}
-		response.JSON(c, "logout successful", http.StatusOK, nil, nil)
+		response.JSON(c, "successfully added to blacklist", http.StatusOK, nil, nil)
 	}
   }
 }
