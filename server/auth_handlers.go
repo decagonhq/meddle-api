@@ -24,16 +24,14 @@ func (s *Server) handleLogin() gin.HandlerFunc {
 	}
 }
 
-func GetClaimsFromToken(c *gin.Context) (string, *models.User, *errors.Error) {
+func GetValuesFromContext(c *gin.Context) (string, *models.User, *errors.Error) {
 	var tokenI, userI interface{}
 	var tokenExists, userExists bool
 
 	if tokenI, tokenExists = c.Get("access_token"); !tokenExists {
-		// response.JSON(c, "", http.StatusForbidden, nil, errors.New("forbidden", http.StatusForbidden))
 		return "", nil, errors.New("forbidden", http.StatusForbidden)
 	}
 	if userI, userExists = c.Get("user"); !userExists {
-		// response.JSON(c, "", http.StatusForbidden, nil, errors.New("forbidden", http.StatusForbidden))
 		return "", nil, errors.New("forbidden", http.StatusForbidden)
 	}
 
@@ -51,18 +49,18 @@ func GetClaimsFromToken(c *gin.Context) (string, *models.User, *errors.Error) {
 
 func (s *Server) handleLogout() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		token, user, err := GetClaimsFromToken(c)
+		token, user, err := GetValuesFromContext(c)
 		if err != nil {
 			response.JSON(c, "", err.Status, nil, err)
 			return
 		}
-		secret := s.Config.JWTSecret
-		claims, errr := getClaims(token, secret)
+
+		claims, errr := getClaims(token, s.Config.JWTSecret)
 		if errr != nil {
 			response.JSON(c, "", http.StatusInternalServerError, nil, errr)
 			return
 		}
-		convertClaims, _ := claims["exp"].(int64)
+		convertClaims, _ := claims["exp"].(int64) //jwt pkg to validate
 		if convertClaims < time.Now().Unix() {
 			response.JSON(c, "successfully logged out", http.StatusOK, nil, nil)
 			return
