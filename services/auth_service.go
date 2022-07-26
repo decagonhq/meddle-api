@@ -41,10 +41,10 @@ func NewAuthService(authRepo db.AuthRepository, conf *config.Config) AuthService
 func (a *authService) LoginUser(loginRequest *models.LoginRequest) (*models.LoginResponse, *apiError.Error) {
 	foundUser, err := a.authRepo.FindUserByEmail(loginRequest.Email)
 	if err != nil {
-		switch err {
-		case gorm.ErrRecordNotFound:
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, apiError.ErrNotFound
-		default:
+		} else {
+			log.Printf("error from database: %v", err)
 			return nil, apiError.ErrInternalServerError
 		}
 	}
