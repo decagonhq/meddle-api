@@ -1,10 +1,16 @@
 package services
 
 import (
+	"fmt"
+	"net/http"
+
 	"errors"
-	"gorm.io/gorm"
 	"log"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 
 	"github.com/decagonhq/meddle-api/config"
 	"github.com/decagonhq/meddle-api/db"
@@ -22,6 +28,7 @@ const RefreshTokenValidity = time.Hour * 24
 // AuthService interface
 type AuthService interface {
 	LoginUser(request *models.LoginRequest) (*models.LoginResponse, *apiError.Error)
+	SignupUser(request *models.User) (*models.User, *apiError.Error)
 }
 
 // authService struct
@@ -36,6 +43,73 @@ func NewAuthService(authRepo db.AuthRepository, conf *config.Config) AuthService
 		Config:   conf,
 		authRepo: authRepo,
 	}
+}
+
+func (a *authService) SignupUser(user *models.User) (*models.User, *apiError.Error) {
+	err := a.authRepo.IsEmailExist(user.Email)
+	if err != nil {
+		// FIXME: return the proper error message from the function
+		// TODO: handle internal server error later
+		return nil, apiError.New("email already exist", http.StatusBadRequest)
+	}
+
+	err = a.authRepo.IsPhoneExist(user.PhoneNumber)
+	if err != nil {
+		return nil, apiError.New("phone already exist", http.StatusBadRequest)
+	}
+
+	user.HashedPassword, err = GenerateHashPassword(user.Password)
+	if err != nil {
+		log.Printf("error generating password hash: %v", err.Error())
+		return nil, apiError.New("internal server error", http.StatusInternalServerError)
+	}
+
+	user.IsEmailActive = false
+
+	user, err = a.authRepo.CreateUser(user)
+	if err != nil {
+		log.Printf("unable to create user: %v", err.Error())
+		return nil, apiError.New("internal server error", http.StatusInternalServerError)
+	}
+	return user, nil
+}
+
+// GetTokenFromHeader returns the token string in the authorization header
+func GetTokenFromHeader(c *gin.Context) string {
+	authHeader := c.Request.Header.Get("Authorization")
+	if len(authHeader) > 8 {
+		return authHeader[7:]
+	}
+	return ""
+}
+
+// verifyAccessToken verifies a token
+func verifyToken(tokenString *string, claims jwt.MapClaims, secret *string) (*jwt.Token, error) {
+	parser := &jwt.Parser{SkipClaimsValidation: true}
+	return parser.ParseWithClaims(*tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(*secret), nil
+	})
+}
+
+// AuthorizeToken check if a refresh token is valid
+func AuthorizeToken(token *string, secret *string) (*jwt.Token, jwt.MapClaims, error) {
+	if token != nil && *token != "" && secret != nil && *secret != "" {
+		claims := jwt.MapClaims{}
+		token, err := verifyToken(token, claims, secret)
+		if err != nil {
+			return nil, nil, err
+		}
+		return token, claims, nil
+	}
+	return nil, nil, fmt.Errorf("empty token or secret")
+}
+
+func GenerateHashPassword(password string) (string, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	return string(hashedPassword), err
 }
 
 func (a *authService) LoginUser(loginRequest *models.LoginRequest) (*models.LoginResponse, *apiError.Error) {
@@ -91,4 +165,3 @@ func GenerateClaims(email string) jwt.MapClaims {
 
 	return accessClaims
 }
-

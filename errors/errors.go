@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Error struct {
@@ -14,6 +16,17 @@ type Error struct {
 
 func (e *Error) Error() string {
 	return e.Message
+}
+
+func (e *Error) Respond(c *gin.Context) {
+	responsedata := gin.H{
+		"message": "",
+		"data":    nil,
+		"errors":  e.Error(),
+		"status":  e.Status,
+	}
+
+	c.JSON(e.Status, responsedata)
 }
 
 func New(message string, status int) *Error {

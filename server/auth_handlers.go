@@ -11,9 +11,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (s *Server) handleSignup() gin.HandlerFunc {
+func (s *Server) HandleSignup() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		response.JSON(c, "successful", http.StatusOK, nil, nil)
+		var user models.User
+		if err := c.ShouldBindJSON(&user); err != nil {
+			response.JSON(c, "", http.StatusBadRequest, nil, err)
+			return
+		}
+		userResponse, err := s.AuthService.SignupUser(&user)
+		if err != nil {
+			err.Respond(c)
+			return
+		}
+		response.JSON(c, "user created successfully", http.StatusCreated, userResponse, nil)
 	}
 }
 
@@ -75,17 +85,17 @@ func (s *Server) handleLogout() gin.HandlerFunc {
 			return
 		} else {
 			accBlacklist := &models.BlackList{
-			Email: user.Email,
-			Token: token,
+				Email: user.Email,
+				Token: token,
+			}
+			if err := s.AuthRepository.AddToBlackList(accBlacklist); err != nil {
+				log.Printf("can't add access token to blacklist: %v\n", err)
+				response.JSON(c, "logout failed", http.StatusInternalServerError, nil, errors.New("can't add access token to blacklist", http.StatusInternalServerError))
+				return
+			}
+			response.JSON(c, "successfully added to blacklist", http.StatusOK, nil, nil)
 		}
-		if err := s.AuthRepository.AddToBlackList(accBlacklist); err != nil {
-			log.Printf("can't add access token to blacklist: %v\n", err)
-			response.JSON(c, "logout failed", http.StatusInternalServerError, nil, errors.New("can't add access token to blacklist", http.StatusInternalServerError))
-			return
-		}
-		response.JSON(c, "successfully added to blacklist", http.StatusOK, nil, nil)
 	}
-  }
 }
 
 func (s *Server) handleGetUsers() gin.HandlerFunc {

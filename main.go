@@ -3,11 +3,10 @@ package main
 import (
 	"log"
 
-	"github.com/decagonhq/meddle-api/services"
-
 	"github.com/decagonhq/meddle-api/config"
 	"github.com/decagonhq/meddle-api/db"
 	"github.com/decagonhq/meddle-api/server"
+	"github.com/decagonhq/meddle-api/services"
 )
 
 func main() {

@@ -1,6 +1,8 @@
 package services
 
 import (
+	"testing"
+
 	"github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/mocks"
 	"github.com/decagonhq/meddle-api/models"
@@ -8,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
-	"testing"
 )
 
 var mockRepository *mocks.MockAuthRepository
@@ -30,7 +31,7 @@ func Test_AuthLoginService(t *testing.T) {
 
 	user := &models.User{
 		Model: models.Model{
-			ID:        "id",
+			ID:        1,
 			CreatedAt: 0,
 			UpdatedAt: 0,
 			DeletedAt: 0,
@@ -40,7 +41,6 @@ func Test_AuthLoginService(t *testing.T) {
 		Email:          "email@gmail.com",
 		Password:       "password",
 		HashedPassword: "",
-		IsAgree:        true,
 	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	require.NoError(t, err)

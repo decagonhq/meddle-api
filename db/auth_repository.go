@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/decagonhq/meddle-api/models"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -12,6 +13,9 @@ import (
 
 type AuthRepository interface {
 	CreateUser(user *models.User) (*models.User, error)
+	IsEmailExist(email string) error
+	IsPhoneExist(email string) error
+	FindUserByUsername(username string) (*models.User, error)
 	FindUserByEmail(email string) (*models.User, error)
 	UpdateUser(user *models.User) error
 	AddToBlackList(blacklist *models.BlackList) error
@@ -27,8 +31,7 @@ func NewAuthRepo(db *GormDB) AuthRepository {
 }
 
 func (a *authRepo) CreateUser(user *models.User) (*models.User, error) {
-	db := a.DB
-	err := db.Create(user).Error
+	err := a.DB.Create(user).Error
 	if err != nil {
 		return nil, fmt.Errorf("could not create user: %v", err)
 	}
@@ -43,6 +46,30 @@ func (a *authRepo) FindUserByUsername(username string) (*models.User, error) {
 		return nil, fmt.Errorf("could not find user: %v", err)
 	}
 	return user, nil
+}
+
+func (a *authRepo) IsEmailExist(email string) error {
+	var count int64
+	err := a.DB.Model(&models.User{}).Where("email = ?", email).Count(&count).Error
+	if err != nil {
+		return errors.Wrap(err, "gorm.count error")
+	}
+	if count > 0 {
+		return fmt.Errorf("email already in use")
+	}
+	return nil
+}
+
+func (a *authRepo) IsPhoneExist(phone string) error {
+	var count int64
+	err := a.DB.Model(&models.User{}).Where("phone_number = ?", phone).Count(&count).Error
+	if err != nil {
+		return errors.Wrap(err, "gorm.count error")
+	}
+	if count > 0 {
+		return fmt.Errorf("phone number already in use")
+	}
+	return nil
 }
 
 func (a *authRepo) FindUserByEmail(email string) (*models.User, error) {

@@ -1,24 +1,114 @@
 package server
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/decagonhq/meddle-api/errors"
-	"github.com/decagonhq/meddle-api/mocks"
-	"github.com/decagonhq/meddle-api/models"
-	"github.com/gin-gonic/gin"
-	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/require"
-	"golang.org/x/crypto/bcrypt"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/decagonhq/meddle-api/errors"
+	"github.com/decagonhq/meddle-api/mocks"
+	"github.com/decagonhq/meddle-api/models"
+	"github.com/decagonhq/meddle-api/services"
+	"github.com/gin-gonic/gin"
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"golang.org/x/crypto/bcrypt"
 )
 
-func Test_LoginHandler(t *testing.T) {
+func TestSignup(t *testing.T) {
+	newReq := &models.User{
+		Name:        "Tolu",
+		PhoneNumber: "+2348163608141",
+		Email:       "toluwase@gmail.com",
+		Password:    "12345678",
+	}
+	user := &models.User{
+		Name:        newReq.Name,
+		PhoneNumber: newReq.PhoneNumber,
+		Email:       newReq.Email,
+	}
+	user.ID = 6
+	user.CreatedAt = time.Now().Unix()
+	user.UpdatedAt = time.Now().Unix()
+
+	cases := []struct {
+		Name            string
+		Request         *models.User
+		ExpectedCode    int
+		ExpectedMessage string
+		ExpectedError   string
+		mockDB          func(ctrl *mocks.MockAuthRepository)
+		checkResponse   func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			Name:            "Test Signup with correct details",
+			Request:         newReq,
+			ExpectedCode:    http.StatusCreated,
+			ExpectedMessage: "user created successfully",
+			ExpectedError:   "",
+			mockDB: func(ctrl *mocks.MockAuthRepository) {
+				ctrl.EXPECT().IsEmailExist(newReq.Email).Return(nil)
+				ctrl.EXPECT().IsPhoneExist(newReq.PhoneNumber).Return(nil)
+				ctrl.EXPECT().CreateUser(gomock.Any()).Return(user, nil)
+			},
+		},
+		{
+			Name:            "Test Signup with no email",
+			Request:         &models.User{Name: "Tolu", PhoneNumber: "08141636082"},
+			ExpectedCode:    http.StatusBadRequest,
+			ExpectedMessage: "",
+			ExpectedError:   "Email is invalid: toluwase.tt.com",
+			mockDB:          func(ctrl *mocks.MockAuthRepository) {},
+		},
+		{
+			Name:            "Test Signup with invalid fields",
+			Request:         &models.User{Name: "Tolu", PhoneNumber: "08141", Email: "tolut.a"},
+			ExpectedCode:    http.StatusBadRequest,
+			ExpectedMessage: "",
+			ExpectedError:   "Email is invalid: toluwase.tt.com",
+			mockDB:          func(ctrl *mocks.MockAuthRepository) {},
+		},
+		{
+			Name:            "Test Signup with duplicate email address",
+			Request:         &models.User{Name: "Tolu", PhoneNumber: "08141", Email: "toluwase@gmail.com"},
+			ExpectedCode:    http.StatusBadRequest,
+			ExpectedMessage: "",
+			ExpectedError:   "user already exists",
+			mockDB:          func(ctrl *mocks.MockAuthRepository) {},
+		},
+	}
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockAuthRepo := mocks.NewMockAuthRepository(ctrl)
+	authService := services.NewAuthService(mockAuthRepo, testServer.handler.Config)
+	testServer.handler.AuthService = authService
+
+	for _, c := range cases {
+		t.Run(c.Name, func(t *testing.T) {
+			// FIXME: refactor this test
+			c.mockDB(mockAuthRepo)
+			data, err := json.Marshal(c.Request)
+			require.NoError(t, err)
+			req, _ := http.NewRequest(http.MethodPost, "/api/v1/auth/signup", bytes.NewReader(data))
+			require.NoError(t, err)
+			recorder := httptest.NewRecorder()
+			testServer.router.ServeHTTP(recorder, req)
+			assert.Equal(t, recorder.Code, c.ExpectedCode)
+			assert.Contains(t, recorder.Body.String(), c.ExpectedMessage)
+
+		})
+	}
+}
+
+func TestLoginHandler(t *testing.T) {
 	// generate a random user
 	user, password := randomUser(t)
 
@@ -180,7 +270,7 @@ func randomUser(t *testing.T) (user models.User, password string) {
 
 	user = models.User{
 		Model: models.Model{
-			ID:        RandomString(6),
+			ID:        6,
 			CreatedAt: RandomInt(1, 100),
 			UpdatedAt: RandomInt(1, 100),
 			DeletedAt: RandomInt(1, 100),
@@ -189,7 +279,6 @@ func randomUser(t *testing.T) (user models.User, password string) {
 		HashedPassword: string(hashedPassword),
 		PhoneNumber:    RandomOwnerName(),
 		Email:          RandomEmail(),
-		IsAgree:        true,
 	}
 	return
 }
