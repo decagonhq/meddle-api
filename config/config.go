@@ -1,11 +1,10 @@
 package config
 
 import (
-	"log"
-	"os"
-
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
+	"log"
+	"os"
 )
 
 type Config struct {
@@ -23,7 +22,7 @@ type Config struct {
 func Load() (*Config, error) {
 	env := os.Getenv("GIN_MODE")
 	if env != "release" {
-		if err := godotenv.Load(".env"); err != nil {
+		if err := godotenv.Load("../.env"); err != nil {
 			log.Printf("couldn't load env vars: %v", err)
 		}
 	}

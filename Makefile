@@ -1,8 +1,9 @@
 up:
 	docker compose up --build
 
-test:
-	API_ENV=test go test ./...
+generate-mock:
+	 mockgen -destination=mocks/auth_mock.go -package=mocks github.com/decagonhq/meddle-api/services AuthService
+	 mockgen -destination=mocks/auth_repo_mock.go -package=mocks github.com/decagonhq/meddle-api/db AuthRepository
 
-mock:
-	mockgen -source=services/auth_service.go -destination=db/mocks/auth_service_mock.go -package=mocks
+test: generate-mock
+	API_ENV=test go test ./...

@@ -9,6 +9,8 @@ import (
 )
 
 // DB provides access to the different db
+//go:generate mockgen -destination=../mocks/auth_repo_mock.go -package=mocks github.com/decagonhq/meddle-api/db AuthRepository
+
 type AuthRepository interface {
 	CreateUser(user *models.User) (*models.User, error)
 	IsEmailExist(email string) error
@@ -84,7 +86,8 @@ func (a *authRepo) UpdateUser(user *models.User) error {
 }
 
 func (a *authRepo) AddToBlackList(blacklist *models.BlackList) error {
-	return nil
+	result := a.DB.Create(blacklist)
+	return result.Error
 }
 
 func (a *authRepo) TokenInBlacklist(token string) bool {

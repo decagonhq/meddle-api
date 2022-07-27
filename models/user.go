@@ -8,6 +8,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	enTranslations "github.com/go-playground/validator/v10/translations/en"
 	"github.com/leebenson/conform"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
@@ -47,4 +48,40 @@ func translateError(err error, trans ut.Translator) (errs []error) {
 		errs = append(errs, translatedErr)
 	}
 	return errs
+
+}
+
+type UserResponse struct {
+	ID          uint   `json:"id"`
+	Name        string `json:"name"`
+	PhoneNumber string `json:"phone_number"`
+	Email       string `json:"email"`
+}
+
+type LoginRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required"`
+}
+
+type LoginResponse struct {
+	UserResponse
+	AccessToken string
+}
+
+// VerifyPassword verifies the collected password with the user's hashed password
+func (u *User) VerifyPassword(password string) error {
+	return bcrypt.CompareHashAndPassword([]byte(u.HashedPassword), []byte(password))
+}
+
+// LoginUserToDto responsible for creating a response object for the handleLogin handler
+func (u *User) LoginUserToDto(token string) *LoginResponse {
+	return &LoginResponse{
+		UserResponse: UserResponse{
+			ID:          u.ID,
+			Name:        u.Name,
+			PhoneNumber: u.PhoneNumber,
+			Email:       u.Email,
+		},
+		AccessToken: token,
+	}
 }

@@ -1,12 +1,14 @@
 package server
 
 import (
-	"github.com/decagonhq/meddle-api/config"
-	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
+	"fmt"
 	"log"
 	"os"
 	"testing"
+
+	"github.com/decagonhq/meddle-api/config"
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 var (
@@ -22,6 +24,7 @@ func TestMain(m *testing.M) {
 	if err := godotenv.Load(".env"); err != nil {
 		log.Printf("couldn't load env vars: %v", err)
 	}
+	fmt.Println("Starting server tests")
 	c, err := config.Load()
 	if err != nil {
 		log.Fatal(err)

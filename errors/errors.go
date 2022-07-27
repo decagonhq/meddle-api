@@ -38,6 +38,14 @@ func New(message string, status int) *Error {
 
 // InActiveUserError defines an inactive user error
 var InActiveUserError = errors.New("user is inactive")
+var ErrNotFound = New("not found", http.StatusNotFound)
+var ErrInternalServerError = New("internal server error", http.StatusInternalServerError)
+var ErrBadRequest = New("bad request", http.StatusBadRequest)
+
+//var ErrUnauthorized = New("unauthorized", http.StatusUnauthorized)
+
+// InValidPasswordError
+var ErrInvalidPassword = New("invalid password", http.StatusUnauthorized)
 
 func GetUniqueContraintError(err error) *Error {
 	fields := strings.Split(err.Error(), "UNIQUE constraint failed: ")
