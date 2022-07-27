@@ -14,6 +14,7 @@ import (
 	"github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/mocks"
 	"github.com/decagonhq/meddle-api/models"
+	"github.com/decagonhq/meddle-api/services"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -28,18 +29,22 @@ func TestSignup(t *testing.T) {
 		Email:       "toluwase@gmail.com",
 		Password:    "12345678",
 	}
-	newResp := &models.User{
+	user := &models.User{
 		Name:        newReq.Name,
 		PhoneNumber: newReq.PhoneNumber,
 		Email:       newReq.Email,
 	}
+	user.ID = 6
+	user.CreatedAt = time.Now().Unix()
+	user.UpdatedAt = time.Now().Unix()
+
 	cases := []struct {
 		Name            string
 		Request         *models.User
 		ExpectedCode    int
 		ExpectedMessage string
 		ExpectedError   string
-		buildStubs      func(ctrl *mocks.MockAuthService)
+		mockDB          func(ctrl *mocks.MockAuthRepository)
 		checkResponse   func(recorder *httptest.ResponseRecorder)
 	}{
 		{
@@ -48,6 +53,11 @@ func TestSignup(t *testing.T) {
 			ExpectedCode:    http.StatusCreated,
 			ExpectedMessage: "user created successfully",
 			ExpectedError:   "",
+			mockDB: func(ctrl *mocks.MockAuthRepository) {
+				ctrl.EXPECT().IsEmailExist(newReq.Email).Return(nil)
+				ctrl.EXPECT().IsPhoneExist(newReq.PhoneNumber).Return(nil)
+				ctrl.EXPECT().CreateUser(gomock.Any()).Return(user, nil)
+			},
 		},
 		{
 			Name:            "Test Signup with no email",
@@ -55,6 +65,7 @@ func TestSignup(t *testing.T) {
 			ExpectedCode:    http.StatusBadRequest,
 			ExpectedMessage: "",
 			ExpectedError:   "Email is invalid: toluwase.tt.com",
+			mockDB:          func(ctrl *mocks.MockAuthRepository) {},
 		},
 		{
 			Name:            "Test Signup with invalid fields",
@@ -62,6 +73,7 @@ func TestSignup(t *testing.T) {
 			ExpectedCode:    http.StatusBadRequest,
 			ExpectedMessage: "",
 			ExpectedError:   "Email is invalid: toluwase.tt.com",
+			mockDB:          func(ctrl *mocks.MockAuthRepository) {},
 		},
 		{
 			Name:            "Test Signup with duplicate email address",
@@ -69,18 +81,20 @@ func TestSignup(t *testing.T) {
 			ExpectedCode:    http.StatusBadRequest,
 			ExpectedMessage: "",
 			ExpectedError:   "user already exists",
+			mockDB:          func(ctrl *mocks.MockAuthRepository) {},
 		},
 	}
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	mockAuthService := mocks.NewMockAuthService(ctrl)
+	mockAuthRepo := mocks.NewMockAuthRepository(ctrl)
+	authService := services.NewAuthService(mockAuthRepo, testServer.handler.Config)
+	testServer.handler.AuthService = authService
 
 	for _, c := range cases {
 		t.Run(c.Name, func(t *testing.T) {
 			// FIXME: refactor this test
-			mockAuthService.EXPECT().SignupUser(c.Request).AnyTimes().Return(newResp, nil)
-			testServer.handler.AuthService = mockAuthService
+			c.mockDB(mockAuthRepo)
 			data, err := json.Marshal(c.Request)
 			require.NoError(t, err)
 			req, _ := http.NewRequest(http.MethodPost, "/api/v1/auth/signup", bytes.NewReader(data))
@@ -94,7 +108,7 @@ func TestSignup(t *testing.T) {
 	}
 }
 
-func Test_LoginHandler(t *testing.T) {
+func TestLoginHandler(t *testing.T) {
 	// generate a random user
 	user, password := randomUser(t)
 

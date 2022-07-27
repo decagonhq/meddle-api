@@ -17,7 +17,7 @@ func JSON(c *gin.Context, message string, status int, data interface{}, err erro
 		"message": message,
 		"data":    data,
 		"errors":  errMessage,
-		"status":  status,
+		"status":  http.StatusText(status),
 	}
 
 	c.JSON(status, responsedata)
