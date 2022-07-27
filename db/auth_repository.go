@@ -8,6 +8,8 @@ import (
 )
 
 // DB provides access to the different db
+//go:generate mockgen -destination=../mocks/auth_repo_mock.go -package=mocks github.com/decagonhq/meddle-api/db AuthRepository
+
 type AuthRepository interface {
 	CreateUser(user *models.User) (*models.User, error)
 	FindUserByEmail(email string) (*models.User, error)
