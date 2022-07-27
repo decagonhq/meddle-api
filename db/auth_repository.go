@@ -59,7 +59,8 @@ func (a *authRepo) UpdateUser(user *models.User) error {
 }
 
 func (a *authRepo) AddToBlackList(blacklist *models.BlackList) error {
-	return nil
+	result := a.DB.Create(blacklist)
+	return result.Error
 }
 
 func (a *authRepo) TokenInBlacklist(token string) bool {

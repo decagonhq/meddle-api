@@ -91,3 +91,4 @@ func GenerateClaims(email string) jwt.MapClaims {
 
 	return accessClaims
 }
+
