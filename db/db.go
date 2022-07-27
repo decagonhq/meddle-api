@@ -37,7 +37,7 @@ func getPostgresDB(c *config.Config) *gorm.DB {
 		Logger: logger.Default,
 	})
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	return postgresDB
 }
