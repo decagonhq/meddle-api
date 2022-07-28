@@ -172,6 +172,4 @@ definitions:
         type: string
       Email:
         type: string
-    xml:
-      name: blacklist
 
