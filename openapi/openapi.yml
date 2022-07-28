@@ -13,7 +13,7 @@ schemes:
   - https
   - http
 paths:
-  /auth/user:
+  /auth/signup:
     post:
       tags:
         - user
@@ -81,11 +81,11 @@ paths:
       responses:
         default:
           description: successful operation
-  /user/{email}:
+  /users:
     get:
       tags:
         - user
-      summary: Get user by user email
+      summary: Get users
       description: ''
       operationId: getUserByEmail
       produces:
@@ -103,31 +103,6 @@ paths:
             $ref: '#/definitions/User'
         '400':
           description: Invalid username supplied
-        '404':
-          description: User not found
-    put:
-      tags:
-        - user
-      summary: Updated user
-      description: This can only be done by the logged in user.
-      operationId: updateUser
-      produces:
-        - application/json
-      parameters:
-        - name: email
-          in: path
-          description: name that need to be updated
-          required: true
-          type: string
-        - in: body
-          name: body
-          description: Updated user object
-          required: true
-          schema:
-            $ref: '#/definitions/User'
-      responses:
-        '400':
-          description: Invalid user supplied
         '404':
           description: User not found
     delete:
@@ -158,23 +133,45 @@ definitions:
   User:
     type: object
     properties:
-      id:
+      ID:
         type: integer
-        format: int64
-      firstName:
+        format: uint
+      CreatedAt:
+        type: int64
+      UpdatedAt:
+          type: int64
+      DeletedAt:
+          type: int64
+      Name:
         type: string
-      lastName:
+      Email:
         type: string
-      email:
+      PhoneNumber:
         type: string
       password:
         type: string
-      phone:
+      HashedPassword:
         type: string
-      userStatus:
-        type: integer
-        format: int32
-        description: User Status
+      IsEmailActive:
+        type: boolean
     xml:
-      name: User
+      name: Blacklist
+  Blacklist:
+    type: object
+    properties:
+      ID:
+        type: integer
+        format: uint
+      CreatedAt:
+        type: int64
+      UpdatedAt:
+        type: int64
+      DeletedAt:
+        type: int64
+      Token:
+        type: string
+      Email:
+        type: string
+    xml:
+      name: blacklist
 
