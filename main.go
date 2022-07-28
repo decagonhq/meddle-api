@@ -18,10 +18,14 @@ func main() {
 	gormDB := db.GetDB(conf)
 	authRepo := db.NewAuthRepo(gormDB)
 	authService := services.NewAuthService(authRepo, conf)
+
+	medicationRepo := db.NewMedicationRepo(gormDB)
+	medicationService := services.NewMedicationService(medicationRepo, conf)
 	s := &server.Server{
-		Config:         conf,
-		AuthRepository: authRepo,
-		AuthService:    authService,
+		Config:            conf,
+		AuthRepository:    authRepo,
+		AuthService:       authService,
+		MedicationService: medicationService,
 	}
 	s.Start()
 }
