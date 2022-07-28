@@ -23,7 +23,6 @@ type Medication struct {
 }
 
 type MedicationRequest struct {
-	gorm.Model
 	Name                   string `json:"name" binding:"required"`
 	Dosage                 int    `json:"dosage" binding:"required"`
 	TimeInterval           int    `json:"time_interval" binding:"required"` // min hour daily
@@ -37,16 +36,19 @@ type MedicationRequest struct {
 }
 
 type MedicationResponse struct {
-	gorm.Model
-	Name                   string `json:"name" binding:"required"`
-	Dosage                 int    `json:"dosage" binding:"required"`
-	TimeInterval           int    `json:"time_interval" binding:"required"` // min hour daily
-	MedicationStartDate    string `json:"medication_start_date" binding:"required"`
-	Duration               int    `json:"duration" binding:"required"`
-	MedicationPrescribedBy string `json:"medication_prescribed_by" binding:"required"`
-	MedicationStopDate     string `json:"medication_stop_date" binding:"required"`
-	MedicationStartTime    string `json:"medication_start_time" binding:"required"`
-	PurposeOfMedication    string `json:"purpose_of_medication" binding:"required"`
+	ID                     uint   `json:"id"`
+	CreatedAt              string `json:"created_at"`
+	UpdatedAt              string `json:"updated_at"`
+	Name                   string `json:"name"`
+	Dosage                 int    `json:"dosage"`
+	TimeInterval           int    `json:"time_interval"` // min hour daily
+	MedicationStartDate    string `json:"medication_start_date"`
+	Duration               int    `json:"duration"`
+	MedicationPrescribedBy string `json:"medication_prescribed_by"`
+	MedicationStopDate     string `json:"medication_stop_date"`
+	MedicationStartTime    string `json:"medication_start_time"`
+	NextDosageTime         string `json:"next_dosage_time"`
+	PurposeOfMedication    string `json:"purpose_of_medication"`
 	UserID                 uint   `json:"user_id"`
 }
 
@@ -63,19 +65,19 @@ func (m *MedicationRequest) ReqToMedicationModel() *Medication {
 }
 
 func (m *Medication) MedicationToResponse() *MedicationResponse {
-	startDate := m.MedicationStartDate.String()
-	stopDate := m.MedicationStopDate.String()
-	startTime := m.MedicationStartTime.String()
 	return &MedicationResponse{
-		Model:                  gorm.Model{},
+		ID:                     m.ID,
+		CreatedAt:              m.CreatedAt.String(),
+		UpdatedAt:              m.UpdatedAt.String(),
 		Name:                   m.Name,
 		Dosage:                 m.Dosage,
 		TimeInterval:           m.TimeInterval,
-		MedicationStartDate:    startDate,
+		MedicationStartDate:    m.MedicationStartDate.String(),
 		Duration:               m.Duration,
 		MedicationPrescribedBy: m.MedicationPrescribedBy,
-		MedicationStopDate:     stopDate,
-		MedicationStartTime:    startTime,
+		MedicationStopDate:     m.MedicationStopDate.String(),
+		MedicationStartTime:    m.MedicationStartTime.String(),
+		NextDosageTime:         m.NextDosageTime.String(),
 		PurposeOfMedication:    m.PurposeOfMedication,
 		UserID:                 m.UserID,
 	}

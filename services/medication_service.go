@@ -48,6 +48,7 @@ func (m *medicationService) CreateMedication(request *models.MedicationRequest) 
 	medication.MedicationStartDate = startDate
 	medication.MedicationStopDate = stopDate
 	medication.MedicationStartTime = startTime
+	medication.NextDosageTime = medication.MedicationStartTime.Add(time.Hour * time.Duration(medication.TimeInterval))
 	medication.IsMedicationDone = false
 
 	response, err := m.medicationRepo.CreateMedication(medication)
