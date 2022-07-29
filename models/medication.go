@@ -1,13 +1,12 @@
 package models
 
 import (
-	"gorm.io/gorm"
 	"time"
 )
 
 type Medication struct {
 	//base model goes here
-	gorm.Model
+	Model
 	Name                   string    `gorm:"column:name"`
 	Dosage                 int       `gorm:"column:dosage"`
 	TimeInterval           int       `gorm:"column:time_interval"` // min hour daily
@@ -67,8 +66,8 @@ func (m *MedicationRequest) ReqToMedicationModel() *Medication {
 func (m *Medication) MedicationToResponse() *MedicationResponse {
 	return &MedicationResponse{
 		ID:                     m.ID,
-		CreatedAt:              m.CreatedAt.String(),
-		UpdatedAt:              m.UpdatedAt.String(),
+		CreatedAt:              time.Unix(m.CreatedAt, 0).String(),
+		UpdatedAt:              time.Unix(m.UpdatedAt, 0).String(),
 		Name:                   m.Name,
 		Dosage:                 m.Dosage,
 		TimeInterval:           m.TimeInterval,
