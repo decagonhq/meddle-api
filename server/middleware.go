@@ -63,6 +63,7 @@ func (s *Server) Authorize() gin.HandlerFunc {
 			}
 		}
 
+		c.Set("access_token", accessToken)
 		c.Set("user", user)
 
 		c.Next()
