@@ -42,7 +42,9 @@ func Test_Logout(t *testing.T){
 		Email:       "toluwase@gmail.com",
 		Password:    "12345678",
 	}
+	conf.JWTSecret = "testSecret"
 	token, err := services.GenerateToken(user.Email, conf.JWTSecret)
+
 	s := &Server{
 		Config:         conf,
 		AuthRepository: repo,
@@ -60,5 +62,6 @@ func Test_Logout(t *testing.T){
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 
 	r.ServeHTTP(resp, req)
+	fmt.Println(resp.Body.String())
 	assert.Equal(t, 200, resp.Code)
 }
