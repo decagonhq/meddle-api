@@ -54,24 +54,6 @@ func GetValuesFromContext(c *gin.Context) (string, *models.User, *errors.Error) 
 		return "", nil, errors.New("invalid token", http.StatusUnauthorized)
 	}
 
-	//
-	//if tokenI, tokenExists = c.Get("access_token"); !tokenExists {
-	//	log.Println("conva")
-	//	return "", nil, errors.New("forbidden", http.StatusForbidden)
-	//}
-	//if userI, userExists = c.Get("user"); !userExists {
-	//	return "", nil, errors.New("forbidden", http.StatusForbidden)
-	//}
-	//
-	//token, ok := tokenI.(string)
-	//if !ok {
-	//	return "", nil, errors.New("internal server error", http.StatusInternalServerError)
-	//}
-	//user, ok := userI.(*models.User)
-	//if !ok {
-	//	return "", nil, errors.New("internal server error", http.StatusInternalServerError)
-	//}
-
 	requestToken = strings.TrimSpace(splitToken[1])
 	return requestToken, nil, nil
 }
