@@ -62,17 +62,12 @@ type LoginRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
 }
-type LogoutRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-}
+
 type LoginResponse struct {
 	UserResponse
 	AccessToken string
 }
-type LogoutResponse struct {
-	UserResponse
-	AccessToken string
-}
+
 // VerifyPassword verifies the collected password with the user's hashed password
 func (u *User) VerifyPassword(password string) error {
 	return bcrypt.CompareHashAndPassword([]byte(u.HashedPassword), []byte(password))
