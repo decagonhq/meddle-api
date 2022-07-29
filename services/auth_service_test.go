@@ -124,3 +124,62 @@ func Test_AuthLoginService(t *testing.T) {
 		})
 	}
 }
+func Test_Logout(t *testing.T) {
+	// arrange
+
+	user := &models.User{
+		Model: models.Model{
+			ID:        1,
+			CreatedAt: 0,
+			UpdatedAt: 0,
+			DeletedAt: 0,
+		},
+		Name:           "name",
+		PhoneNumber:    "1234567890",
+		Email:          "email@gmail.com",
+		Password:       "password",
+		HashedPassword: "",
+	}
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	require.NoError(t, err)
+	user.HashedPassword = string(hashedPassword)
+	testCases := []struct {
+		name          string
+		input         models.LogoutRequest
+		dbOutput      *models.User
+		dbError       error
+		logoutResponse string
+		logoutError    *errors.Error
+	},
+
+		{
+			name: "internal server error case",
+			input: models.LoginRequest{
+				Email:    user.Email,
+				Password: user.Password,
+			},
+			dbOutput:      nil,
+			dbError:       gorm.ErrInvalidDB,
+			loginResponse: nil,
+			loginError:    errors.ErrInternalServerError,
+		},
+	}
+	teardown := setup(t)
+	defer teardown()
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+
+			mockRepository.EXPECT().FindUserByEmail(tc.input.Email).Times(1).Return(tc.dbOutput, tc.dbError)
+
+			loginResponse, err := testLoginService.LoginUser(&tc.input)
+			if tc.name != "login successful case" {
+				require.Equal(t, tc.loginResponse, loginResponse)
+				require.Equal(t, tc.loginError, err)
+			} else {
+				require.NotZero(t, loginResponse.AccessToken)
+				require.Equal(t, tc.loginError, err)
+			}
+
+		})
+	}
+}
