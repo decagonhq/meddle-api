@@ -21,11 +21,11 @@ func Test_MedicationService(t *testing.T) {
 	startTime, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
 
 	medication := &models.Medication{
-		Model: gorm.Model{
+		Model: models.Model{
 			ID:        0,
-			CreatedAt: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC),
-			UpdatedAt: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC),
-			DeletedAt: gorm.DeletedAt{Time: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC)},
+			CreatedAt: time.Now().Unix(),
+			UpdatedAt: time.Now().Unix(),
+			DeletedAt: 0,
 		},
 		Name:                   "paracetamol",
 		Dosage:                 2,
@@ -77,8 +77,8 @@ func Test_MedicationService(t *testing.T) {
 			dbError:  nil,
 			createMedResponse: &models.MedicationResponse{
 				ID:                     medication.ID,
-				CreatedAt:              medication.CreatedAt.String(),
-				UpdatedAt:              medication.UpdatedAt.String(),
+				CreatedAt:              time.Unix(medication.CreatedAt, 0).String(),
+				UpdatedAt:              time.Unix(medication.UpdatedAt, 0).String(),
 				Name:                   "paracetamol",
 				Dosage:                 2,
 				TimeInterval:           8,
