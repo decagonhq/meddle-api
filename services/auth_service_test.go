@@ -146,13 +146,12 @@ func Test_Logout(t *testing.T) {
 	testCases := []struct {
 		name          string
 		input         models.LogoutRequest
-		dbOutput      *models.User
+		dbOutput      string
 		dbError       error
 		logoutResponse string
 		logoutError    *errors.Error
 	},
-
-		{
+	{
 			name: "internal server error case",
 			input: models.LoginRequest{
 				Email:    user.Email,
@@ -172,12 +171,12 @@ func Test_Logout(t *testing.T) {
 			mockRepository.EXPECT().FindUserByEmail(tc.input.Email).Times(1).Return(tc.dbOutput, tc.dbError)
 
 			loginResponse, err := testLoginService.LoginUser(&tc.input)
-			if tc.name != "login successful case" {
-				require.Equal(t, tc.loginResponse, loginResponse)
-				require.Equal(t, tc.loginError, err)
+			if tc.name != "logout successful case" {
+				require.Equal(t, tc.logoutResponse, logoutResponse)
+				require.Equal(t, tc.logoutError, err)
 			} else {
-				require.NotZero(t, loginResponse.AccessToken)
-				require.Equal(t, tc.loginError, err)
+				require.NotZero(t, logoutResponse.AccessToken)
+				require.Equal(t, tc.logoutError, err)
 			}
 
 		})
