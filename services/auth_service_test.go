@@ -20,8 +20,12 @@ func setup(t *testing.T) func() {
 	ctrl.Finish()
 	mockRepository = mocks.NewMockAuthRepository(ctrl)
 	testLoginService = NewAuthService(mockRepository, testConfig)
+
+	mockMedicationRepository = mocks.NewMockMedicationRepository(ctrl)
+	testMedicationService = NewMedicationService(mockMedicationRepository, testConfig)
 	return func() {
 		testLoginService = nil
+		testMedicationService = nil
 		defer ctrl.Finish()
 	}
 }
