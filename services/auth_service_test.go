@@ -150,19 +150,47 @@ func Test_Logout(t *testing.T) {
 		dbError       error
 		logoutResponse string
 		logoutError    *errors.Error
-	},
-	{
-			name: "internal server error case",
+	}{
+		{
+			name: "logout successful case",
 			input: models.LoginRequest{
 				Email:    user.Email,
 				Password: user.Password,
 			},
+			dbOutput: user,
+			dbError:  nil,
+			loginResponse: &models.LoginResponse{
+				UserResponse: models.UserResponse{
+					ID:          user.ID,
+					Name:        user.Name,
+					PhoneNumber: user.PhoneNumber,
+					Email:       user.Email,
+				},
+			},
+			loginError: nil,
+		},
+		{
+			name: "invalid password",
+			input: models.LogoutRequest{
+				Email:    user.Email,
+			},
+			dbOutput:      nil,
+			dbError:       nil,
+			logoutResponse: string,
+			logoutError:    errors.ErrInvalidPassword,
+		},
+		{
+			name: "internal server error case",
+			input: models.LogoutRequest{
+				Email:    user.Email,
+			},
 			dbOutput:      nil,
 			dbError:       gorm.ErrInvalidDB,
-			loginResponse: nil,
-			loginError:    errors.ErrInternalServerError,
+			logoutResponse: nil,
+			logoutError:    errors.ErrInternalServerError,
 		},
 	}
+
 	teardown := setup(t)
 	defer teardown()
 	for _, tc := range testCases {
@@ -170,7 +198,7 @@ func Test_Logout(t *testing.T) {
 
 			mockRepository.EXPECT().FindUserByEmail(tc.input.Email).Times(1).Return(tc.dbOutput, tc.dbError)
 
-			loginResponse, err := testLoginService.LoginUser(&tc.input)
+			logoutResponse, err := testLoginService.LoginUser(&tc.input)
 			if tc.name != "logout successful case" {
 				require.Equal(t, tc.logoutResponse, logoutResponse)
 				require.Equal(t, tc.logoutError, err)
