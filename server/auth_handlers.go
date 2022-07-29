@@ -3,6 +3,7 @@ package server
 import (
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/decagonhq/meddle-api/errors"
@@ -44,31 +45,40 @@ func (s *Server) handleLogin() gin.HandlerFunc {
 }
 
 func GetValuesFromContext(c *gin.Context) (string, *models.User, *errors.Error) {
-	var tokenI, userI interface{}
-	var tokenExists, userExists bool
-
-	if tokenI, tokenExists = c.Get("access_token"); !tokenExists {
-		return "", nil, errors.New("forbidden", http.StatusForbidden)
+	requestToken := c.GetHeader("Authorization")
+	if requestToken == "" {
+		return "", nil, errors.New("token not found", http.StatusUnauthorized)
 	}
-	if userI, userExists = c.Get("user"); !userExists {
-		return "", nil, errors.New("forbidden", http.StatusForbidden)
-	}
-
-	token, ok := tokenI.(string)
-	if !ok {
-		return "", nil, errors.New("internal server error", http.StatusInternalServerError)
-	}
-	user, ok := userI.(*models.User)
-	if !ok {
-		return "", nil, errors.New("internal server error", http.StatusInternalServerError)
+	splitToken := strings.Split(requestToken, "Bearer")
+	if len(splitToken) != 2 || len(splitToken[1]) < 1 {
+		return "", nil, errors.New("invalid token", http.StatusUnauthorized)
 	}
 
-	return token, user, nil
+	//
+	//if tokenI, tokenExists = c.Get("access_token"); !tokenExists {
+	//	log.Println("conva")
+	//	return "", nil, errors.New("forbidden", http.StatusForbidden)
+	//}
+	//if userI, userExists = c.Get("user"); !userExists {
+	//	return "", nil, errors.New("forbidden", http.StatusForbidden)
+	//}
+	//
+	//token, ok := tokenI.(string)
+	//if !ok {
+	//	return "", nil, errors.New("internal server error", http.StatusInternalServerError)
+	//}
+	//user, ok := userI.(*models.User)
+	//if !ok {
+	//	return "", nil, errors.New("internal server error", http.StatusInternalServerError)
+	//}
+
+	requestToken = strings.TrimSpace(splitToken[1])
+	return requestToken, nil, nil
 }
 
 func (s *Server) handleLogout() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		token, user, err := GetValuesFromContext(c)
+		token, _, err := GetValuesFromContext(c)
 		if err != nil {
 			response.JSON(c, "", err.Status, nil, err)
 			return
@@ -79,22 +89,38 @@ func (s *Server) handleLogout() gin.HandlerFunc {
 			response.JSON(c, "", http.StatusInternalServerError, nil, errr)
 			return
 		}
+
+		_, errr = verifyToken(token, claims, s.Config.JWTSecret)
+		if errr != nil {
+			response.JSON(c, "", http.StatusInternalServerError, nil, errr)
+			return
+		}
+
+		email, ok := claims["email"].(string)
+		if !ok {
+			response.JSON(c, "", http.StatusInternalServerError, nil, errors.New("invalid token", http.StatusInternalServerError))
+			return
+		}
+
 		convertClaims, _ := claims["exp"].(int64) //jwt pkg to validate
 		if convertClaims < time.Now().Unix() {
-			response.JSON(c, "successfully logged out", http.StatusOK, nil, nil)
-			return
-		} else {
-			accBlacklist := &models.BlackList{
-				Email: user.Email,
-				Token: token,
+			{
+				accBlacklist := &models.BlackList{
+					Email: email,
+					Token: token,
+				}
+
+				if err := s.AuthRepository.AddToBlackList(accBlacklist); err != nil {
+					log.Printf("can't add access token to blacklist: %v\n", err)
+					response.JSON(c, "logout failed", http.StatusInternalServerError, nil, errors.New("can't add access token to blacklist", http.StatusInternalServerError))
+					return
+				}
 			}
-			if err := s.AuthRepository.AddToBlackList(accBlacklist); err != nil {
-				log.Printf("can't add access token to blacklist: %v\n", err)
-				response.JSON(c, "logout failed", http.StatusInternalServerError, nil, errors.New("can't add access token to blacklist", http.StatusInternalServerError))
-				return
-			}
-			response.JSON(c, "successfully added to blacklist", http.StatusOK, nil, nil)
+
 		}
+
+		response.JSON(c, "logout successful", http.StatusOK, nil, nil)
+
 	}
 }
 

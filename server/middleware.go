@@ -41,7 +41,7 @@ func (s *Server) Authorize() gin.HandlerFunc {
 			return
 		}
 
-		email, ok := accessClaims["user_email"].(string)
+		email, ok := accessClaims["email"].(string)
 		if !ok {
 			respondAndAbort(c, "", http.StatusInternalServerError, nil, errs.New("internal server error", http.StatusInternalServerError))
 			return
