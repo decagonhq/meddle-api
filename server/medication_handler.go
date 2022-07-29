@@ -1,7 +1,6 @@
 package server
 
 import (
-	"github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/models"
 	"github.com/decagonhq/meddle-api/server/response"
 	"github.com/gin-gonic/gin"
@@ -12,13 +11,8 @@ func (s *Server) handleCreateMedication() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var medicationRequest models.MedicationRequest
 
-		userI, exists := c.Get("user")
-		if !exists {
-			err := errors.New("user not signed in", http.StatusUnauthorized)
-			response.JSON(c, err.Message, err.Status, nil, err)
-			return
-		}
-		userId := userI.(*models.User).ID
+		_, user, _ := GetValuesFromContext(c)
+		userId := user.ID
 
 		if err := c.ShouldBindJSON(&medicationRequest); err != nil {
 			response.JSON(c, "", http.StatusBadRequest, nil, err)
@@ -28,6 +22,7 @@ func (s *Server) handleCreateMedication() gin.HandlerFunc {
 		createdMedication, err := s.MedicationService.CreateMedication(&medicationRequest)
 		if err != nil {
 			err.Respond(c)
+			return
 		}
 
 		response.JSON(c, "medication created successful", http.StatusCreated, createdMedication, nil)

@@ -9,7 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
-	"gorm.io/gorm"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -26,11 +25,11 @@ func TestCreateMedicationHandler(t *testing.T) {
 	startTime, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
 
 	medication := &models.Medication{
-		Model: gorm.Model{
-			ID:        0,
-			CreatedAt: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC),
-			UpdatedAt: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC),
-			DeletedAt: gorm.DeletedAt{Time: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC)},
+		Model: models.Model{
+			ID:        1,
+			CreatedAt: time.Now().Unix(),
+			UpdatedAt: time.Now().Unix(),
+			DeletedAt: 0,
 		},
 		Name:                   "paracetamol",
 		Dosage:                 2,
@@ -80,8 +79,8 @@ func TestCreateMedicationHandler(t *testing.T) {
 			},
 			medicationResponse: &models.MedicationResponse{
 				ID:                     medication.ID,
-				CreatedAt:              medication.CreatedAt.String(),
-				UpdatedAt:              medication.UpdatedAt.String(),
+				CreatedAt:              time.Unix(medication.CreatedAt, 0).String(),
+				UpdatedAt:              time.Unix(medication.UpdatedAt, 0).String(),
 				Name:                   medication.Name,
 				Dosage:                 medication.Dosage,
 				TimeInterval:           medication.TimeInterval,

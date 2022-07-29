@@ -45,6 +45,8 @@ func (m *medicationService) CreateMedication(request *models.MedicationRequest) 
 	}
 
 	medication := request.ReqToMedicationModel()
+	medication.CreatedAt = time.Now().Unix()
+	medication.UpdatedAt = time.Now().Unix()
 	medication.MedicationStartDate = startDate
 	medication.MedicationStopDate = stopDate
 	medication.MedicationStartTime = startTime

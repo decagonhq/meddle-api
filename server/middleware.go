@@ -43,7 +43,6 @@ func (s *Server) Authorize() gin.HandlerFunc {
 
 		email, ok := accessClaims["email"].(string)
 		if !ok {
-			log.Println("unable to retrieve access claim")
 			respondAndAbort(c, "", http.StatusInternalServerError, nil, errs.New("internal server error", http.StatusInternalServerError))
 			return
 		}
@@ -64,6 +63,7 @@ func (s *Server) Authorize() gin.HandlerFunc {
 			}
 		}
 
+		c.Set("access_token", accessToken)
 		c.Set("user", user)
 
 		c.Next()
