@@ -42,16 +42,12 @@ paths:
       produces:
         - application/json
       parameters:
-        - name: email
-          in: query
-          description: The user email for login
+        - in: body
+          name: user
+          description: login user to the system
           required: true
-          type: string
-        - name: password
-          in: query
-          description: The password for login in clear text
-          required: true
-          type: string
+          schema:
+            $ref: '#/definitions/UserRequest'
       responses:
         '200':
           description: successful operation
@@ -149,12 +145,62 @@ paths:
           description: Invalid email supplied
         '404':
           description: User not found
+  /user/medications:
+    post:
+      tags:
+        - medication
+      summary: Create medication
+      description: This creates a new medication entry in the data.
+      operationId: createMedication
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: medication
+          description: medication to add the system
+          required: true
+          schema:
+            $ref: '#/definitions/Medication'
+      responses:
+        '200':
+          description: Created medication successfully
+          schema:
+            $ref: '#/definitions/MedicationResponse'
+        '400':
+          description: Bad request from user
+        '403':
+          description: Forbidden user
+        '500':
+          description: Internal server error
+
 securityDefinitions:
   bearerAuth:
     type: apiKey
     name: Authorization
     in: header
 definitions:
+  UserRequest:
+    type: object
+    properties:
+      email:
+        type: string
+        format: email
+      password:
+        type: string
+        format: password
+    xml:
+      name: UserRequest
+  UserResponse:
+    type: object
+    properties:
+      email:
+        type: string
+        format: email
+      password:
+        type: string
+        format: password
+    xml:
+      name: UserRequest
   User:
     type: object
     properties:
@@ -175,5 +221,105 @@ definitions:
         type: integer
         format: int32
         description: User Status
-
+    xml:
+      name: User
+  Medication:
+    type: object
+    properties:
+      name:
+        type: string
+        example: "paracetamol"
+      dosage:
+        type: integer
+        format: int
+        example: 2
+        description: number of medication (dose) to take
+      time_interval:
+        type: integer
+        format: int
+        example: 8
+        description: the next time-interval of hours to take your medication
+      medication_start_date:
+        type: string
+        format: date-time
+        description: day for starting medication
+      duration:
+        type: integer
+        format: int
+        example: 7
+        description: number of days to take the medication
+      medication_prescribed_by:
+        type: string
+        example: "Dr Tolu"
+      medication_stop_date:
+        type: string
+        format: date-time
+        description: expected date to finish medication
+      medication_start_time:
+        type: string
+        format: date-time
+        description: expected day to start medication
+      purpose_of_medication:
+        type: string
+        example: "malaria treatment"
+    xml:
+      name: Medication
+  MedicationResponse:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: uint
+        example: 1
+      name:
+        type: string
+        example: "paracetamol"
+      dosage:
+        type: integer
+        format: int
+        example: 2
+      time_interval:
+        type: integer
+        example: 8
+        description: the next time-interval of hours to take your medication
+      medication_start_date:
+        type: string
+        format: date-time
+        description: day for starting medication
+      duration:
+        type: integer
+        format: int
+        example: 7
+        description: number of days to take the medication
+      medication_prescribed_by:
+        type: string
+        example: "Dr Tolu"
+      medication_stop_date:
+        type: string
+        format: date-time
+        description: expected date to finish medication
+      medication_start_time:
+        type: string
+        format: date-time
+        description: expected day to start medication
+      next_dosage_time:
+        type: string
+        format: date-time
+        description: next time to take of medication (dose)
+      purpose_of_medication:
+        type: string
+        example: "malaria treatment"
+      user_id:
+        type: integer
+        format: uint
+        example: 2
+        description: owner of medication id
+      created_at:
+        type: string
+        format: date-time
+      updated_at:
+        type: string
+        format: date-time
+    xml:
+      name: MedicationResponse
 

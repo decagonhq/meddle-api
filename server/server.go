@@ -17,9 +17,10 @@ import (
 
 // Server serves requests to DB with router
 type Server struct {
-	Config         *config.Config
-	AuthRepository db.AuthRepository
-	AuthService    services.AuthService
+	Config            *config.Config
+	AuthRepository    db.AuthRepository
+	AuthService       services.AuthService
+	MedicationService services.MedicationService
 }
 
 func (s *Server) Start() {
