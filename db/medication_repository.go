@@ -11,7 +11,7 @@ import (
 
 type MedicationRepository interface {
 	CreateMedication(medication *models.Medication) (*models.Medication, error)
-	GetMedicationById(userId string) (*models.User, error)
+	GetMedicationById(userId uint) (*models.Medication, error)
 }
 
 type medicationRepo struct {
@@ -31,12 +31,11 @@ func (m *medicationRepo) CreateMedication(medication *models.Medication) (*model
 	return medication, nil
 }
 
-func (m *medicationRepo) GetMedicationById(userId string) (*models.User, error) {
-	var user models.User
-	err := m.DB.Where("id = ?", userId).First(&user).Error
+func (m *medicationRepo) GetMedicationById(userId uint) (*models.Medication, error) {
+	var medication models.Medication
+	err := m.DB.Where("id = ?", userId).First(&medication).Error
 	if err != nil {
-		log.Println(err)
 		return nil, fmt.Errorf("could not get medication: %v", err)
 	}
-	return &user, nil
+	return &medication, nil
 }

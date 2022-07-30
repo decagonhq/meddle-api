@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/server/response"
 	"github.com/gin-gonic/gin"
@@ -13,12 +12,10 @@ func (s *Server) handleGetMedDetail() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		_, user, err := GetValuesFromContext(c)
 		if err != nil {
-			log.Println(err)
 			err.Respond(c)
 			return
 		}
-		userid := fmt.Sprintf("%c", user.ID)
-			medication, err := s.MedicationService.GetMedicationDetail(userid)
+			medication, err := s.MedicationService.GetMedicationDetail(user.ID)
 			if err != nil {
 				log.Printf("get medications error : %v\n", err)
 				response.JSON(c, "", http.StatusInternalServerError, nil, errors.New("internal server error", http.StatusInternalServerError))
