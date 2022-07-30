@@ -15,7 +15,8 @@ func (s *Server) handleGetMedDetail() gin.HandlerFunc {
 			err.Respond(c)
 			return
 		}
-			medication, err := s.MedicationService.GetMedicationDetail(user.ID)
+		medId := c.Param("medId")
+			medication, err := s.MedicationService.GetMedicationById(user.ID, medId)
 			if err != nil {
 				log.Printf("get medications error : %v\n", err)
 				response.JSON(c, "", http.StatusInternalServerError, nil, errors.New("internal server error", http.StatusInternalServerError))
