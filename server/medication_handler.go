@@ -10,7 +10,6 @@ import (
 func (s *Server) handleCreateMedication() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var medicationRequest models.MedicationRequest
-
 		_, user, err := GetValuesFromContext(c)
 		if err != nil {
 			err.Respond(c)
