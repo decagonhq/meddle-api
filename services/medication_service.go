@@ -62,8 +62,8 @@ func (m *medicationService) CreateMedication(request *models.MedicationRequest) 
 	return response.MedicationToResponse(), nil
 }
 
-func (m *medicationService) GetMedication(userId string) (*models.User, *errors.Error) {
-	user, err := m.medicationRepo.GetMedication(userId)
+func (m *medicationService) GetMedicationDetail(userId string) (*models.User, *errors.Error) {
+	user, err := m.medicationRepo.GetMedicationById(userId)
 	if err != nil {
 		log.Println(err)
 		return nil, errors.ErrInternalServerError
