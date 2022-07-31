@@ -23,6 +23,8 @@ func (s *Server) defineRoutes(router *gin.Engine) {
 
 	authorized.POST("/user/medications", s.handleCreateMedication())
 
+	authorized.GET("/user/medications/next", s.handleGetNextMedication())
+
 }
 
 func (s *Server) setupRouter() *gin.Engine {
