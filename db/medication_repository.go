@@ -11,6 +11,7 @@ import (
 
 type MedicationRepository interface {
 	CreateMedication(medication *models.Medication) (*models.Medication, error)
+	GetNextMedication(userID uint) (*models.Medication, error)
 }
 
 type medicationRepo struct {
@@ -28,4 +29,14 @@ func (m *medicationRepo) CreateMedication(medication *models.Medication) (*model
 		return nil, fmt.Errorf("could not create medication: %v", err)
 	}
 	return medication, nil
+}
+
+func (m *medicationRepo) GetNextMedication(userID uint) (*models.Medication, error) {
+	var medication models.Medication
+	err := m.DB.Where("user_id = ?", userID).Order("next_dosage_time ASC").First(&medication).Error
+	if err != nil {
+		log.Println(err)
+		return nil, fmt.Errorf("could not get next medication: %v", err)
+	}
+	return &medication, nil
 }
