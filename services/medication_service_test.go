@@ -190,13 +190,13 @@ func Test_GetNextMedicationService(t *testing.T) {
 		PurposeOfMedication:    "malaria treatment",
 	}
 	testCases := []struct {
-		name              string
-		dbInput           uint
-		dbOutput          *models.Medication
-		dbError           error
-		getAllMedResponse *models.MedicationResponse
-		getAllMedError    *errors.Error
-		buildStubs        func(repository *mocks.MockMedicationRepository, dbInput uint, dbOutput *models.Medication, dbError error)
+		name               string
+		dbInput            uint
+		dbOutput           *models.Medication
+		dbError            error
+		getNextMedResponse *models.MedicationResponse
+		getNextMedError    *errors.Error
+		buildStubs         func(repository *mocks.MockMedicationRepository, dbInput uint, dbOutput *models.Medication, dbError error)
 	}{
 		{
 			name:    "getting all medications successful case",
@@ -221,7 +221,7 @@ func Test_GetNextMedicationService(t *testing.T) {
 				UserID:                 1,
 			},
 			dbError: nil,
-			getAllMedResponse: &models.MedicationResponse{
+			getNextMedResponse: &models.MedicationResponse{
 				ID:                     medication.ID,
 				CreatedAt:              time.Unix(medication.CreatedAt, 0).String(),
 				UpdatedAt:              time.Unix(medication.UpdatedAt, 0).String(),
@@ -237,18 +237,18 @@ func Test_GetNextMedicationService(t *testing.T) {
 				PurposeOfMedication:    "malaria treatment",
 				UserID:                 1,
 			},
-			getAllMedError: nil,
+			getNextMedError: nil,
 			buildStubs: func(repository *mocks.MockMedicationRepository, dbInput uint, dbOutput *models.Medication, dbError error) {
 				repository.EXPECT().GetNextMedication(dbInput).Times(1).Return(dbOutput, dbError)
 			},
 		},
 		{
-			name:              "error creating medication due server error",
-			dbInput:           1,
-			dbOutput:          nil,
-			dbError:           gorm.ErrInvalidDB,
-			getAllMedResponse: nil,
-			getAllMedError:    errors.ErrInternalServerError,
+			name:               "error creating medication due server error",
+			dbInput:            1,
+			dbOutput:           nil,
+			dbError:            gorm.ErrInvalidDB,
+			getNextMedResponse: nil,
+			getNextMedError:    errors.ErrInternalServerError,
 			buildStubs: func(repository *mocks.MockMedicationRepository, dbInput uint, dbOutput *models.Medication, dbError error) {
 				repository.EXPECT().GetNextMedication(dbInput).Times(1).Return(dbOutput, dbError)
 			},
@@ -261,8 +261,8 @@ func Test_GetNextMedicationService(t *testing.T) {
 			tc.buildStubs(mockMedicationRepository, tc.dbInput, tc.dbOutput, tc.dbError)
 			medicationResponse, err := testMedicationService.GetNextMedication(1)
 
-			require.Equal(t, tc.getAllMedResponse, medicationResponse)
-			require.Equal(t, tc.getAllMedError, err)
+			require.Equal(t, tc.getNextMedResponse, medicationResponse)
+			require.Equal(t, tc.getNextMedError, err)
 
 		})
 	}
