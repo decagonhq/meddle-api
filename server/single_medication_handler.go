@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/server/response"
 	"github.com/gin-gonic/gin"
@@ -20,7 +19,7 @@ func (s *Server) handleGetMedDetail() gin.HandlerFunc {
 		id := c.Param("id")
 		idUint, errr := strconv.ParseUint(id, 10, 32)
 		if errr != nil {
-			fmt.Println(err)
+			log.Printf("could not parse id: %v\n", errr)
 		}
 			medication, err := s.MedicationService.GetMedicationDetail(uint(idUint), user.ID)
 			if err != nil {
@@ -29,6 +28,5 @@ func (s *Server) handleGetMedDetail() gin.HandlerFunc {
 				return
 			}
 			response.JSON(c, "retrieved medications successfully", http.StatusOK, gin.H{"medication": medication}, nil)
-			return
 	}
 }
