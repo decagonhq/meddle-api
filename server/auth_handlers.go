@@ -81,7 +81,6 @@ func (s *Server) handleLogout() gin.HandlerFunc {
 		}
 		convertClaims, _ := claims["exp"].(int64) //jwt pkg to validate
 		if convertClaims < time.Now().Unix() {
-			{
 				accBlacklist := &models.BlackList{
 					Email: user.Email,
 					Token: token,
