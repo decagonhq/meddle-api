@@ -250,7 +250,7 @@ func TestGetAllMedicationHandler(t *testing.T) {
 		name               string
 		medicationResponse []models.MedicationResponse
 		buildStubs         func(service *mocks.MockMedicationService, userID uint, response []models.MedicationResponse)
-		checkResponse      func(t *testing.T, recorder *httptest.ResponseRecorder)
+		checkCodeResponse  func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
 		{
 			name: "success case",
@@ -291,7 +291,7 @@ func TestGetAllMedicationHandler(t *testing.T) {
 			buildStubs: func(service *mocks.MockMedicationService, request uint, response []models.MedicationResponse) {
 				service.EXPECT().GetAllMedications(request).Times(1).Return(response, nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+			checkCodeResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 			},
 		},
@@ -301,7 +301,7 @@ func TestGetAllMedicationHandler(t *testing.T) {
 			buildStubs: func(service *mocks.MockMedicationService, request uint, response []models.MedicationResponse) {
 				service.EXPECT().GetAllMedications(request).Times(1).Return(nil, errors.ErrInternalServerError)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+			checkCodeResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
 			},
 		},
@@ -329,7 +329,7 @@ func TestGetAllMedicationHandler(t *testing.T) {
 			req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", accToken))
 
 			testServer.router.ServeHTTP(recorder, req)
-			tc.checkResponse(t, recorder)
+			tc.checkCodeResponse(t, recorder)
 		})
 	}
 }
