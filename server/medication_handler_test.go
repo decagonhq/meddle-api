@@ -227,12 +227,6 @@ func TestGetAllMedicationHandler(t *testing.T) {
 	startTime, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
 
 	medication := models.Medication{
-		Model: models.Model{
-			ID:        1,
-			CreatedAt: time.Now().Unix(),
-			UpdatedAt: time.Now().Unix(),
-			DeletedAt: 0,
-		},
 		Name:                   "paracetamol",
 		Dosage:                 2,
 		TimeInterval:           8,
