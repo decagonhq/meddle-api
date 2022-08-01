@@ -172,7 +172,24 @@ paths:
           description: Forbidden user
         '500':
           description: Internal server error
-
+  /user/medications/next:
+    get:
+      tags:
+        - medication
+      summary: Get next medication for user
+      description: This gets next medication related to a logged in user.
+      operationId: getNextMedication
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: get next medications successful
+          schema:
+            $ref: '#/definitions/MedicationResponse'
+        '403':
+          description: Forbidden user
+        '500':
+          description: Internal server error
 securityDefinitions:
   bearerAuth:
     type: apiKey
