@@ -91,12 +91,9 @@ func (s *Server) handleLogout() gin.HandlerFunc {
 					return
 				}
 			}
+					response.JSON(c, "logout successful", http.StatusOK, nil, nil)
 
 		}
-
-		response.JSON(c, "logout successful", http.StatusOK, nil, nil)
-
-	}
 }
 
 func (s *Server) handleGetUsers() gin.HandlerFunc {
