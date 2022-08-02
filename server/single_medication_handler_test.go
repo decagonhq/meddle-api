@@ -14,7 +14,7 @@ import (
 	"testing"
 )
 
-var mockRepository *mocks.MockAuthRepository
+//var mockRepository *mocks.MockAuthRepository
 
 func Test_SingleMedication(t *testing.T){
 	ctrl := gomock.NewController(t)
