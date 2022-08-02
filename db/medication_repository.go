@@ -11,7 +11,7 @@ import (
 
 type MedicationRepository interface {
 	CreateMedication(medication *models.Medication) (*models.Medication, error)
-	GetMedicationById(id uint, userId uint) (*models.Medication, error)
+	GetMedicationDetail(id uint, userId uint) (*models.Medication, error)
 }
 
 type medicationRepo struct {
@@ -31,7 +31,7 @@ func (m *medicationRepo) CreateMedication(medication *models.Medication) (*model
 	return medication, nil
 }
 
-func (m *medicationRepo) GetMedicationById(id uint, userId uint) (*models.Medication, error) {
+func (m *medicationRepo) GetMedicationDetail(id uint, userId uint) (*models.Medication, error) {
 	var medication models.Medication
 	err := m.DB.Where("id = ? AND user_id = ?", id, userId).First(&medication).Error
 	if err != nil {

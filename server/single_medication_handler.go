@@ -23,6 +23,8 @@ func (s *Server) handleGetMedDetail() gin.HandlerFunc {
 		}
 			medication, err := s.MedicationService.GetMedicationDetail(uint(idUint), user.ID)
 			if err != nil {
+
+				log.Println("here")
 				log.Printf("get medications error : %v\n", err)
 				response.JSON(c, "", http.StatusInternalServerError, nil, errors.New("internal server error", http.StatusInternalServerError))
 				return
