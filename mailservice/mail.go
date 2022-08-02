@@ -23,7 +23,7 @@ func (mail Mailgun) SendSimpleMessage(UserEmail, EmailSubject, EmailBody string)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 	defer cancel()
-
+	//m := mail.Client.NewMessage(EmailFrom, "Verify Account", "")
 	res, _, err := mail.Client.Send(ctx, m)
 	if err != nil {
 		return "", err
