@@ -16,16 +16,6 @@ import (
 
 var mockRepository *mocks.MockAuthRepository
 
-func setup(t *testing.T) func() {
-	ctrl := gomock.NewController(t)
-	ctrl.Finish()
-	mockRepository = mocks.NewMockAuthRepository(ctrl)
-
-	return func(){
-		defer ctrl.Finish()
-	}
-}
-
 func Test_SingleMedication(t *testing.T){
 	ctrl := gomock.NewController(t)
 	auth := mocks.NewMockAuthService(ctrl)
