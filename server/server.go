@@ -3,6 +3,8 @@ package server
 import (
 	"context"
 	"fmt"
+	"github.com/decagonhq/meddle-api/config"
+	"github.com/decagonhq/meddle-api/db"
 	"github.com/decagonhq/meddle-api/mailservice"
 	"github.com/decagonhq/meddle-api/services"
 	"log"
@@ -11,9 +13,6 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-
-	"github.com/decagonhq/meddle-api/config"
-	"github.com/decagonhq/meddle-api/db"
 )
 
 // Server serves requests to DB with router

@@ -31,13 +31,3 @@ func (mail Mailgun) SendSimpleMessage(UserEmail, EmailSubject, EmailBody string)
 	return res, nil
 }
 
-func (mail *Mailgun) AddTemplate() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-	return mail.Client.CreateTemplate(ctx, &mailgun.Template{
-		Name: "meddle",
-		Version: mailgun.TemplateVersion{
-			Template: `<h1>Hello world</>`,
-		},
-	})
-	}
