@@ -14,7 +14,6 @@ import (
 
 type MedicationService interface {
 	CreateMedication(request *models.MedicationRequest) (*models.MedicationResponse, *errors.Error)
-	GetMedicationDetail(id uint, userId uint) (*models.Medication, *errors.Error)
 }
 
 // medicationService struct
@@ -60,13 +59,4 @@ func (m *medicationService) CreateMedication(request *models.MedicationRequest) 
 		return nil, errors.ErrInternalServerError
 	}
 	return response.MedicationToResponse(), nil
-}
-
-func (m *medicationService) GetMedicationDetail(id uint, userId uint) (*models.Medication, *errors.Error) {
-	medic, err := m.medicationRepo.GetMedicationById(id, userId)
-	if err != nil {
-		log.Println(err)
-		return nil, errors.ErrInternalServerError
-	}
-	return medic, nil
 }

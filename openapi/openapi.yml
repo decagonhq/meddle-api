@@ -172,30 +172,6 @@ paths:
           description: Forbidden user
         '500':
           description: Internal server error
-  /user/medication/{id}:
-    get:
-      tags:
-        - medication
-      summary: Get user medication by id and userid
-      description: ''
-      operationId: getUserById
-      produces:
-        - application/json
-      parameters:
-        - name: id
-          in: path
-          description: 'The name that needs to be fetched. Use user1 for testing. '
-          required: true
-          type: string
-      responses:
-        '200':
-          description: retrieved medications successfully
-          schema:
-            $ref: '#/definitions/Medication'
-        '500':
-          description: Internal server error
-        '404':
-          description: Medication not found
 securityDefinitions:
   bearerAuth:
     type: apiKey
