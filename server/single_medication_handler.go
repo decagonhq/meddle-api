@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"strconv"
 )
-
 func (s *Server) handleGetMedDetail() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		_, user, err := GetValuesFromContext(c)

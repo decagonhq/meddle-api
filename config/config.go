@@ -18,7 +18,6 @@ type Config struct {
 	PostgresDB       string `envconfig:"postgres_db"`
 	JWTSecret        string `envconfig:"jwt_secret"`
 }
-
 func Load() (*Config, error) {
 	env := os.Getenv("GIN_MODE")
 	if env != "release" {
