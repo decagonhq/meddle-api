@@ -172,7 +172,7 @@ paths:
           description: Forbidden user
         '500':
           description: Internal server error
-  /user/medication/{id}:
+  /user/medications/{id}:
     get:
       tags:
         - medication
