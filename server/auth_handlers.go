@@ -1,7 +1,13 @@
 package server
 
 import (
+	"context"
+	"encoding/base64"
+	"fmt"
+	"github.com/decagonhq/meddle-api/config"
+	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"time"
 
@@ -40,6 +46,71 @@ func (s *Server) handleLogin() gin.HandlerFunc {
 			return
 		}
 		response.JSON(c, "login successful", http.StatusOK, userResponse, nil)
+	}
+}
+
+func (s *Server) HandleGoogleOauthLogin() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Create oauthState cookie
+		oauthState := GenerateStateOauthCookie(c.Writer)
+		/*
+			AuthCodeURL receive state that is a token to protect the user
+			from CSRF attacks. You must always provide a non-empty string
+			and validate that it matches the the state query parameter
+			on your redirect callback.
+		*/
+		u := config.AppConfig.GoogleLoginConfig.AuthCodeURL(oauthState)
+		http.Redirect(c.Writer, c.Request, u, http.StatusTemporaryRedirect)
+	}
+}
+
+func (s *Server) HandleGoogleCallback() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// get oauth state from cookie for this user
+		oauthState, _ := c.Request.Cookie("oauthstate")
+		state := c.Request.FormValue("state")
+		code := c.Request.FormValue("code")
+		c.Writer.Header().Add("content-type", "application/json")
+
+		// ERROR : Invalid OAuth State
+		if state != oauthState.Value {
+			http.Redirect(c.Writer, c.Request, "/", http.StatusTemporaryRedirect)
+			fmt.Fprintf(c.Writer, "invalid oauth google state")
+			return
+		}
+
+		// Exchange Auth Code for Tokens
+		token, err := config.AppConfig.GoogleLoginConfig.Exchange(
+			context.Background(), code)
+
+		// ERROR : Auth Code Exchange Failed
+		if err != nil {
+			fmt.Fprintf(c.Writer, "falied code exchange: %s", err.Error())
+			return
+		}
+
+		// Fetch User Data from google server
+		resp, err := http.Get(config.OauthGoogleUrlAPI + token.AccessToken)
+
+		// ERROR : Unable to get user data from google
+		if err != nil {
+			fmt.Fprintf(c.Writer, "failed getting user info: %s", err.Error())
+			return
+		}
+
+		// Parse user data JSON Object
+		defer resp.Body.Close()
+		contents, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Fprintf(c.Writer, "failed read response: %s", err.Error())
+			return
+		}
+
+		// send back response to browser
+		fmt.Fprintln(c.Writer, string(contents))
+
+		response.JSON(c, "login successful", http.StatusOK, resp, nil)
 	}
 }
 
@@ -117,4 +188,20 @@ func (s *Server) handleShowProfile() gin.HandlerFunc {
 
 		response.JSON(c, "successful", http.StatusOK, nil, nil)
 	}
+}
+
+func GenerateStateOauthCookie(w http.ResponseWriter) string {
+	var expiration = time.Now().Add(2 * time.Minute)
+	b := make([]byte, 16)
+	rand.Read(b)
+	state := base64.URLEncoding.EncodeToString(b)
+	cookie := http.Cookie{
+		Name:     "oauthstate",
+		Value:    state,
+		Expires:  expiration,
+		HttpOnly: true,
+	}
+	http.SetCookie(w, &cookie)
+
+	return state
 }
