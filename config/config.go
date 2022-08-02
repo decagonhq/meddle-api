@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 	"log"
@@ -32,5 +33,6 @@ func Load() (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println(*c)
 	return c, nil
 }
