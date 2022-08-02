@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/decagonhq/meddle-api/mailservice"
 	"github.com/decagonhq/meddle-api/services"
 	"log"
 	"net/http"
@@ -22,7 +21,6 @@ type Server struct {
 	AuthRepository    db.AuthRepository
 	AuthService       services.AuthService
 	MedicationService services.MedicationService
-	Mail              *mailservice.Mailgun
 }
 
 func (s *Server) Start() {
