@@ -30,7 +30,7 @@ func main() {
 		AuthRepository:    authRepo,
 		AuthService:       authService,
 		MedicationService: medicationService,
-		Mail:			  mailService,
+		Mail:              mailService,
 	}
 	s.Start()
 }
