@@ -16,7 +16,7 @@ import (
 
 //var mockRepository *mocks.MockAuthRepository
 
-func Test_SingleMedication(t *testing.T){
+func Test_MedicationDetail(t *testing.T){
 	ctrl := gomock.NewController(t)
 	auth := mocks.NewMockAuthService(ctrl)
 	repo := mocks.NewMockAuthRepository(ctrl)
@@ -50,7 +50,7 @@ func Test_SingleMedication(t *testing.T){
 
 	//repo.EXPECT().AddToBlackList(&models.BlackList{Email: user.Email, Token: token}).Return(nil)
 	repo.EXPECT().TokenInBlacklist(token).Return(false)
-	med.EXPECT().GetMedicationDetail(gomock.Any(), gomock.Any()).Return(medication, nil)
+	med.EXPECT().GetMedicationDetail(uint(1), user.ID).Return(medication, nil)
 	repo.EXPECT().FindUserByEmail(user.Email).Return(user, nil)
 
 
