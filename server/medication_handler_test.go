@@ -227,12 +227,6 @@ func TestGetNextMedicationHandler(t *testing.T) {
 	startTime, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
 
 	medication := models.Medication{
-		Model: models.Model{
-			ID:        1,
-			CreatedAt: time.Now().Unix(),
-			UpdatedAt: time.Now().Unix(),
-			DeletedAt: 0,
-		},
 		Name:                   "paracetamol",
 		Dosage:                 2,
 		TimeInterval:           8,
@@ -247,29 +241,31 @@ func TestGetNextMedicationHandler(t *testing.T) {
 	// test cases
 	testCases := []struct {
 		name               string
-		medicationResponse *models.MedicationResponse
-		buildStubs         func(service *mocks.MockMedicationService, userID uint, response *models.MedicationResponse)
+		medicationResponse []models.MedicationResponse
+		buildStubs         func(service *mocks.MockMedicationService, userID uint, response []models.MedicationResponse)
 		checkResponse      func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
 		{
 			name: "success case",
-			medicationResponse: &models.MedicationResponse{
-				ID:                     medication.ID,
-				CreatedAt:              time.Unix(medication.CreatedAt, 0).String(),
-				UpdatedAt:              time.Unix(medication.UpdatedAt, 0).String(),
-				Name:                   medication.Name,
-				Dosage:                 medication.Dosage,
-				TimeInterval:           medication.TimeInterval,
-				MedicationStartDate:    medication.MedicationStartDate.String(),
-				Duration:               medication.Duration,
-				MedicationPrescribedBy: medication.MedicationPrescribedBy,
-				MedicationStopDate:     medication.MedicationStopDate.String(),
-				MedicationStartTime:    medication.MedicationStartTime.String(),
-				NextDosageTime:         medication.NextDosageTime.String(),
-				PurposeOfMedication:    medication.PurposeOfMedication,
-				UserID:                 user.ID,
+			medicationResponse: []models.MedicationResponse{
+				{
+					ID:                     medication.ID,
+					CreatedAt:              time.Unix(medication.CreatedAt, 0).String(),
+					UpdatedAt:              time.Unix(medication.UpdatedAt, 0).String(),
+					Name:                   medication.Name,
+					Dosage:                 medication.Dosage,
+					TimeInterval:           medication.TimeInterval,
+					MedicationStartDate:    medication.MedicationStartDate.String(),
+					Duration:               medication.Duration,
+					MedicationPrescribedBy: medication.MedicationPrescribedBy,
+					MedicationStopDate:     medication.MedicationStopDate.String(),
+					MedicationStartTime:    medication.MedicationStartTime.String(),
+					NextDosageTime:         medication.NextDosageTime.String(),
+					PurposeOfMedication:    medication.PurposeOfMedication,
+					UserID:                 user.ID,
+				},
 			},
-			buildStubs: func(service *mocks.MockMedicationService, request uint, response *models.MedicationResponse) {
+			buildStubs: func(service *mocks.MockMedicationService, request uint, response []models.MedicationResponse) {
 				service.EXPECT().GetNextMedication(request).Times(1).Return(response, nil)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
@@ -279,7 +275,7 @@ func TestGetNextMedicationHandler(t *testing.T) {
 		{
 			name:               "internal server error",
 			medicationResponse: nil,
-			buildStubs: func(service *mocks.MockMedicationService, request uint, response *models.MedicationResponse) {
+			buildStubs: func(service *mocks.MockMedicationService, request uint, response []models.MedicationResponse) {
 				service.EXPECT().GetNextMedication(request).Times(1).Return(nil, errors.ErrInternalServerError)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {

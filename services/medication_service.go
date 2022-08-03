@@ -14,7 +14,7 @@ import (
 
 type MedicationService interface {
 	CreateMedication(request *models.MedicationRequest) (*models.MedicationResponse, *errors.Error)
-	GetNextMedication(userID uint) (*models.MedicationResponse, *errors.Error)
+	GetNextMedication(userID uint) ([]models.MedicationResponse, *errors.Error)
 }
 
 // medicationService struct
@@ -51,8 +51,8 @@ func (m *medicationService) CreateMedication(request *models.MedicationRequest) 
 	medication.MedicationStartDate = startDate
 	medication.MedicationStopDate = stopDate
 	medication.MedicationStartTime = startTime
-	medication.NextDosageTime = medication.MedicationStartTime.Add(time.Hour * time.Duration(medication.TimeInterval))
-	medication.IsMedicationDone = false
+	nextTime := medication.MedicationStartTime.Add(time.Hour * time.Duration(medication.TimeInterval))
+	medication.NextDosageTime = time.Date(nextTime.Year(), nextTime.Month(), nextTime.Day(), nextTime.Hour(), 0, 0, 0, time.UTC)
 
 	response, err := m.medicationRepo.CreateMedication(medication)
 	if err != nil {
@@ -62,10 +62,19 @@ func (m *medicationService) CreateMedication(request *models.MedicationRequest) 
 	return response.MedicationToResponse(), nil
 }
 
-func (m *medicationService) GetNextMedication(userID uint) (*models.MedicationResponse, *errors.Error) {
-	medication, err := m.medicationRepo.GetNextMedication(userID)
+func (m *medicationService) GetNextMedication(userID uint) ([]models.MedicationResponse, *errors.Error) {
+	//medication, err := m.medicationRepo.GetNextMedication(userID)
+	//if err != nil {
+	//	return nil, errors.ErrInternalServerError
+	//}
+	//return medication.MedicationToResponse(), nil
+	var nextMedicationResponses []models.MedicationResponse
+	medications, err := m.medicationRepo.GetNextMedication(userID)
 	if err != nil {
 		return nil, errors.ErrInternalServerError
 	}
-	return medication.MedicationToResponse(), nil
+	for _, medication := range medications {
+		nextMedicationResponses = append(nextMedicationResponses, *medication.MedicationToResponse())
+	}
+	return nextMedicationResponses, nil
 }

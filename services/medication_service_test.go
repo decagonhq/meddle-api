@@ -172,12 +172,6 @@ func Test_GetNextMedicationService(t *testing.T) {
 	startTime, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
 
 	medication := &models.Medication{
-		Model: models.Model{
-			ID:        1,
-			CreatedAt: time.Now().Unix(),
-			UpdatedAt: time.Now().Unix(),
-			DeletedAt: 0,
-		},
 		Name:                   "paracetamol",
 		Dosage:                 2,
 		TimeInterval:           8,
@@ -192,64 +186,62 @@ func Test_GetNextMedicationService(t *testing.T) {
 	testCases := []struct {
 		name               string
 		dbInput            uint
-		dbOutput           *models.Medication
+		dbOutput           []models.Medication
 		dbError            error
-		getNextMedResponse *models.MedicationResponse
+		getNextMedResponse []models.MedicationResponse
 		getNextMedError    *errors.Error
-		buildStubs         func(repository *mocks.MockMedicationRepository, dbInput uint, dbOutput *models.Medication, dbError error)
+		buildStubs         func(repository *mocks.MockMedicationRepository, dbInput uint, dbOutput []models.Medication, dbError error)
 	}{
 		{
-			name:    "getting all medications successful case",
+			name:    "getting next medications successful case",
 			dbInput: 1,
-			dbOutput: &models.Medication{
-				Model: models.Model{
-					ID:        1,
-					CreatedAt: time.Now().Unix(),
-					UpdatedAt: time.Now().Unix(),
-					DeletedAt: 0,
+			dbOutput: []models.Medication{
+				{
+					Name:                   "paracetamol",
+					Dosage:                 2,
+					TimeInterval:           8,
+					MedicationStartDate:    startDate,
+					Duration:               7,
+					MedicationPrescribedBy: "Dr Tolu",
+					MedicationStopDate:     stopDate,
+					MedicationStartTime:    startTime,
+					NextDosageTime:         startTime.Add(time.Hour * time.Duration(8)),
+					PurposeOfMedication:    "malaria treatment",
+					UserID:                 1,
 				},
-				Name:                   "paracetamol",
-				Dosage:                 2,
-				TimeInterval:           8,
-				MedicationStartDate:    startDate,
-				Duration:               7,
-				MedicationPrescribedBy: "Dr Tolu",
-				MedicationStopDate:     stopDate,
-				MedicationStartTime:    startTime,
-				NextDosageTime:         startTime.Add(time.Hour * time.Duration(8)),
-				PurposeOfMedication:    "malaria treatment",
-				UserID:                 1,
 			},
 			dbError: nil,
-			getNextMedResponse: &models.MedicationResponse{
-				ID:                     medication.ID,
-				CreatedAt:              time.Unix(medication.CreatedAt, 0).String(),
-				UpdatedAt:              time.Unix(medication.UpdatedAt, 0).String(),
-				Name:                   "paracetamol",
-				Dosage:                 2,
-				TimeInterval:           8,
-				MedicationStartDate:    medication.MedicationStartDate.String(),
-				Duration:               7,
-				MedicationPrescribedBy: "Dr Tolu",
-				MedicationStopDate:     medication.MedicationStopDate.String(),
-				MedicationStartTime:    medication.MedicationStartTime.String(),
-				NextDosageTime:         medication.NextDosageTime.String(),
-				PurposeOfMedication:    "malaria treatment",
-				UserID:                 1,
+			getNextMedResponse: []models.MedicationResponse{
+				{
+					ID:                     medication.ID,
+					CreatedAt:              time.Unix(medication.CreatedAt, 0).String(),
+					UpdatedAt:              time.Unix(medication.UpdatedAt, 0).String(),
+					Name:                   "paracetamol",
+					Dosage:                 2,
+					TimeInterval:           8,
+					MedicationStartDate:    medication.MedicationStartDate.String(),
+					Duration:               7,
+					MedicationPrescribedBy: "Dr Tolu",
+					MedicationStopDate:     medication.MedicationStopDate.String(),
+					MedicationStartTime:    medication.MedicationStartTime.String(),
+					NextDosageTime:         medication.NextDosageTime.String(),
+					PurposeOfMedication:    "malaria treatment",
+					UserID:                 1,
+				},
 			},
 			getNextMedError: nil,
-			buildStubs: func(repository *mocks.MockMedicationRepository, dbInput uint, dbOutput *models.Medication, dbError error) {
+			buildStubs: func(repository *mocks.MockMedicationRepository, dbInput uint, dbOutput []models.Medication, dbError error) {
 				repository.EXPECT().GetNextMedication(dbInput).Times(1).Return(dbOutput, dbError)
 			},
 		},
 		{
-			name:               "error creating medication due server error",
+			name:               "error getting next medications due server error",
 			dbInput:            1,
 			dbOutput:           nil,
 			dbError:            gorm.ErrInvalidDB,
 			getNextMedResponse: nil,
 			getNextMedError:    errors.ErrInternalServerError,
-			buildStubs: func(repository *mocks.MockMedicationRepository, dbInput uint, dbOutput *models.Medication, dbError error) {
+			buildStubs: func(repository *mocks.MockMedicationRepository, dbInput uint, dbOutput []models.Medication, dbError error) {
 				repository.EXPECT().GetNextMedication(dbInput).Times(1).Return(dbOutput, dbError)
 			},
 		},

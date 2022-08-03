@@ -27,5 +27,7 @@ func main() {
 		AuthService:       authService,
 		MedicationService: medicationService,
 	}
+	go db.UpdateNextMedicationCronJob(medicationRepo)
+	//go db.RunCronJob(medicationRepo)
 	s.Start()
 }
