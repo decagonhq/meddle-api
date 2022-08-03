@@ -21,7 +21,7 @@ type Server struct {
 	AuthRepository    db.AuthRepository
 	AuthService       services.AuthService
 	MedicationService services.MedicationService
-	Mail              *mailservice.Mailgun
+	Mail              mailservice.Mailer
 }
 
 func (s *Server) Start() {
