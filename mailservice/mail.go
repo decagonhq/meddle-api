@@ -34,6 +34,7 @@ func StartMailGun() *mailgun.MailgunImpl {
 
 func (mail *Mailgun) SendVerifyAccount(userEmail, link string) (string, error) {
 	EmailFrom := os.Getenv("MG_EMAIL_FROM")
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 	defer cancel()
 
