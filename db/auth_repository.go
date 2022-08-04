@@ -5,7 +5,6 @@ import (
 	"github.com/decagonhq/meddle-api/models"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
-	"log"
 )
 
 // DB provides access to the different db
@@ -21,7 +20,6 @@ type AuthRepository interface {
 	UpdateUser(user *models.User) error
 	AddToBlackList(blacklist *models.BlackList) error
 	TokenInBlacklist(token string) bool
-	SetUserToActive(userID uint) error
 }
 
 type authRepo struct {
@@ -103,20 +101,8 @@ func (a *authRepo) TokenInBlacklist(token string) bool {
 	return result.Error != nil
 }
 
-func (a *authRepo) SetUserToActive(userID uint) error {
-	var user *models.User
-	err := a.DB.Model(&user).Where("id = ?", userID).Update("is_active", true).Error
-	return err
-}
 
-func (a *authRepo) VerifyEmail(token *models.User, id uint) error {
-	var tokenUser *models.User
-	err := a.SetUserToActive(tokenUser.ID)
-	if err != nil {
-		log.Printf("Error: %v", err.Error())
-		return  errors.New("could not set user to active")
-	}
-	 return nil
-}
+
+
 
 
