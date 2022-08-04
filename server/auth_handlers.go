@@ -81,21 +81,19 @@ func (s *Server) handleLogout() gin.HandlerFunc {
 		}
 		convertClaims, _ := claims["exp"].(int64) //jwt pkg to validate
 		if convertClaims < time.Now().Unix() {
-			response.JSON(c, "successfully logged out", http.StatusOK, nil, nil)
-			return
-		} else {
-			accBlacklist := &models.BlackList{
-				Email: user.Email,
-				Token: token,
+				accBlacklist := &models.BlackList{
+					Email: user.Email,
+					Token: token,
+				}
+				if err := s.AuthRepository.AddToBlackList(accBlacklist); err != nil {
+					log.Printf("can't add access token to blacklist: %v\n", err)
+					response.JSON(c, "logout failed", http.StatusInternalServerError, nil, errors.New("can't add access token to blacklist", http.StatusInternalServerError))
+					return
+				}
 			}
-			if err := s.AuthRepository.AddToBlackList(accBlacklist); err != nil {
-				log.Printf("can't add access token to blacklist: %v\n", err)
-				response.JSON(c, "logout failed", http.StatusInternalServerError, nil, errors.New("can't add access token to blacklist", http.StatusInternalServerError))
-				return
-			}
-			response.JSON(c, "successfully added to blacklist", http.StatusOK, nil, nil)
+					response.JSON(c, "logout successful", http.StatusOK, nil, nil)
+
 		}
-	}
 }
 
 func (s *Server) handleGetUsers() gin.HandlerFunc {
