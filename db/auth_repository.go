@@ -16,7 +16,6 @@ type AuthRepository interface {
 	IsPhoneExist(email string) error
 	FindUserByUsername(username string) (*models.User, error)
 	FindUserByEmail(email string) (*models.User, error)
-	FindUserById(userID uint) (*models.User, error)
 	UpdateUser(user *models.User) error
 	AddToBlackList(blacklist *models.BlackList) error
 	TokenInBlacklist(token string) bool
@@ -79,12 +78,6 @@ func (a *authRepo) FindUserByEmail(email string) (*models.User, error) {
 		return nil, err
 	}
 	return &user, nil
-}
-
-func (a *authRepo) FindUserById(userID uint) (*models.User, error) {
-	var user *models.User
-	err := a.DB.Where("id = ?", userID).First(&user).Error
-	return user, err
 }
 
 func (a *authRepo) UpdateUser(user *models.User) error {
