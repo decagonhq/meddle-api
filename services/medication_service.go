@@ -15,6 +15,8 @@ import (
 type MedicationService interface {
 	CreateMedication(request *models.MedicationRequest) (*models.MedicationResponse, *errors.Error)
 	GetNextMedications(userID uint) ([]models.MedicationResponse, *errors.Error)
+	GetAllMedications(userID uint) ([]models.MedicationResponse, *errors.Error)
+
 }
 
 // medicationService struct
@@ -68,6 +70,20 @@ func (m *medicationService) CreateMedication(request *models.MedicationRequest) 
 	return response.MedicationToResponse(), nil
 }
 
+func (m *medicationService) GetAllMedications(userID uint) ([]models.MedicationResponse, *errors.Error) {
+	var medicationResponses []models.MedicationResponse
+	
+  medications, err := m.medicationRepo.GetAllMedications(userID)
+	if err != nil {
+		return nil, errors.ErrInternalServerError
+	}
+  
+	for _, medication := range medications {
+		medicationResponses = append(medicationResponses, *medication.MedicationToResponse())
+	}
+	return medicationResponses, nil
+}
+
 func (m *medicationService) GetNextMedications(userID uint) ([]models.MedicationResponse, *errors.Error) {
 	var nextMedicationResponses []models.MedicationResponse
 
@@ -75,8 +91,10 @@ func (m *medicationService) GetNextMedications(userID uint) ([]models.Medication
 	if err != nil {
 		return nil, errors.ErrInternalServerError
 	}
+  
 	for _, medication := range medications {
 		nextMedicationResponses = append(nextMedicationResponses, *medication.MedicationToResponse())
 	}
 	return nextMedicationResponses, nil
+
 }
