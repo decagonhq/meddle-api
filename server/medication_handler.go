@@ -42,7 +42,7 @@ func (s *Server) handleGetNextMedication() gin.HandlerFunc {
 			return
 		}
 
-		medication, err := s.MedicationService.GetNextMedication(user.ID)
+		medication, err := s.MedicationService.GetNextMedications(user.ID)
 		if err != nil {
 			err.Respond(c)
 			return

@@ -266,7 +266,7 @@ func TestGetNextMedicationHandler(t *testing.T) {
 				},
 			},
 			buildStubs: func(service *mocks.MockMedicationService, request uint, response []models.MedicationResponse) {
-				service.EXPECT().GetNextMedication(request).Times(1).Return(response, nil)
+				service.EXPECT().GetNextMedications(request).Times(1).Return(response, nil)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
@@ -276,7 +276,7 @@ func TestGetNextMedicationHandler(t *testing.T) {
 			name:               "internal server error",
 			medicationResponse: nil,
 			buildStubs: func(service *mocks.MockMedicationService, request uint, response []models.MedicationResponse) {
-				service.EXPECT().GetNextMedication(request).Times(1).Return(nil, errors.ErrInternalServerError)
+				service.EXPECT().GetNextMedications(request).Times(1).Return(nil, errors.ErrInternalServerError)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)

@@ -231,7 +231,7 @@ func Test_GetNextMedicationService(t *testing.T) {
 			},
 			getNextMedError: nil,
 			buildStubs: func(repository *mocks.MockMedicationRepository, dbInput uint, dbOutput []models.Medication, dbError error) {
-				repository.EXPECT().GetNextMedication(dbInput).Times(1).Return(dbOutput, dbError)
+				repository.EXPECT().GetNextMedications(dbInput).Times(1).Return(dbOutput, dbError)
 			},
 		},
 		{
@@ -242,7 +242,7 @@ func Test_GetNextMedicationService(t *testing.T) {
 			getNextMedResponse: nil,
 			getNextMedError:    errors.ErrInternalServerError,
 			buildStubs: func(repository *mocks.MockMedicationRepository, dbInput uint, dbOutput []models.Medication, dbError error) {
-				repository.EXPECT().GetNextMedication(dbInput).Times(1).Return(dbOutput, dbError)
+				repository.EXPECT().GetNextMedications(dbInput).Times(1).Return(dbOutput, dbError)
 			},
 		},
 	}
@@ -251,7 +251,7 @@ func Test_GetNextMedicationService(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.buildStubs(mockMedicationRepository, tc.dbInput, tc.dbOutput, tc.dbError)
-			medicationResponse, err := testMedicationService.GetNextMedication(1)
+			medicationResponse, err := testMedicationService.GetNextMedications(1)
 
 			require.Equal(t, tc.getNextMedResponse, medicationResponse)
 			require.Equal(t, tc.getNextMedError, err)

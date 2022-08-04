@@ -13,7 +13,7 @@ import (
 
 type MedicationRepository interface {
 	CreateMedication(medication *models.Medication) (*models.Medication, error)
-	GetNextMedication(userID uint) ([]models.Medication, error)
+	GetNextMedications(userID uint) ([]models.Medication, error)
 	UpdateNextMedicationTime()
 	GetAllNextMedicationsToUpdate() ([]models.Medication, error)
 }
@@ -35,7 +35,7 @@ func (m *medicationRepo) CreateMedication(medication *models.Medication) (*model
 	return medication, nil
 }
 
-func (m *medicationRepo) GetNextMedication(userID uint) ([]models.Medication, error) {
+func (m *medicationRepo) GetNextMedications(userID uint) ([]models.Medication, error) {
 	var medications []models.Medication
 	err := m.DB.Where("user_id = ? AND next_dosage_time > ?", userID, time.Now().UTC()).Order("next_dosage_time ASC").Limit(10).Find(&medications).Error
 	if err != nil {
