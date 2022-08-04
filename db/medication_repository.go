@@ -4,11 +4,8 @@ import (
 	"fmt"
 	"github.com/decagonhq/meddle-api/models"
 	"github.com/go-co-op/gocron"
-	"github.com/robfig/cron/v3"
 	"gorm.io/gorm"
 	"log"
-	"os"
-	"os/signal"
 	"time"
 )
 
@@ -47,16 +44,10 @@ func (m *medicationRepo) GetNextMedication(userID uint) ([]models.Medication, er
 	return medication, nil
 }
 
-// remove minute and seconds use only hour for time
-// 1 Fetch all medications if the next time for dosage => present time...
-// 2 Update the next time for each medication to the sum of (next dosage time and the time interval) only if
-// the sum is doesn't enter the next day, otherwise set the next dosage time to 8am/9am the next day
-// 3 Check if the next dosage time is != dosage stop time
-//fetch in batches...
-
 func (m *medicationRepo) GetAllNextMedicationsToUpdate() ([]models.Medication, error) {
 	var medications []models.Medication
-	err := m.DB.Where("next_dosage_time = ?", time.Now().UTC()).Find(&medications).Error
+
+	err := m.DB.Where("(SELECT date_trunc('minute', next_dosage_time)) = (SELECT date_trunc('minute', now()))").Find(&medications).Error
 	if err != nil {
 		log.Println(err)
 		return nil, fmt.Errorf("could not get next medication: %v", err)
@@ -73,34 +64,24 @@ func (m *medicationRepo) UpdateNextMedicationTime() {
 	for _, medication := range medications {
 		timeSumation := medication.NextDosageTime.Add(time.Hour * time.Duration(medication.TimeInterval))
 		diff := timeSumation.Day() - medication.NextDosageTime.Day()
-		// check if the timeSumation has not entered the next day
-		if diff == 0 {
-			medication.NextDosageTime = timeSumation
-			m.DB.Model(&medication).Where("user_id = ?", medication.UserID).Update("next_dosage_time", medication.NextDosageTime)
-		} else {
-			// next day at 8am or 9am
-			d := medication.NextDosageTime
-			medication.NextDosageTime = time.Date(d.Year(), d.Month(), d.Day()+1, 9, 0, 0, 0, time.UTC)
-			m.DB.Model(&medication).Where("user_id = ?", medication.UserID).Update("next_dosage_time", medication.NextDosageTime)
+
+		if medication.NextDosageTime != medication.MedicationStopDate && medication.IsMedicationDone == false && medication.NextDosageTime.Unix() < medication.MedicationStopDate.Unix() {
+			if diff == 0 {
+				medication.NextDosageTime = timeSumation
+				m.DB.Model(&medication).Where("user_id = ?", medication.UserID).Update("next_dosage_time", medication.NextDosageTime)
+			} else {
+				d := medication.NextDosageTime
+				medication.NextDosageTime = time.Date(d.Year(), d.Month(), d.Day()+1, 9, 0, 0, 0, time.UTC)
+				m.DB.Model(&medication).Where("user_id = ?", medication.UserID).Update("next_dosage_time", medication.NextDosageTime)
+			}
 		}
 	}
 }
 
 func UpdateNextMedicationCronJob(repo MedicationRepository) {
-
 	s := gocron.NewScheduler(time.UTC)
-	s.Every(2).Seconds().Do(func() {
+	s.Every(1).Minute().Do(func() {
 		repo.UpdateNextMedicationTime()
 	})
 	s.StartBlocking()
-}
-
-func RunCronJob(repo MedicationRepository) {
-	c := cron.New()
-	c.AddFunc("@hourly", func() { fmt.Println("Every hour") })
-	c.AddFunc("@every 5m", func() { repo.UpdateNextMedicationTime() })
-	go c.Start()
-	sig := make(chan os.Signal)
-	signal.Notify(sig, os.Interrupt, os.Kill)
-	<-sig
 }

@@ -52,7 +52,13 @@ func (m *medicationService) CreateMedication(request *models.MedicationRequest) 
 	medication.MedicationStopDate = stopDate
 	medication.MedicationStartTime = startTime
 	nextTime := medication.MedicationStartTime.Add(time.Hour * time.Duration(medication.TimeInterval))
-	medication.NextDosageTime = time.Date(nextTime.Year(), nextTime.Month(), nextTime.Day(), nextTime.Hour(), 0, 0, 0, time.UTC)
+
+	if nextTime.Day()-medication.MedicationStartTime.Day() <= 0 {
+		medication.NextDosageTime = time.Date(nextTime.Year(), nextTime.Month(), nextTime.Day(), nextTime.Hour(), 0, 0, 0, time.UTC)
+	} else {
+		d := medication.MedicationStartTime
+		medication.NextDosageTime = time.Date(d.Year(), d.Month(), d.Day()+1, 9, 0, 0, 0, time.UTC)
+	}
 
 	response, err := m.medicationRepo.CreateMedication(medication)
 	if err != nil {
@@ -63,12 +69,8 @@ func (m *medicationService) CreateMedication(request *models.MedicationRequest) 
 }
 
 func (m *medicationService) GetNextMedication(userID uint) ([]models.MedicationResponse, *errors.Error) {
-	//medication, err := m.medicationRepo.GetNextMedication(userID)
-	//if err != nil {
-	//	return nil, errors.ErrInternalServerError
-	//}
-	//return medication.MedicationToResponse(), nil
 	var nextMedicationResponses []models.MedicationResponse
+
 	medications, err := m.medicationRepo.GetNextMedication(userID)
 	if err != nil {
 		return nil, errors.ErrInternalServerError
