@@ -22,7 +22,7 @@ type AuthRepository interface {
 	AddToBlackList(blacklist *models.BlackList) error
 	TokenInBlacklist(token string) bool
 	VerifyEmail(token *models.User,id uint) error
-	SetUserToActive(userID string) error
+	SetUserToActive(userID uint) error
 }
 
 type authRepo struct {
