@@ -19,11 +19,10 @@ func main() {
 	gormDB := db.GetDB(conf)
 	authRepo := db.NewAuthRepo(gormDB)
 	authService := services.NewAuthService(authRepo, conf)
-	startMail := mailservice.StartMailGun()
 
 	medicationRepo := db.NewMedicationRepo(gormDB)
 	medicationService := services.NewMedicationService(medicationRepo, conf)
-	mailService := mailservice.NewMailService(startMail, conf)
+	mailService := mailservice.NewMailService(conf)
 
 	s := &server.Server{
 		Config:            conf,

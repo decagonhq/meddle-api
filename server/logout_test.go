@@ -21,16 +21,15 @@ func setup(t *testing.T) func() {
 	ctrl.Finish()
 	mockRepository = mocks.NewMockAuthRepository(ctrl)
 
-	return func(){
+	return func() {
 		defer ctrl.Finish()
 	}
 }
 
-func Test_Logout(t *testing.T){
+func Test_Logout(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	auth := mocks.NewMockAuthService(ctrl)
 	repo := mocks.NewMockAuthRepository(ctrl)
-
 
 	conf, err := config.Load()
 	if err != nil {
@@ -54,7 +53,6 @@ func Test_Logout(t *testing.T){
 	repo.EXPECT().AddToBlackList(&models.BlackList{Email: user.Email, Token: token}).Return(nil)
 	repo.EXPECT().TokenInBlacklist(token).Return(false)
 	repo.EXPECT().FindUserByEmail(user.Email).Return(user, nil)
-
 
 	r := s.setupRouter()
 	resp := httptest.NewRecorder()
