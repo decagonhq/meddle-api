@@ -104,17 +104,18 @@ func (a *authRepo) TokenInBlacklist(token string) bool {
 	return result.Error != nil
 }
 
-func (a *authRepo) SetUserToActive(userID string) error {
+func (a *authRepo) SetUserToActive(userID uint) error {
 	var user *models.User
 	err := a.DB.Model(&user).Where("id = ?", userID).Update("is_active", true).Error
 	return err
 }
 
-func (a *authRepo) VerifyEmail(token *models.User,id uint) error {
-	err := a.SetUserToActive(fmt.Sprintf("%s", int(token.ID)))
+func (a *authRepo) VerifyEmail(token *models.User, id uint) error {
+	var tokenUser *models.User
+	err := a.SetUserToActive(tokenUser.ID)
 	if err != nil {
 		log.Printf("Error: %v", err.Error())
-		return  errors.New("could not set email")
+		return  errors.New("could not set user to active")
 	}
 	 return nil
 }
