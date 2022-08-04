@@ -29,12 +29,26 @@ const RefreshTokenValidity = time.Hour * 24
 type AuthService interface {
 	LoginUser(request *models.LoginRequest) (*models.LoginResponse, *apiError.Error)
 	SignupUser(request *models.User) (*models.User, *apiError.Error)
+	VerifyEmail(user *models.User) (string, error)
 }
 
 // authService struct
 type authService struct {
 	Config   *config.Config
 	authRepo db.AuthRepository
+}
+
+func (a *authService) VerifyEmail(user *models.User) (string, error) {
+	dUser, err := a.authRepo.FindUserById(user.ID)
+	if err != nil {
+		log.Printf("Error: %v", err.Error())
+		return  "", apiError.ErrInternalServerError
+	}
+	if user.ID != dUser.ID {
+		log.Println("invalid token")
+		return "", nil
+	}
+	return "", nil
 }
 
 // NewAuthService instantiate an authService

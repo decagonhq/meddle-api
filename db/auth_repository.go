@@ -2,10 +2,10 @@ package db
 
 import (
 	"fmt"
-
 	"github.com/decagonhq/meddle-api/models"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
+	"log"
 )
 
 // DB provides access to the different db
@@ -17,9 +17,12 @@ type AuthRepository interface {
 	IsPhoneExist(email string) error
 	FindUserByUsername(username string) (*models.User, error)
 	FindUserByEmail(email string) (*models.User, error)
+	FindUserById(userID uint) (*models.User, error)
 	UpdateUser(user *models.User) error
 	AddToBlackList(blacklist *models.BlackList) error
 	TokenInBlacklist(token string) bool
+	VerifyEmail(token *models.User,id uint) error
+	SetUserToActive(userID string) error
 }
 
 type authRepo struct {
@@ -81,6 +84,12 @@ func (a *authRepo) FindUserByEmail(email string) (*models.User, error) {
 	return &user, nil
 }
 
+func (a *authRepo) FindUserById(userID uint) (*models.User, error) {
+	var user *models.User
+	err := a.DB.Where("id = ?", userID).First(&user).Error
+	return user, err
+}
+
 func (a *authRepo) UpdateUser(user *models.User) error {
 	return nil
 }
@@ -94,3 +103,20 @@ func (a *authRepo) TokenInBlacklist(token string) bool {
 	result := a.DB.Where("token = ?", token).Find(&models.BlackList{})
 	return result.Error != nil
 }
+
+func (a *authRepo) SetUserToActive(userID string) error {
+	var user *models.User
+	err := a.DB.Model(&user).Where("id = ?", userID).Update("is_active", true).Error
+	return err
+}
+
+func (a *authRepo) VerifyEmail(token *models.User,id uint) error {
+	err := a.SetUserToActive(string(token.ID))
+	if err != nil {
+		log.Printf("Error: %v", err.Error())
+		return  errors.New("could not set email")
+	}
+	 return nil
+}
+
+
