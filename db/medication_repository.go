@@ -67,7 +67,7 @@ func (m *medicationRepo) UpdateNextMedicationTime() {
 			if diff == 0 {
 				m.DB.Model(&medication).Where("user_id = ?", medication.UserID).Update("next_dosage_time", timeSumation)
 			} else {
-				medication.NextDosageTime = SetNextDosageTime(medication.NextDosageTime)
+				medication.NextDosageTime = ResetNextDosageTime(medication.NextDosageTime)
 				m.DB.Model(&medication).Where("user_id = ?", medication.UserID).Update("next_dosage_time", medication.NextDosageTime)
 			}
 		}
@@ -91,6 +91,6 @@ func (m *medicationRepo) GetAllMedications(userID uint) ([]models.Medication, er
 	return medications, nil
 }
 
-func SetNextDosageTime(t time.Time) time.Time {
+func ResetNextDosageTime(t time.Time) time.Time {
 	return time.Date(t.Year(), t.Month(), t.Day()+1, 9, 0, 0, 0, time.UTC)
 }
