@@ -21,7 +21,6 @@ type AuthRepository interface {
 	UpdateUser(user *models.User) error
 	AddToBlackList(blacklist *models.BlackList) error
 	TokenInBlacklist(token string) bool
-	VerifyEmail(token *models.User,id uint) error
 	SetUserToActive(userID uint) error
 }
 
