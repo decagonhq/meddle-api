@@ -15,6 +15,7 @@ type MedicationRepository interface {
 	CreateMedication(medication *models.Medication) (*models.Medication, error)
 	GetNextMedication(userID uint) ([]models.Medication, error)
 	UpdateNextMedicationTime()
+	GetAllNextMedicationsToUpdate() ([]models.Medication, error)
 }
 
 type medicationRepo struct {
@@ -35,13 +36,13 @@ func (m *medicationRepo) CreateMedication(medication *models.Medication) (*model
 }
 
 func (m *medicationRepo) GetNextMedication(userID uint) ([]models.Medication, error) {
-	var medication []models.Medication
-	err := m.DB.Where("user_id = ? AND next_dosage_time > ?", userID, time.Now().UTC()).Order("next_dosage_time ASC").Limit(10).Find(&medication).Error
+	var medications []models.Medication
+	err := m.DB.Where("user_id = ? AND next_dosage_time > ?", userID, time.Now().UTC()).Order("next_dosage_time ASC").Limit(10).Find(&medications).Error
 	if err != nil {
 		log.Println(err)
 		return nil, fmt.Errorf("could not get next medication: %v", err)
 	}
-	return medication, nil
+	return medications, nil
 }
 
 func (m *medicationRepo) GetAllNextMedicationsToUpdate() ([]models.Medication, error) {

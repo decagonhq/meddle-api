@@ -35,7 +35,7 @@ func Test_MedicationService(t *testing.T) {
 		MedicationPrescribedBy: "Dr Tolu",
 		MedicationStopDate:     stopDate,
 		MedicationStartTime:    startTime,
-		NextDosageTime:         startTime.Add(time.Hour * time.Duration(8)),
+		NextDosageTime:         time.Date(startTime.Add(time.Hour*time.Duration(8)).Year(), startTime.Add(time.Hour*time.Duration(8)).Month(), startTime.Add(time.Hour*time.Duration(8)).Day(), startTime.Add(time.Hour*time.Duration(8)).Hour(), 0, 0, 0, time.UTC),
 		PurposeOfMedication:    "malaria treatment",
 	}
 	testCases := []struct {
