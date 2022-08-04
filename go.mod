@@ -13,6 +13,7 @@ require (
 	github.com/joho/godotenv v1.4.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/leebenson/conform v1.2.2
+	github.com/mailgun/mailgun-go/v4 v4.8.1
 	github.com/pkg/errors v0.8.1
 	github.com/stretchr/testify v1.8.0
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
@@ -25,6 +26,7 @@ require (
 	github.com/etgryphon/stringUp v0.0.0-20121020160746-31534ccd8cac // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/goccy/go-json v0.9.7 // indirect
+	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgconn v1.12.1 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
