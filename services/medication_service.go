@@ -16,7 +16,6 @@ type MedicationService interface {
 	CreateMedication(request *models.MedicationRequest) (*models.MedicationResponse, *errors.Error)
 	GetNextMedications(userID uint) ([]models.MedicationResponse, *errors.Error)
 	GetAllMedications(userID uint) ([]models.MedicationResponse, *errors.Error)
-
 }
 
 // medicationService struct
@@ -56,10 +55,9 @@ func (m *medicationService) CreateMedication(request *models.MedicationRequest) 
 	nextTime := medication.MedicationStartTime.Add(time.Hour * time.Duration(medication.TimeInterval))
 
 	if nextTime.Day()-medication.MedicationStartTime.Day() <= 0 {
-		medication.NextDosageTime = time.Date(nextTime.Year(), nextTime.Month(), nextTime.Day(), nextTime.Hour(), 0, 0, 0, time.UTC)
+		medication.NextDosageTime = db.SetNextDosageTime(nextTime)
 	} else {
-		d := medication.MedicationStartTime
-		medication.NextDosageTime = time.Date(d.Year(), d.Month(), d.Day()+1, 9, 0, 0, 0, time.UTC)
+		medication.NextDosageTime = db.SetNextDosageTime(medication.MedicationStartTime)
 	}
 
 	response, err := m.medicationRepo.CreateMedication(medication)
@@ -72,12 +70,12 @@ func (m *medicationService) CreateMedication(request *models.MedicationRequest) 
 
 func (m *medicationService) GetAllMedications(userID uint) ([]models.MedicationResponse, *errors.Error) {
 	var medicationResponses []models.MedicationResponse
-	
-  medications, err := m.medicationRepo.GetAllMedications(userID)
+
+	medications, err := m.medicationRepo.GetAllMedications(userID)
 	if err != nil {
 		return nil, errors.ErrInternalServerError
 	}
-  
+
 	for _, medication := range medications {
 		medicationResponses = append(medicationResponses, *medication.MedicationToResponse())
 	}
@@ -91,7 +89,7 @@ func (m *medicationService) GetNextMedications(userID uint) ([]models.Medication
 	if err != nil {
 		return nil, errors.ErrInternalServerError
 	}
-  
+
 	for _, medication := range medications {
 		nextMedicationResponses = append(nextMedicationResponses, *medication.MedicationToResponse())
 	}

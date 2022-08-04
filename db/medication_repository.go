@@ -39,7 +39,6 @@ func (m *medicationRepo) GetNextMedications(userID uint) ([]models.Medication, e
 	var medications []models.Medication
 	err := m.DB.Where("user_id = ? AND next_dosage_time > ?", userID, time.Now().UTC()).Order("next_dosage_time ASC").Limit(10).Find(&medications).Error
 	if err != nil {
-		log.Println(err)
 		return nil, fmt.Errorf("could not get next medication: %v", err)
 	}
 	return medications, nil
@@ -50,7 +49,6 @@ func (m *medicationRepo) GetAllNextMedicationsToUpdate() ([]models.Medication, e
 
 	err := m.DB.Where("(SELECT date_trunc('minute', next_dosage_time)) = (SELECT date_trunc('minute', now()))").Find(&medications).Error
 	if err != nil {
-		log.Println(err)
 		return nil, fmt.Errorf("could not get next medication: %v", err)
 	}
 	return medications, nil
@@ -60,7 +58,6 @@ func (m *medicationRepo) UpdateNextMedicationTime() {
 	medications, err := m.GetAllNextMedicationsToUpdate()
 	if err != nil {
 		log.Println(err)
-		return
 	}
 	for _, medication := range medications {
 		timeSumation := medication.NextDosageTime.Add(time.Hour * time.Duration(medication.TimeInterval))
@@ -68,11 +65,9 @@ func (m *medicationRepo) UpdateNextMedicationTime() {
 
 		if medication.NextDosageTime != medication.MedicationStopDate && medication.IsMedicationDone == false && medication.NextDosageTime.Unix() < medication.MedicationStopDate.Unix() {
 			if diff == 0 {
-				medication.NextDosageTime = timeSumation
-				m.DB.Model(&medication).Where("user_id = ?", medication.UserID).Update("next_dosage_time", medication.NextDosageTime)
+				m.DB.Model(&medication).Where("user_id = ?", medication.UserID).Update("next_dosage_time", timeSumation)
 			} else {
-				d := medication.NextDosageTime
-				medication.NextDosageTime = time.Date(d.Year(), d.Month(), d.Day()+1, 9, 0, 0, 0, time.UTC)
+				medication.NextDosageTime = SetNextDosageTime(medication.NextDosageTime)
 				m.DB.Model(&medication).Where("user_id = ?", medication.UserID).Update("next_dosage_time", medication.NextDosageTime)
 			}
 		}
@@ -96,3 +91,6 @@ func (m *medicationRepo) GetAllMedications(userID uint) ([]models.Medication, er
 	return medications, nil
 }
 
+func SetNextDosageTime(t time.Time) time.Time {
+	return time.Date(t.Year(), t.Month(), t.Day()+1, 9, 0, 0, 0, time.UTC)
+}
