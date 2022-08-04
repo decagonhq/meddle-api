@@ -111,7 +111,7 @@ func (a *authRepo) SetUserToActive(userID string) error {
 }
 
 func (a *authRepo) VerifyEmail(token *models.User,id uint) error {
-	err := a.SetUserToActive(string(token.ID))
+	err := a.SetUserToActive(fmt.Sprintf("%s", token.ID))
 	if err != nil {
 		log.Printf("Error: %v", err.Error())
 		return  errors.New("could not set email")
