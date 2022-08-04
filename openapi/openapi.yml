@@ -172,6 +172,24 @@ paths:
           description: Forbidden user
         '500':
           description: Internal server error
+    get:
+      tags:
+        - medication
+      summary: Get all medications
+      description: This gets all medications related to a logged in user.
+      operationId: getAllMedications
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: get all medications successful
+          schema:
+            $ref: '#/definitions/AllMedicationResponse'
+        '403':
+          description: Forbidden user
+        '500':
+          description: Internal server error
+
 securityDefinitions:
   bearerAuth:
     type: apiKey
@@ -261,8 +279,22 @@ definitions:
       purpose_of_medication:
         type: string
         example: "malaria treatment"
+    required:
+      - name
+      - dosage
+      - time_interval
+      - medication_start_date
+      - duration
+      - medication_prescribed_by
+      - medication_stop_date
+      - medication_start_time
+      - purpose_of_medication
     xml:
       name: Medication
+  AllMedicationResponse:
+    type: array
+    items:
+      $ref: '#/definitions/MedicationResponse'
   MedicationResponse:
     type: object
     properties:

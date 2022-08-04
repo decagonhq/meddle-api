@@ -116,18 +116,4 @@ func (s *Server) handleShowProfile() gin.HandlerFunc {
 	}
 }
 
-func (s *Server) VerifyEmail() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		_, user, err := GetValuesFromContext(c)
-		if err != nil {
-			err.Respond(c)
-			return
-		}
-		_, errr := s.AuthService.VerifyEmail(user)
-		if errr != nil {
-			err.Respond(c)
-		}
-		response.JSON(c,"your email has been verified", http.StatusOK, nil, nil)
-	}
-}
 
