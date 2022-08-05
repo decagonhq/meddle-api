@@ -10,7 +10,7 @@ import (
 
 type Mailer interface {
 	SendVerifyAccount(userEmail, link string) error
-	SendResetPassword(userEmail, link string) (string, error)
+	SendResetPassword(userEmail, link string) error
 }
 type Mailgun struct {
 	Client *mailgun.MailgunImpl
@@ -46,7 +46,7 @@ func (mail *Mailgun) SendVerifyAccount(userEmail, link string) error {
 	return err
 }
 
-func (mail *Mailgun) SendResetPassword(userEmail, link string) (string, error) {
+func (mail *Mailgun) SendResetPassword(userEmail, link string) error {
 	EmailFrom := mail.Conf.EmailFrom
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
@@ -55,17 +55,17 @@ func (mail *Mailgun) SendResetPassword(userEmail, link string) (string, error) {
 	m := mail.Client.NewMessage(EmailFrom, "Reset Password", "")
 	m.SetTemplate("reset.password")
 	if err := m.AddRecipient(userEmail); err != nil {
-		return "", err
+		return errors.New("could not add recipient")
 	}
 
 	err := m.AddVariable("link", link)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	res, _, errr := mail.Client.Send(ctx, m)
+	_, _, errr := mail.Client.Send(ctx, m)
 	if errr != nil {
-		return "", errr
+		return errr
 	}
-	return res, nil
+	return nil
 }
