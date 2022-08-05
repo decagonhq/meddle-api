@@ -61,7 +61,6 @@ func GetValuesFromContext(c *gin.Context) (string, *models.User, *errors.Error) 
 	if !ok {
 		return "", nil, errors.New("internal server error", http.StatusInternalServerError)
 	}
-
 	return token, user, nil
 }
 

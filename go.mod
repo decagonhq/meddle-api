@@ -13,6 +13,7 @@ require (
 	github.com/joho/godotenv v1.4.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/leebenson/conform v1.2.2
+	github.com/mailgun/mailgun-go/v4 v4.8.1
 	github.com/pkg/errors v0.8.1
 	github.com/stretchr/testify v1.8.0
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
