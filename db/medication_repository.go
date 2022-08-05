@@ -37,7 +37,7 @@ func (m *medicationRepo) CreateMedication(medication *models.Medication) (*model
 
 func (m *medicationRepo) GetNextMedications(userID uint) ([]models.Medication, error) {
 	var medications []models.Medication
-	err := m.DB.Where("user_id = ? AND next_dosage_time > ?", userID, time.Now().UTC()).Order("next_dosage_time ASC").Limit(10).Find(&medications).Error
+	err := m.DB.Where("user_id = ? AND next_dosage_time > ?", userID, time.Now().UTC()).Order("next_dosage_time ASC").Find(&medications).Error
 	if err != nil {
 		return nil, fmt.Errorf("could not get next medication: %v", err)
 	}
@@ -47,7 +47,7 @@ func (m *medicationRepo) GetNextMedications(userID uint) ([]models.Medication, e
 func (m *medicationRepo) GetAllNextMedicationsToUpdate() ([]models.Medication, error) {
 	var medications []models.Medication
 
-	err := m.DB.Where("(SELECT date_trunc('minute', next_dosage_time)) = (SELECT date_trunc('minute', now()))").Find(&medications).Error
+	err := m.DB.Where("(SELECT date_trunc('hour', next_dosage_time)) = (SELECT date_trunc('hour', now()))").Find(&medications).Error
 	if err != nil {
 		return nil, fmt.Errorf("could not get next medication: %v", err)
 	}
@@ -57,26 +57,28 @@ func (m *medicationRepo) GetAllNextMedicationsToUpdate() ([]models.Medication, e
 func (m *medicationRepo) UpdateNextMedicationTime() {
 	medications, err := m.GetAllNextMedicationsToUpdate()
 	if err != nil {
-		log.Println(err)
+		log.Println(fmt.Errorf("could not get next medications while running update next dosage cron job: %v", err))
 	}
 	for _, medication := range medications {
 		timeSumation := medication.NextDosageTime.Add(time.Hour * time.Duration(medication.TimeInterval))
-		diff := timeSumation.Day() - medication.NextDosageTime.Day()
+		setNextDosageTime := SetNextDosageTime(timeSumation, medication.NextDosageTime)
 
-		if medication.NextDosageTime != medication.MedicationStopDate && medication.IsMedicationDone == false && medication.NextDosageTime.Unix() < medication.MedicationStopDate.Unix() {
-			if diff == 0 {
-				m.DB.Model(&medication).Where("user_id = ?", medication.UserID).Update("next_dosage_time", timeSumation)
-			} else {
-				medication.NextDosageTime = ResetNextDosageTime(medication.NextDosageTime)
-				m.DB.Model(&medication).Where("user_id = ?", medication.UserID).Update("next_dosage_time", medication.NextDosageTime)
-			}
+		if medication.IsMedicationDone == false && medication.NextDosageTime.Unix() < medication.MedicationStopDate.Unix() {
+			m.DB.Model(&medication).Where("user_id = ?", medication.UserID).Update("next_dosage_time", setNextDosageTime)
 		}
 	}
 }
 
 func UpdateNextMedicationCronJob(repo MedicationRepository) {
+	_, presentMinute, presentSecond := time.Now().UTC().Clock()
+	waitTime := time.Duration(60-presentMinute)*time.Minute + time.Duration(60-presentSecond)*time.Second
+	if waitTime == 0 {
+		waitTime = 0
+	}
+
 	s := gocron.NewScheduler(time.UTC)
-	s.Every(1).Minute().Do(func() {
+	time.Sleep(waitTime)
+	s.Every(1).Hour().Do(func() {
 		repo.UpdateNextMedicationTime()
 	})
 	s.StartBlocking()
@@ -91,6 +93,9 @@ func (m *medicationRepo) GetAllMedications(userID uint) ([]models.Medication, er
 	return medications, nil
 }
 
-func ResetNextDosageTime(t time.Time) time.Time {
-	return time.Date(t.Year(), t.Month(), t.Day()+1, 9, 0, 0, 0, time.UTC)
+func SetNextDosageTime(t1, t2 time.Time) time.Time {
+	if t1.Day()-t2.Day() <= 0 {
+		return time.Date(t1.Year(), t1.Month(), t1.Day(), t1.Hour(), 0, 0, 0, time.UTC)
+	}
+	return time.Date(t2.Year(), t2.Month(), t2.Day()+1, 9, 0, 0, 0, time.UTC)
 }

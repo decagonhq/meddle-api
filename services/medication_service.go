@@ -53,12 +53,8 @@ func (m *medicationService) CreateMedication(request *models.MedicationRequest) 
 	medication.MedicationStopDate = stopDate
 	medication.MedicationStartTime = startTime
 	nextTime := medication.MedicationStartTime.Add(time.Hour * time.Duration(medication.TimeInterval))
-	log.Println(nextTime)
-	if nextTime.Day()-medication.MedicationStartTime.Day() <= 0 {
-		medication.NextDosageTime = time.Date(nextTime.Year(), nextTime.Month(), nextTime.Day(), nextTime.Hour(), 0, 0, 0, time.UTC)
-	} else {
-		medication.NextDosageTime = db.ResetNextDosageTime(medication.MedicationStartTime)
-	}
+
+	medication.NextDosageTime = db.SetNextDosageTime(nextTime, medication.MedicationStartTime)
 
 	response, err := m.medicationRepo.CreateMedication(medication)
 	if err != nil {
