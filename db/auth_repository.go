@@ -2,7 +2,6 @@ package db
 
 import (
 	"fmt"
-
 	"github.com/decagonhq/meddle-api/models"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
