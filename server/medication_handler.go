@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/models"
 	"github.com/decagonhq/meddle-api/server/response"
@@ -43,7 +42,8 @@ func (s *Server) handleGetMedDetail() gin.HandlerFunc {
 		id := c.Param("id")
 		idUint, errr := strconv.ParseUint(id, 10, 32)
 		if errr != nil {
-			fmt.Errorf("error parsing id: %v", errr)
+			response.JSON(c, "error parsing id", http.StatusBadRequest, nil, errr)
+			return
 		}
 		medication, err := s.MedicationService.GetMedicationDetail(uint(idUint), user.ID)
 		if err != nil {
