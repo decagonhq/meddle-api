@@ -20,7 +20,7 @@ func (s *Server) ForgotPassword() gin.HandlerFunc {
 		}
 		err := s.AuthService.ForgotPassword(&foundUser)
 		if err != nil {
-			err.Respond(c)
+			response.JSON(c, "email was not sent", http.StatusBadRequest, nil, err)
 			return
 		}
 		response.JSON(c, "link to reset password successfully sent", http.StatusCreated, nil, nil)
