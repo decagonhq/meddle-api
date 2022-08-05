@@ -2,10 +2,10 @@ package db
 
 import (
 	"fmt"
-
 	"github.com/decagonhq/meddle-api/models"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
+	"log"
 )
 
 // DB provides access to the different db
@@ -20,6 +20,7 @@ type AuthRepository interface {
 	UpdateUser(user *models.User) error
 	AddToBlackList(blacklist *models.BlackList) error
 	TokenInBlacklist(token string) bool
+	UpdatePassword(password string, email string) error
 }
 
 type authRepo struct {
@@ -93,4 +94,14 @@ func (a *authRepo) AddToBlackList(blacklist *models.BlackList) error {
 func (a *authRepo) TokenInBlacklist(token string) bool {
 	result := a.DB.Where("token = ?", token).Find(&models.BlackList{})
 	return result.Error != nil
+}
+
+func (a *authRepo) UpdatePassword(password string, email string) error {
+	var user *models.User
+	err := a.DB.Model(&user).Where("email = ?", email).Update("hashed_password", password).UpdateColumns(password)
+	if err != nil {
+		log.Println(err)
+		return errors.New("could not update password")
+	}
+	return nil
 }
