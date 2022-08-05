@@ -5,7 +5,6 @@ import (
 	"github.com/decagonhq/meddle-api/db"
 	"github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/models"
-	"log"
 	"net/http"
 	"time"
 )
@@ -58,7 +57,6 @@ func (m *medicationService) CreateMedication(request *models.MedicationRequest) 
 
 	response, err := m.medicationRepo.CreateMedication(medication)
 	if err != nil {
-		log.Println(err)
 		return nil, errors.ErrInternalServerError
 	}
 	return response.MedicationToResponse(), nil
