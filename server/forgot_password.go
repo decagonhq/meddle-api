@@ -23,7 +23,7 @@ func (s *Server) ForgotPassword() gin.HandlerFunc {
 			response.JSON(c, "email was not sent", http.StatusBadRequest, nil, err)
 			return
 		}
-		response.JSON(c, "link to reset password successfully sent", http.StatusCreated, nil, nil)
+		response.JSON(c, "link to reset password successfully sent", http.StatusOK, nil, nil)
 	}
 }
 
