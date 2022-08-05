@@ -1,11 +1,11 @@
 package server
 
 import (
+	"fmt"
 	"github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/models"
 	"github.com/decagonhq/meddle-api/server/response"
 	"github.com/gin-gonic/gin"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -46,7 +46,7 @@ func (s *Server) handleGetMedDetail() gin.HandlerFunc {
 		id := c.Param("id")
 		idUint, errr := strconv.ParseUint(id, 10, 32)
 		if errr != nil {
-			log.Fatalf("error converting id to uint: %v\n", errr)
+			fmt.Errorf("error parsing id: %v", errr)
 		}
 		medication, err := s.MedicationService.GetMedicationDetail(uint(idUint), user.ID)
 		if err != nil {
