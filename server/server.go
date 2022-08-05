@@ -65,6 +65,5 @@ func gracefulShutdown(srv *http.Server) {
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Fatal("Server forced to shutdown:", err)
 	}
-
 	log.Println("Server exiting")
 }
