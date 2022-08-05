@@ -18,9 +18,7 @@ func (s *Server) handleCreateMedication() gin.HandlerFunc {
 			err.Respond(c)
 			return
 		}
-
 		userId := user.ID
-
 		if err := c.ShouldBindJSON(&medicationRequest); err != nil {
 			response.JSON(c, "", http.StatusBadRequest, nil, err)
 			return
@@ -31,7 +29,6 @@ func (s *Server) handleCreateMedication() gin.HandlerFunc {
 			err.Respond(c)
 			return
 		}
-
 		response.JSON(c, "medication created successful", http.StatusCreated, createdMedication, nil)
 	}
 }
@@ -64,7 +61,6 @@ func (s *Server) handleGetAllMedications() gin.HandlerFunc {
 			err.Respond(c)
 			return
 		}
-
 		medications, err := s.MedicationService.GetAllMedications(user.ID)
 		if err != nil {
 			err.Respond(c)
