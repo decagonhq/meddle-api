@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"github.com/decagonhq/meddle-api/mailservice"
 	"net/http"
 
 	"errors"
@@ -36,7 +37,7 @@ type AuthService interface {
 type authService struct {
 	Config   *config.Config
 	authRepo db.AuthRepository
-	mail     *Mailgun
+	mail     mailservice.Mailer
 }
 
 // NewAuthService instantiate an authService

@@ -19,7 +19,7 @@ type User struct {
 	Email          string `json:"email" gorm:"unique;not null" binding:"required,email"`
 	PhoneNumber    string `json:"phone_number" gorm:"unique" binding:"required,e164"`
 	Password       string `json:"password,omitempty" gorm:"-" binding:"required,min=8,max=15"`
-	HashedPassword string `json:"-" gorm:"password,text" gorm:"type:text"`
+	HashedPassword string `json:"-" gorm:"password"`
 	IsEmailActive  bool   `json:"-"`
 }
 

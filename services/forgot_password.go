@@ -22,7 +22,6 @@ func (a *authService) ForgotPassword(user *models.ForgotPassword) *apiError.Erro
 
 	_, err = a.mail.SendResetPassword(user.Email, fmt.Sprintf("http://localhost:8080/reset-password/%s", token))
 
-	log.Println("LINK: ", fmt.Sprintf("http://localhost:8080/reset-password/%s", token))
 	if err != nil {
 		log.Printf("Error: %v", err.Error())
 		return apiError.New("mail couldn't be sent", http.StatusServiceUnavailable)
