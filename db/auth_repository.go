@@ -93,9 +93,4 @@ func (a *authRepo) TokenInBlacklist(token string) bool {
 	result := a.DB.Where("token = ?", token).Find(&models.BlackList{})
 	return result.Error != nil
 }
-<<<<<<< Updated upstream
-=======
 
-
-
->>>>>>> Stashed changes
