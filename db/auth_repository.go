@@ -93,3 +93,24 @@ func (a *authRepo) TokenInBlacklist(token string) bool {
 	result := a.DB.Where("token = ?", token).Find(&models.BlackList{})
 	return result.Error != nil
 }
+
+func (a *authRepo) Verify_Email(userId string, token string) error {
+	var user models.User
+	err := a.DB.Where("id = ?", userId).First(&user).Error
+	if err != nil {
+		return errors.Wrap(err, "gorm.find error")
+	}
+	if user.IsEmailActive {
+		return fmt.Errorf("email already verified")
+	}
+	//if user.Email_verification_token != token {
+	//	return fmt.Errorf("invalid token")
+	//}
+	user.IsEmailActive = true
+	err = a.DB.Save(&user).Error
+	if err != nil {
+		return errors.Wrap(err, "gorm.save error")
+	}
+	return nil
+}
+
