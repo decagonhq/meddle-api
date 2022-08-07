@@ -29,6 +29,7 @@ const RefreshTokenValidity = time.Hour * 24
 type AuthService interface {
 	LoginUser(request *models.LoginRequest) (*models.LoginResponse, *apiError.Error)
 	SignupUser(request *models.User) (*models.User, *apiError.Error)
+	VerifyEmail(token string, userid string) error
 }
 
 // authService struct
@@ -164,4 +165,9 @@ func GenerateClaims(email string) jwt.MapClaims {
 	}
 
 	return accessClaims
+}
+
+func (a *authService) VerifyEmail(token string, userid string) error {
+	err := a.authRepo.VerifyEmail(token, userid)
+	return err
 }
