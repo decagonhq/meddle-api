@@ -6,19 +6,20 @@ import (
 	"github.com/decagonhq/meddle-api/server/response"
 	"github.com/decagonhq/meddle-api/services"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 	"log"
 	"net/http"
 	"time"
 )
 
-func (s *Server) ForgotPassword() gin.HandlerFunc {
+func (s *Server) SendEmailForPasswordReset() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var foundUser models.ForgotPassword
 		if err := c.ShouldBindJSON(&foundUser); err != nil {
 			response.JSON(c, "error unmarshalling body", http.StatusBadRequest, nil, err)
 			return
 		}
-		err := s.AuthService.ForgotPassword(&foundUser)
+		err := s.AuthService.SendEmailForPasswordReset(&foundUser)
 		if err != nil {
 			response.JSON(c, "email was not sent", http.StatusBadRequest, nil, err)
 			return
@@ -41,6 +42,7 @@ func (s *Server) ResetPassword() gin.HandlerFunc {
 		}
 		if pw.Password != pw.ConfirmPassword {
 			response.JSON(c, "password does not match", errors.ErrBadRequest.Status, nil, err)
+			return
 		}
 		var user models.User
 		user.Password = pw.Password
@@ -48,8 +50,28 @@ func (s *Server) ResetPassword() gin.HandlerFunc {
 		if err != nil {
 			log.Printf("error generating password hash: %v", err.Error())
 			response.JSON(c, "internal server error", errors.ErrInternalServerError.Status, nil, err)
+			return
 		}
 		token := c.Param("token")
+
+		tok, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+
+		})
+		if !tok.Valid {
+
+		}
+
+		jwtB64 := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+
+		var token *jwt.Token
+		if token, err = jwt.Parse(jwtB64, jwks.Keyfunc); err != nil {
+			log.Fatalf("Failed to parse the JWT.\nError: %s", err.Error())
+		}
+
+		if !token.Valid {
+			log.Fatalf("The token is not valid.")
+		}
+
 		claims, errr := getClaims(token, s.Config.JWTSecret)
 		if errr != nil {
 			response.JSON(c, "", http.StatusInternalServerError, nil, errr)
