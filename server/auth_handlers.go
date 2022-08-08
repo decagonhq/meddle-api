@@ -1,6 +1,8 @@
 package server
 
 import (
+	"github.com/decagonhq/meddle-api/config"
+	"golang.org/x/oauth2"
 	"log"
 	"net/http"
 	"time"
@@ -98,8 +100,9 @@ func (s *Server) handleLogout() gin.HandlerFunc {
 
 func (s *Server) handleFBLogin() gin.HandlerFunc {
 	return func(c *gin.Context) {
-
-		c.Redirect(http.StatusTemporaryRedirect, "/")
+		conf := config.GetFacebookOAuthConfig(s.Config.FacebookClientID, s.Config.FacebookClientSecret, s.Config.FacebookRedirectURL)
+		url := conf.AuthCodeURL(s.Config.OauthStateString, oauth2.AccessTypeOffline)
+		c.Redirect(http.StatusTemporaryRedirect, url)
 	}
 }
 
