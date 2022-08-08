@@ -5,7 +5,6 @@ import (
 	"github.com/decagonhq/meddle-api/models"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
-	"log"
 )
 
 // DB provides access to the different db
@@ -20,6 +19,7 @@ type AuthRepository interface {
 	UpdateUser(user *models.User) error
 	AddToBlackList(blacklist *models.BlackList) error
 	TokenInBlacklist(token string) bool
+	IsTokenInBlacklist(token string) error
 	UpdatePassword(password string, email string) error
 }
 
@@ -96,12 +96,22 @@ func (a *authRepo) TokenInBlacklist(token string) bool {
 	return result.Error != nil
 }
 
-func (a *authRepo) UpdatePassword(password string, email string) error {
-	var user *models.User
-	err := a.DB.Model(&user).Where("email = ?", email).Update("hashed_password", password).UpdateColumns(password)
+func (a *authRepo) IsTokenInBlacklist(token string) error {
+	var count int64
+	err := a.DB.Model(&models.BlackList{}).Where("token = ?", token).Count(&count).Error
 	if err != nil {
-		log.Println(err)
-		return errors.New("could not update password")
+		return errors.Wrap(err, "gorm.count error")
+	}
+	if count > 0 {
+		return fmt.Errorf("token expired, request a new link")
+	}
+	return nil
+}
+
+func (a *authRepo) UpdatePassword(password string, email string) error {
+	err := a.DB.Model(&models.User{}).Where("email = ?", email).Updates(models.User{HashedPassword: password}).Error
+	if err != nil {
+		return err
 	}
 	return nil
 }

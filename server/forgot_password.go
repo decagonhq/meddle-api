@@ -6,10 +6,8 @@ import (
 	"github.com/decagonhq/meddle-api/server/response"
 	"github.com/decagonhq/meddle-api/services"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt"
 	"log"
 	"net/http"
-	"time"
 )
 
 func (s *Server) SendEmailForPasswordReset() gin.HandlerFunc {
@@ -53,51 +51,37 @@ func (s *Server) ResetPassword() gin.HandlerFunc {
 			return
 		}
 		token := c.Param("token")
-
-		tok, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
-
-		})
-		if !tok.Valid {
-
-		}
-
-		jwtB64 := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
-
-		var token *jwt.Token
-		if token, err = jwt.Parse(jwtB64, jwks.Keyfunc); err != nil {
-			log.Fatalf("Failed to parse the JWT.\nError: %s", err.Error())
-		}
-
-		if !token.Valid {
-			log.Fatalf("The token is not valid.")
-		}
-
-		claims, errr := getClaims(token, s.Config.JWTSecret)
-		if errr != nil {
-			response.JSON(c, "", http.StatusInternalServerError, nil, errr)
+		err = s.AuthRepository.IsTokenInBlacklist(token)
+		if err != nil {
+			response.JSON(c, "expired token, Please request a new password reset link", http.StatusUnauthorized, nil, nil)
 			return
 		}
-		if isTokenExpired(claims) {
-			response.JSON(c, "your link expired, cant update password", http.StatusInternalServerError, nil, errr)
+		//getClaims function contains verifyToken function
+		//where token validity is verified
+		claims, errr := getClaims(token, s.Config.JWTSecret)
+		if errr != nil {
+			response.JSON(c, "invalid link, please try again", http.StatusUnauthorized, nil, errr)
+			return
+		}
+		err = claims.Valid()
+		if err != nil {
+			response.JSON(c, "your token has expired, cant update password, Request a new password reset link", http.StatusUnauthorized, nil, errr)
 			return
 		}
 		email := claims["email"].(string)
 		errr = s.AuthRepository.UpdatePassword(user.HashedPassword, email)
 		if errr != nil {
-			response.JSON(c, "cant update password", http.StatusInternalServerError, nil, errr)
+			response.JSON(c, "An error occurred, try again", http.StatusInternalServerError, nil, errr)
 			return
 		}
-		convertClaims, _ := claims["exp"].(int64)
-		if convertClaims < time.Now().Unix() {
-			accBlacklist := &models.BlackList{
-				Email: email,
-				Token: token,
-			}
-			if err := s.AuthRepository.AddToBlackList(accBlacklist); err != nil {
-				log.Printf("can't add access token to blacklist: %v\n", err)
-				response.JSON(c, "reset failed", http.StatusInternalServerError, nil, errors.New("can't add access token to blacklist", http.StatusInternalServerError))
-				return
-			}
+		accBlacklist := &models.BlackList{
+			Email: email,
+			Token: token,
+		}
+		if err := s.AuthRepository.AddToBlackList(accBlacklist); err != nil {
+			log.Printf("can't add access token to blacklist: %v\n", err)
+			response.JSON(c, "request a new link", http.StatusInternalServerError, nil, errors.New("", http.StatusInternalServerError))
+			return
 		}
 		response.JSON(c, "Reset successful, Login with your new password to continue", http.StatusCreated, nil, nil)
 	}

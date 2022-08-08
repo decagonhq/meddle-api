@@ -18,7 +18,8 @@ func (a *authService) SendEmailForPasswordReset(user *models.ForgotPassword) *ap
 	if err != nil {
 		return apiError.New("could not generate link", http.StatusInternalServerError)
 	}
-	link := fmt.Sprintf("http://localhost:8080/reset-password/%s", token)
+	link := fmt.Sprintf("http://localhost:8080/reset/password/%s", token)
+	log.Println("my token: ", token)
 	body := "Please Click the link below to reset your password"
 	title := "Password Reset Link"
 	v := map[string]interface{}{}
