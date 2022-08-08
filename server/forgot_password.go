@@ -28,22 +28,22 @@ func (s *Server) SendEmailForPasswordReset() gin.HandlerFunc {
 
 func (s *Server) ResetPassword() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var pw models.ResetPassword
-		if err := c.ShouldBindJSON(&pw); err != nil {
+		var password models.ResetPassword
+		if err := c.ShouldBindJSON(&password); err != nil {
 			response.JSON(c, "error unmarshalling body", http.StatusBadRequest, nil, err)
 			return
 		}
-		err := models.ValidatePassword(pw.Password)
+		err := models.ValidatePassword(password.Password)
 		if err != nil {
 			response.JSON(c, "", errors.ErrBadRequest.Status, nil, err)
 			return
 		}
-		if pw.Password != pw.ConfirmPassword {
+		if password.Password != password.ConfirmPassword {
 			response.JSON(c, "password does not match", errors.ErrBadRequest.Status, nil, err)
 			return
 		}
 		var user models.User
-		user.Password = pw.Password
+		user.Password = password.Password
 		user.HashedPassword, err = services.GenerateHashPassword(user.Password)
 		if err != nil {
 			log.Printf("error generating password hash: %v", err.Error())
