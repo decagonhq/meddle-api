@@ -97,6 +97,6 @@ func (a *authRepo) TokenInBlacklist(token string) bool {
 
 func (a *authRepo) VerifyEmail(token, userid string) error {
 	var user models.User
-	err := a.DB.Model(&user).Where("is_email_active = ?",user.ID).Updates(true).Error
+	err := a.DB.Model(&user).Where("id = ?", user.ID).Update("is_email_active",true).Error
 	return err
 }
