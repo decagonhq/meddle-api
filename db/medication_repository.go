@@ -47,7 +47,7 @@ func (m *medicationRepo) GetNextMedications(userID uint) ([]models.Medication, e
 func (m *medicationRepo) GetAllNextMedicationsToUpdate() ([]models.Medication, error) {
 	var medications []models.Medication
 
-	err := m.DB.Where("(SELECT date_trunc('minute', next_dosage_time)) = (SELECT date_trunc('minute', now()))").Find(&medications).Error
+	err := m.DB.Where("(SELECT date_trunc('hour', next_dosage_time)) = (SELECT date_trunc('hour', now()))").Find(&medications).Error
 	if err != nil {
 		return nil, fmt.Errorf("could not get next medication: %v", err)
 	}
@@ -73,6 +73,7 @@ func UpdateNextMedicationCronJob(repo MedicationRepository) {
 	_, presentMinute, presentSecond := time.Now().UTC().Clock()
 	waitTime := time.Duration(60-presentMinute)*time.Minute + time.Duration(60-presentSecond)*time.Second
 	s := gocron.NewScheduler(time.UTC)
+	log.Println("***************************", waitTime)
 	time.Sleep(waitTime)
 	s.Every(1).Hour().Do(func() {
 		repo.UpdateNextMedicationTime()
