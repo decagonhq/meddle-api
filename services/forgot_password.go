@@ -16,14 +16,14 @@ func (a *authService) SendEmailForPasswordReset(user *models.ForgotPassword) *ap
 	}
 	token, err := GenerateToken(foundUser.Email, a.Config.JWTSecret)
 	if err != nil {
-		return apiError.New("could not generate link", http.StatusInternalServerError)
+		return apiError.New("", http.StatusInternalServerError)
 	}
-	link := fmt.Sprintf("http://localhost:8080/api/v1/password/reset/%s", token)
-	log.Println("my token: ", token)
+	link := fmt.Sprintf("%s:%d/password/reset/%s", a.Config.Host, a.Config.Port, token)
 	body := "Please Click the link below to reset your password"
 	title := "Password Reset Link"
-	v := map[string]interface{}{}
-	err = a.mail.SendMail(user.Email, title, body, link, v)
+	value := map[string]interface{}{}
+	value["link"] = link
+	err = a.mail.SendMail(user.Email, title, body, "", value)
 	if err != nil {
 		log.Printf("Error: %v", err.Error())
 		return apiError.New("mail couldn't be sent", http.StatusServiceUnavailable)

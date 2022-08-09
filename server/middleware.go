@@ -19,29 +19,6 @@ import (
 func (s *Server) Authorize() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		secret := s.Config.JWTSecret
-		// if isJWTSecretEmpty(secret) {
-		// 	respondAndAbort(c, "", http.StatusInternalServerError, nil, errs.New("internal server error", http.StatusInternalServerError))
-		// 	return
-		// }
-
-		// accessToken := getTokenFromHeader(c)
-		// if isAccessTokenEmpty(accessToken) {
-		// 	respondAndAbort(c, "invalid token", http.StatusUnauthorized, nil, errs.New("unauthorized", http.StatusUnauthorized))
-		// 	return
-		// }
-
-		// token, err := validateToken(accessToken, secret)
-		// if err != nil {
-		// 	respondAndAbort(c, "", http.StatusUnauthorized, nil, errs.New("unauthorized", http.StatusUnauthorized))
-		// 	return
-		// }
-
-		// accessClaims, err := getClaims(token)
-		// if err != nil {
-		// 	respondAndAbort(c, "", http.StatusInternalServerError, nil, errs.New("internal server error", http.StatusInternalServerError))
-		// 	return
-		// }
-
 		accessToken := getTokenFromHeader(c)
 		accessClaims, err := jwt.ValidateAndGetClaims(accessToken, secret)
 		if err != nil {

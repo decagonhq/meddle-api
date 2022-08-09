@@ -6,7 +6,7 @@ import (
 )
 
 type Mailer interface {
-	SendMail(toEmail, title, body, link string, v map[string]interface{}) error
+	SendMail(toEmail, title, body, template string, values map[string]interface{}) error
 }
 type Mailgun struct {
 	Client *mailgun.MailgunImpl

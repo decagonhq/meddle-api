@@ -55,7 +55,6 @@ func (s *Server) ResetPassword() gin.HandlerFunc {
 		token := c.Param("token")
 		err = s.AuthRepository.IsTokenInBlacklist(token)
 		if err != nil {
-			// expired token, Please request a new password reset link
 			response.JSON(c, "", http.StatusUnauthorized, nil, nil)
 			return
 		}
@@ -64,25 +63,6 @@ func (s *Server) ResetPassword() gin.HandlerFunc {
 			response.JSON(c, "", http.StatusUnauthorized, nil, err)
 			return
 		}
-		// tk, err := validateToken(token, s.Config.JWTSecret)
-		// if err != nil {
-		// 	response.JSON(c, "", http.StatusUnauthorized, nil, err)
-		// 	return
-		// }
-		// //TODO Refactor the test server, remove repository from the actual server
-		// //getClaims function contains verifyToken function
-		// //where token validity is verified
-		// claims, errr := getClaims(tk)
-		// if errr != nil {
-		// 	response.JSON(c, "", http.StatusUnauthorized, nil, errr)
-		// 	return
-		// }
-		// // FIXME: no need to check this anymore because it is checked already in getClaims
-		// // err = claims.Valid()
-		// // if err != nil {
-		// // 	response.JSON(c, "your token has expired, cant update password, Request a new password reset link", http.StatusUnauthorized, nil, errr)
-		// // 	return
-		// // }
 		email := claims["email"].(string)
 		errr := s.AuthRepository.UpdatePassword(user.HashedPassword, email)
 		if errr != nil {
@@ -95,7 +75,7 @@ func (s *Server) ResetPassword() gin.HandlerFunc {
 		}
 		if err := s.AuthRepository.AddToBlackList(accBlacklist); err != nil {
 			log.Printf("can't add access token to blacklist: %v\n", err)
-			response.JSON(c, "request a new link", http.StatusInternalServerError, nil, errors.New("", http.StatusInternalServerError))
+			response.JSON(c, "", http.StatusInternalServerError, nil, errors.New("", http.StatusInternalServerError))
 			return
 		}
 		response.JSON(c, "Reset successful, Login with your new password to continue", http.StatusCreated, nil, nil)
