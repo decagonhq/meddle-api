@@ -1,11 +1,13 @@
 package services
 
 import (
+	"fmt"
 	"github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/mocks"
 	"github.com/decagonhq/meddle-api/models"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
+	"log"
 	"net/http"
 	"testing"
 	"time"
@@ -165,7 +167,6 @@ func Test_CreateMedicationService(t *testing.T) {
 	}
 }
 
-
 func Test_GetAllMedicationsService(t *testing.T) {
 
 	// arrange
@@ -294,8 +295,6 @@ func Test_GetAllMedicationsService(t *testing.T) {
 
 }
 
-
-
 func Test_GetNextMedicationService(t *testing.T) {
 	// arrange
 	startDate, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
@@ -315,7 +314,6 @@ func Test_GetNextMedicationService(t *testing.T) {
 		PurposeOfMedication:    "malaria treatment",
 	}
 	testCases := []struct {
-
 		name               string
 		dbInput            uint
 		dbOutput           []models.Medication
@@ -387,6 +385,218 @@ func Test_GetNextMedicationService(t *testing.T) {
 
 			require.Equal(t, tc.getNextMedResponse, medicationResponse)
 			require.Equal(t, tc.getNextMedError, err)
+
+		})
+	}
+
+}
+
+func Test_CronUpdateMedicationForNextTime(t *testing.T) {
+	startDate := time.Now().UTC()
+	stopDate := startDate.AddDate(0, 0, 7)
+	startTime := startDate
+
+	testCases := []struct {
+		name          string
+		dbInput       *models.Medication
+		dbOutput      []models.Medication
+		dbError       error
+		buildStubs    func(repository *mocks.MockMedicationRepository, dbInput *models.Medication, timeInput time.Time, dbOutput []models.Medication, dbError error)
+		checkResponse func(t *testing.T, cronJobError error)
+	}{
+		{
+			name: "updating medication's next time successful case",
+			dbInput: &models.Medication{
+				Name:                   "paracetamol",
+				Dosage:                 2,
+				TimeInterval:           8,
+				MedicationStartDate:    startDate,
+				Duration:               7,
+				MedicationPrescribedBy: "Dr Tolu",
+				MedicationStopDate:     stopDate,
+				MedicationStartTime:    startTime,
+				NextDosageTime:         startTime,
+				PurposeOfMedication:    "malaria treatment",
+				UserID:                 1,
+			},
+			dbOutput: []models.Medication{
+				{
+					Name:                   "paracetamol",
+					Dosage:                 2,
+					TimeInterval:           8,
+					MedicationStartDate:    startDate,
+					Duration:               7,
+					MedicationPrescribedBy: "Dr Tolu",
+					MedicationStopDate:     stopDate,
+					MedicationStartTime:    startTime,
+					NextDosageTime:         startTime,
+					PurposeOfMedication:    "malaria treatment",
+					UserID:                 1,
+				},
+			},
+			dbError: nil,
+			buildStubs: func(repository *mocks.MockMedicationRepository, dbInput *models.Medication, timeInput time.Time, dbOutput []models.Medication, dbError error) {
+				repository.EXPECT().GetAllNextMedicationsToUpdate().Times(1).Return(dbOutput, dbError)
+				repository.EXPECT().UpdateNextMedicationTime(dbInput, timeInput).Times(1).Return(nil)
+			},
+			checkResponse: func(t *testing.T, cronJobError error) {
+				require.Nil(t, cronJobError)
+			},
+		},
+		{
+			name: "updating medication's is done successful case",
+			dbInput: &models.Medication{
+				Name:                   "paracetamol",
+				Dosage:                 2,
+				TimeInterval:           8,
+				MedicationStartDate:    startDate,
+				Duration:               7,
+				MedicationPrescribedBy: "Dr Tolu",
+				MedicationStopDate:     stopDate.AddDate(0, 0, -7),
+				MedicationStartTime:    startTime,
+				NextDosageTime:         startTime,
+				PurposeOfMedication:    "malaria treatment",
+				UserID:                 1,
+			},
+			dbOutput: []models.Medication{
+				{
+					Name:                   "paracetamol",
+					Dosage:                 2,
+					TimeInterval:           8,
+					MedicationStartDate:    startDate,
+					Duration:               7,
+					MedicationPrescribedBy: "Dr Tolu",
+					MedicationStopDate:     stopDate.AddDate(0, 0, -7),
+					MedicationStartTime:    startTime,
+					NextDosageTime:         startTime,
+					PurposeOfMedication:    "malaria treatment",
+					UserID:                 1,
+				},
+			},
+			dbError: nil,
+			buildStubs: func(repository *mocks.MockMedicationRepository, dbInput *models.Medication, timeInput time.Time, dbOutput []models.Medication, dbError error) {
+				repository.EXPECT().GetAllNextMedicationsToUpdate().Times(1).Return(dbOutput, dbError)
+				repository.EXPECT().UpdateMedicationDone(dbInput).Times(1).Return(nil)
+			},
+			checkResponse: func(t *testing.T, cronJobError error) {
+				log.Println(cronJobError)
+				require.Nil(t, cronJobError)
+			},
+		},
+		{
+			name: "error getting next medications to update case",
+			dbInput: &models.Medication{
+				Name:                   "paracetamol",
+				Dosage:                 2,
+				TimeInterval:           8,
+				MedicationStartDate:    startDate,
+				Duration:               7,
+				MedicationPrescribedBy: "Dr Tolu",
+				MedicationStopDate:     stopDate,
+				MedicationStartTime:    startTime,
+				NextDosageTime:         startTime,
+				PurposeOfMedication:    "malaria treatment",
+				UserID:                 1,
+			},
+			dbOutput: nil,
+			dbError:  fmt.Errorf("could not get next medication: %v", gorm.ErrInvalidDB),
+			buildStubs: func(repository *mocks.MockMedicationRepository, dbInput *models.Medication, timeInput time.Time, dbOutput []models.Medication, dbError error) {
+				repository.EXPECT().GetAllNextMedicationsToUpdate().Times(1).Return(dbOutput, dbError)
+			},
+			checkResponse: func(t *testing.T, cronJobError error) {
+				log.Println(cronJobError)
+				require.EqualError(t, cronJobError, fmt.Sprint("could not get next medications while running update next dosage cron job"))
+			},
+		},
+		{
+			name: "error updating medication's next time case",
+			dbInput: &models.Medication{
+				Name:                   "paracetamol",
+				Dosage:                 2,
+				TimeInterval:           8,
+				MedicationStartDate:    startDate,
+				Duration:               7,
+				MedicationPrescribedBy: "Dr Tolu",
+				MedicationStopDate:     stopDate,
+				MedicationStartTime:    startTime,
+				NextDosageTime:         startTime,
+				PurposeOfMedication:    "malaria treatment",
+				UserID:                 1,
+			},
+			dbOutput: []models.Medication{
+				{
+					Name:                   "paracetamol",
+					Dosage:                 2,
+					TimeInterval:           8,
+					MedicationStartDate:    startDate,
+					Duration:               7,
+					MedicationPrescribedBy: "Dr Tolu",
+					MedicationStopDate:     stopDate,
+					MedicationStartTime:    startTime,
+					NextDosageTime:         startTime,
+					PurposeOfMedication:    "malaria treatment",
+					UserID:                 1,
+				},
+			},
+			dbError: nil,
+			buildStubs: func(repository *mocks.MockMedicationRepository, dbInput *models.Medication, timeInput time.Time, dbOutput []models.Medication, dbError error) {
+				repository.EXPECT().GetAllNextMedicationsToUpdate().Times(1).Return(dbOutput, dbError)
+				repository.EXPECT().UpdateNextMedicationTime(dbInput, timeInput).Times(1).Return(fmt.Errorf("could not update medication: %v", gorm.ErrInvalidDB))
+			},
+			checkResponse: func(t *testing.T, cronJobError error) {
+				require.EqualError(t, cronJobError, fmt.Sprint("could not update next medication time while running update next dosage cron job"))
+			},
+		},
+		{
+			name: "error updating medication's is done fail case",
+			dbInput: &models.Medication{
+				Name:                   "paracetamol",
+				Dosage:                 2,
+				TimeInterval:           8,
+				MedicationStartDate:    startDate,
+				Duration:               7,
+				MedicationPrescribedBy: "Dr Tolu",
+				MedicationStopDate:     stopDate.AddDate(0, 0, -7),
+				MedicationStartTime:    startTime,
+				NextDosageTime:         startTime,
+				PurposeOfMedication:    "malaria treatment",
+				UserID:                 1,
+			},
+			dbOutput: []models.Medication{
+				{
+					Name:                   "paracetamol",
+					Dosage:                 2,
+					TimeInterval:           8,
+					MedicationStartDate:    startDate,
+					Duration:               7,
+					MedicationPrescribedBy: "Dr Tolu",
+					MedicationStopDate:     stopDate.AddDate(0, 0, -7),
+					MedicationStartTime:    startTime,
+					NextDosageTime:         startTime,
+					PurposeOfMedication:    "malaria treatment",
+					UserID:                 1,
+				},
+			},
+			dbError: nil,
+			buildStubs: func(repository *mocks.MockMedicationRepository, dbInput *models.Medication, timeInput time.Time, dbOutput []models.Medication, dbError error) {
+				repository.EXPECT().GetAllNextMedicationsToUpdate().Times(1).Return(dbOutput, dbError)
+				repository.EXPECT().UpdateMedicationDone(dbInput).Times(1).Return(fmt.Errorf("could not update medication: %v", gorm.ErrInvalidDB))
+			},
+			checkResponse: func(t *testing.T, cronJobError error) {
+				require.EqualError(t, cronJobError, fmt.Sprint("could not update is medication done while running update next dosage cron job"))
+			},
+		},
+	}
+	teardown := setup(t)
+	defer teardown()
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			timeSumation := tc.dbInput.NextDosageTime.Add(time.Hour * time.Duration(tc.dbInput.TimeInterval))
+			nextDosageTime := GetNextDosageTime(timeSumation, tc.dbInput.NextDosageTime)
+			tc.buildStubs(mockMedicationRepository, tc.dbInput, nextDosageTime, tc.dbOutput, tc.dbError)
+			err := testMedicationService.CronUpdateMedicationForNextTime()
+
+			tc.checkResponse(t, err)
 
 		})
 	}
