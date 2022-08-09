@@ -1,11 +1,11 @@
 package main
 
 import (
+	"github.com/decagonhq/meddle-api/mailservice"
 	"log"
 
 	"github.com/decagonhq/meddle-api/config"
 	"github.com/decagonhq/meddle-api/db"
-	"github.com/decagonhq/meddle-api/mailservice"
 	"github.com/decagonhq/meddle-api/server"
 	"github.com/decagonhq/meddle-api/services"
 )

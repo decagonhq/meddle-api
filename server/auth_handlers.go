@@ -116,25 +116,14 @@ func (s *Server) handleShowProfile() gin.HandlerFunc {
 
 func (s *Server) HandleVerifyEmail() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		tokenBack, ok := c.Get("token")
+		paramToken, ok := c.Get("token")
 		if !ok {
 			response.JSON(c, "", http.StatusBadRequest, nil, errors.New("token not found", http.StatusBadRequest))
 			return
 		}
-		userid := c.Param("userid")
-		token,_,_:= GetValuesFromContext(c)
-		if tokenBack == "" || userid == "" {
-			log.Printf("token or userid is empty\n")
-		}
-		if token != tokenBack {
-			log.Printf("token is not equal to tokenBack\n")
-		} else {
-			if err := s.AuthRepository.VerifyEmail(token, userid); err != nil {
-				log.Printf("can't verify email: %v\n", err)
-				response.JSON(c, "", http.StatusInternalServerError, nil, errors.New("can't verify email", http.StatusInternalServerError))
-				return
-			}
-			response.JSON(c, "email verified successfully", http.StatusOK, nil, nil)
+		err := s.AuthService.VerifyEmail(paramToken.(string))
+		if err != nil {
+			response.JSON(c, "", http.StatusBadRequest, nil, err)
 		}
 	}
 }

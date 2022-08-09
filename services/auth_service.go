@@ -81,7 +81,7 @@ func (a *authService) SignupUser(user *models.User) (*models.User, *apiError.Err
 	subject := "Verify your email"
 	body := "Please Click the link below to verify your email"
 	templateName := "verifyEmail"
-	err = a.Mail.SendMail(user.Email,subject, body,templateName,map[string]string{"link":link})
+	err = a.Mailer.SendMail(user.Email,subject, body,templateName,map[string]string{"link":link})
 	if err != nil {
 		log.Printf("Error: %v", err.Error())
 		return nil, apiError.New("mail couldn't be sent", http.StatusServiceUnavailable)
@@ -172,16 +172,15 @@ func GenerateToken(email string, secret string) (string, error) {
 }
 
 func GenerateClaims(email string) jwt.MapClaims {
-
 	accessClaims := jwt.MapClaims{
 		"email": email,
 		"exp":   time.Now().Add(AccessTokenValidity).Unix(),
 	}
-
 	return accessClaims
 }
 
 func (a *authService) VerifyEmail(token string) error {
+	//validate token here
 	err := a.authRepo.VerifyEmail(token)
 	return err
 }

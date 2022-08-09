@@ -98,6 +98,10 @@ func (a *authRepo) TokenInBlacklist(token string) bool {
 func (a *authRepo) VerifyEmail(token string) error {
 	var user models.User
 	err := a.DB.Model(&user).Where("id = ?", user.ID).Update("is_email_active",true).Error
+	if err != nil {
+		return errors.Wrap(err, "gorm.update error")
+	}
+	err = a.AddToBlackList(&models.BlackList{Token: token})
 	return err
 }
 
