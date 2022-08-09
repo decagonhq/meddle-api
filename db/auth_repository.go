@@ -19,7 +19,7 @@ type AuthRepository interface {
 	UpdateUser(user *models.User) error
 	AddToBlackList(blacklist *models.BlackList) error
 	TokenInBlacklist(token string) bool
-	VerifyEmail(token) error
+	VerifyEmail(token string) error
 }
 
 type authRepo struct {
@@ -95,7 +95,7 @@ func (a *authRepo) TokenInBlacklist(token string) bool {
 	return result.Error != nil
 }
 
-func (a *authRepo) VerifyEmail(token) error {
+func (a *authRepo) VerifyEmail(token string) error {
 	var user models.User
 	err := a.DB.Model(&user).Where("id = ?", user.ID).Update("is_email_active",true).Error
 	return err

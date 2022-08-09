@@ -78,10 +78,10 @@ func (a *authService) SignupUser(user *models.User) (*models.User, *apiError.Err
 	}
 	link := fmt.Sprintf("http://localhost:8080/verifyEmail/%s", token)
 	log.Println("my token: ", token)
-	title := "Verify your email"
+	subject := "Verify your email"
 	body := "Please Click the link below to verify your email"
-	v := map[string]interface{}{}
-	err = a.mail.SendMail(user.Email, title, body, link, v)
+	templateName := "verifyEmail"
+	err = a.Mail.SendMail(user.Email,subject, body,templateName,map[string]string{"link":link})
 	if err != nil {
 		log.Printf("Error: %v", err.Error())
 		return nil, apiError.New("mail couldn't be sent", http.StatusServiceUnavailable)
