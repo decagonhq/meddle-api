@@ -282,6 +282,9 @@ definitions:
         type: string
         format: date-time
         description: expected day to start medication
+      medication_icon:
+        type: string
+        example: "malaria treatment"
       purpose_of_medication:
         type: string
         example: "malaria treatment"
@@ -332,6 +335,9 @@ definitions:
       purpose_of_medication:
         type: string
         example: "malaria treatment"
+      medication_icon:
+        type: string
+        example: "Heart Icon"
       user_id:
         type: integer
         format: uint
