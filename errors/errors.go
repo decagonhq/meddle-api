@@ -25,7 +25,6 @@ func (e *Error) Respond(c *gin.Context) {
 		"errors":  e.Error(),
 		"status":  e.Status,
 	}
-
 	c.JSON(e.Status, responsedata)
 }
 

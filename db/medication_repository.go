@@ -10,6 +10,7 @@ import (
 
 type MedicationRepository interface {
 	CreateMedication(medication *models.Medication) (*models.Medication, error)
+	GetMedicationDetail(id uint, userId uint) (*models.Medication, error)
 	GetAllMedications(userID uint) ([]models.Medication, error)
 }
 
@@ -27,6 +28,15 @@ func (m *medicationRepo) CreateMedication(medication *models.Medication) (*model
 		return nil, fmt.Errorf("could not create medication: %v", err)
 	}
 	return medication, nil
+}
+
+func (m *medicationRepo) GetMedicationDetail(id uint, userId uint) (*models.Medication, error) {
+	var medication models.Medication
+	err := m.DB.Where("id = ? AND user_id = ?", id, userId).First(&medication).Error
+	if err != nil {
+		return nil, fmt.Errorf("could not get medication: %v", err)
+	}
+	return &medication, nil
 }
 
 func (m *medicationRepo) GetAllMedications(userID uint) ([]models.Medication, error) {

@@ -19,7 +19,7 @@ type Config struct {
 	JWTSecret        string `envconfig:"jwt_secret"`
 	MailgunApiKey    string `envconfig:"mg_public_api_key"`
 	MgDomain         string `envconfig:"mg_domain"`
-	EmailFrom		 string `envconfig:"email_from"`
+	EmailFrom        string `envconfig:"email_from"`
 }
 
 func Load() (*Config, error) {
