@@ -56,6 +56,7 @@ func (s *Server) ResetPassword() gin.HandlerFunc {
 			response.JSON(c, "expired token, Please request a new password reset link", http.StatusUnauthorized, nil, nil)
 			return
 		}
+		//TODO Refactor the test server, remove repository from the actual server
 		//getClaims function contains verifyToken function
 		//where token validity is verified
 		claims, errr := getClaims(token, s.Config.JWTSecret)

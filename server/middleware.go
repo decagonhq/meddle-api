@@ -119,10 +119,17 @@ func getTokenFromHeader(c *gin.Context) string {
 
 // verifyAccessToken verifies a token
 func verifyToken(tokenString string, claims jwt.MapClaims, secret string) (*jwt.Token, error) {
-	parser := &jwt.Parser{SkipClaimsValidation: true}
-	return parser.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+	//parser := &jwt.Parser{SkipClaimsValidation: true}
+	//return parser.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+	//	if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+	//		return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+	//	}
+	//	return []byte(secret), nil
+	//})
+	//secret := []byte(config.Config.JwtSecret)
+	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 		}
 		return []byte(secret), nil
 	})
@@ -132,6 +139,7 @@ func getClaims(token string, secret string) (jwt.MapClaims, error) {
 	claims := jwt.MapClaims{}
 	_, err := verifyToken(token, claims, secret)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 	return claims, nil

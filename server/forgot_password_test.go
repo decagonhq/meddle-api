@@ -16,8 +16,8 @@ import (
 
 func TestResetPassword(t *testing.T) {
 	user := models.User{}
-	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRvbHV3YXNlQGdtYWlsLmNvbSIsImV4cCI6MTY1OTkyODEwOH0.-XSbw58vy8QCKRAdJba-H-POD89pKlXkpFpnX389faE"
-	//email := "toluwasethomas1@gmail.com"
+	email := "toluwasethomas1@gmail.com"
+	token, _ := services.GenerateToken(email, testServer.handler.Config.JWTSecret)
 	newReq := &models.ResetPassword{
 		Password:        "12345678",
 		ConfirmPassword: "12345678",
@@ -33,18 +33,18 @@ func TestResetPassword(t *testing.T) {
 		mockDB          func(ctrl *mocks.MockAuthRepository)
 		checkResponse   func(recorder *httptest.ResponseRecorder)
 	}{
-		//{
-		//	Name:            "Test Reset Password",
-		//	Request:         newReq,
-		//	ExpectedCode:    http.StatusCreated,
-		//	ExpectedMessage: "Reset successful, Login with your new password to continue",
-		//	ExpectedError:   "",
-		//	mockDB: func(ctrl *mocks.MockAuthRepository) {
-		//		ctrl.EXPECT().IsTokenInBlacklist(token).Return(nil).AnyTimes()
-		//		ctrl.EXPECT().UpdatePassword(user.HashedPassword, email).Return(nil).AnyTimes()
-		//		ctrl.EXPECT().AddToBlackList(gomock.Any()).Return(nil).AnyTimes()
-		//	},
-		//},
+		{
+			Name:            "Test Reset Password",
+			Request:         newReq,
+			ExpectedCode:    http.StatusCreated,
+			ExpectedMessage: "Reset successful, Login with your new password to continue",
+			ExpectedError:   "",
+			mockDB: func(ctrl *mocks.MockAuthRepository) {
+				ctrl.EXPECT().IsTokenInBlacklist(token).Return(nil).AnyTimes()
+				ctrl.EXPECT().UpdatePassword(user.HashedPassword, email).Return(nil).AnyTimes()
+				ctrl.EXPECT().AddToBlackList(gomock.Any()).Return(nil).AnyTimes()
+			},
+		},
 		{
 			Name:            "Test Supply with password not equal",
 			Request:         &models.ResetPassword{Password: newReq.Password, ConfirmPassword: "hhhhhhhh"},
@@ -68,6 +68,7 @@ func TestResetPassword(t *testing.T) {
 	mockAuthRepo := mocks.NewMockAuthRepository(ctrl)
 	authService := services.NewAuthService(mockAuthRepo, testServer.handler.Config)
 	testServer.handler.AuthService = authService
+	testServer.handler.AuthRepository = mockAuthRepo
 
 	for _, c := range cases {
 		t.Run(c.Name, func(t *testing.T) {
