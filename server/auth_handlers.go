@@ -73,18 +73,6 @@ func (s *Server) handleLogout() gin.HandlerFunc {
 			response.JSON(c, "", err.Status, nil, err)
 			return
 		}
-
-		// tk, errr := validateToken(token, s.Config.JWTSecret)
-		// if errr != nil {
-		// 	response.JSON(c, "", http.StatusInternalServerError, nil, errr)
-		// 	return
-		// }
-		// // TODO: rethink the error handling here
-		// claims, errr := getClaims(tk)
-		// if errr != nil {
-		// 	response.JSON(c, "", http.StatusUnauthorized, nil, errr)
-		// 	return
-		// }
 		claims, errr := jwt.ValidateAndGetClaims(token, s.Config.JWTSecret)
 		if errr != nil {
 			response.JSON(c, "", http.StatusUnauthorized, nil, errr)
