@@ -21,11 +21,10 @@ type Config struct {
 	MgDomain         string `envconfig:"mg_domain"`
 	EmailFrom		 string `envconfig:"email_from"`
 }
-
 func Load() (*Config, error) {
 	env := os.Getenv("GIN_MODE")
 	if env != "release" {
-		if err := godotenv.Load("../.env"); err != nil {
+		if err := godotenv.Load("./.env"); err != nil {
 			log.Printf("couldn't load env vars: %v", err)
 		}
 	}

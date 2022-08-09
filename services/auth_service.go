@@ -72,6 +72,20 @@ func (a *authService) SignupUser(user *models.User) (*models.User, *apiError.Err
 		log.Printf("unable to create user: %v", err.Error())
 		return nil, apiError.New("internal server error", http.StatusInternalServerError)
 	}
+	token, err := GenerateToken(user.Email, a.Config.JWTSecret)
+	if err != nil {
+		return nil, apiError.New("internal server error", http.StatusInternalServerError)
+	}
+	link := fmt.Sprintf("http://localhost:8080/verifyEmail/%s", token)
+	log.Println("my token: ", token)
+	title := "Verify your email"
+	body := "Please Click the link below to verify your email"
+	v := map[string]interface{}{}
+	err = a.mail.SendMail(user.Email, title, body, link, v)
+	if err != nil {
+		log.Printf("Error: %v", err.Error())
+		return nil, apiError.New("mail couldn't be sent", http.StatusServiceUnavailable)
+	}
 	return user, nil
 }
 

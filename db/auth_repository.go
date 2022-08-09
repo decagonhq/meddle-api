@@ -100,3 +100,4 @@ func (a *authRepo) VerifyEmail(token, userid string) error {
 	err := a.DB.Model(&user).Where("id = ?", user.ID).Update("is_email_active",true).Error
 	return err
 }
+
