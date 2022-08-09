@@ -30,6 +30,5 @@ func main() {
 		MedicationService: medicationService,
 		Mail:              mailService,
 	}
-	s.Mail.SendMail("techagentng@g")
 	s.Start()
 }
