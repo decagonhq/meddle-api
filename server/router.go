@@ -13,7 +13,6 @@ func (s *Server) defineRoutes(router *gin.Engine) {
 	apirouter := router.Group("/api/v1")
 	apirouter.POST("/auth/signup", s.HandleSignup())
 	apirouter.POST("/auth/login", s.handleLogin())
-	apirouter.POST("/:userToken", s.handleVerifyEmail())
 
 	authorized := apirouter.Group("/")
 	authorized.Use(s.Authorize())
