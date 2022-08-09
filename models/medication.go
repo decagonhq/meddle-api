@@ -4,67 +4,22 @@ import (
 	"time"
 )
 
-type MedicationIcon int64
-
-const (
-	HeartIcon MedicationIcon = iota + 1
-	BrainIcon
-	StomachIcon
-	ToothIcon
-	EyeIcon
-	BoneIcon
-	MosquitoIcon
-)
-
-// String returns the string value of the status
-func (m MedicationIcon) String() string {
-	icons := [...]string{"Heart Icon", "Brain Icon", "Stomach Icon", "Tooth Icon", "Eye Icon", "Bone Icon", "Mosquito Icon"}
-
-	// prevent panicking in case of status is out-of-range
-	if m < HeartIcon || m > MosquitoIcon {
-		return "Unknown"
-	}
-
-	return icons[m-1]
-}
-
-func StringToEnum(str string) MedicationIcon {
-	switch str {
-	case "Heart Icon":
-		return HeartIcon
-	case "Brain Icon":
-		return BrainIcon
-	case "Stomach Icon":
-		return StomachIcon
-	case "Tooth Icon":
-		return ToothIcon
-	case "Eye Icon":
-		return EyeIcon
-	case "Bone Icon":
-		return BoneIcon
-	case "Mosquito Icon":
-		return MosquitoIcon
-	default:
-		return HeartIcon
-	}
-}
-
 type Medication struct {
 	//base model goes here
 	Model
-	Name                   string         `gorm:"column:name"`
-	Dosage                 int            `gorm:"column:dosage"`
-	TimeInterval           int            `gorm:"column:time_interval"` // min hour daily
-	MedicationStartDate    time.Time      `gorm:"column:medication_start_date"`
-	Duration               int            `gorm:"column:duration"`
-	MedicationPrescribedBy string         `gorm:"column:medication_prescribed_by"`
-	MedicationStopDate     time.Time      `gorm:"column:medication_stop_date"`
-	MedicationStartTime    time.Time      `gorm:"column:medication_start_time"`
-	NextDosageTime         time.Time      `gorm:"column:next_dosage_time"`
-	PurposeOfMedication    string         `gorm:"column:purpose_of_medication"`
-	IsMedicationDone       bool           `gorm:"column:is_medication_done"`
-	MedicationIcon         MedicationIcon `gorm:"column:medication_icon type:medication_icon"`
-	UserID                 uint           `gorm:"column:user_id"`
+	Name                   string    `gorm:"column:name"`
+	Dosage                 int       `gorm:"column:dosage"`
+	TimeInterval           int       `gorm:"column:time_interval"` // min hour daily
+	MedicationStartDate    time.Time `gorm:"column:medication_start_date"`
+	Duration               int       `gorm:"column:duration"`
+	MedicationPrescribedBy string    `gorm:"column:medication_prescribed_by"`
+	MedicationStopDate     time.Time `gorm:"column:medication_stop_date"`
+	MedicationStartTime    time.Time `gorm:"column:medication_start_time"`
+	NextDosageTime         time.Time `gorm:"column:next_dosage_time"`
+	PurposeOfMedication    string    `gorm:"column:purpose_of_medication"`
+	IsMedicationDone       bool      `gorm:"column:is_medication_done"`
+	MedicationIcon         string    `gorm:"column:medication_icon"`
+	UserID                 uint      `gorm:"column:user_id"`
 }
 
 type MedicationRequest struct {
@@ -107,6 +62,7 @@ func (m *MedicationRequest) ReqToMedicationModel() *Medication {
 		Duration:               m.Duration,
 		MedicationPrescribedBy: m.MedicationPrescribedBy,
 		PurposeOfMedication:    m.PurposeOfMedication,
+		MedicationIcon:         m.MedicationIcon,
 		UserID:                 m.UserID,
 	}
 }
@@ -126,7 +82,7 @@ func (m *Medication) MedicationToResponse() *MedicationResponse {
 		MedicationStartTime:    m.MedicationStartTime.String(),
 		NextDosageTime:         m.NextDosageTime.String(),
 		PurposeOfMedication:    m.PurposeOfMedication,
-		MedicationIcon:         m.MedicationIcon.String(),
+		MedicationIcon:         m.MedicationIcon,
 		UserID:                 m.UserID,
 	}
 }
