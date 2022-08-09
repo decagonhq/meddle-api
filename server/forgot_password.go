@@ -1,13 +1,14 @@
 package server
 
 import (
+	"log"
+	"net/http"
+
 	"github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/models"
 	"github.com/decagonhq/meddle-api/server/response"
 	"github.com/decagonhq/meddle-api/services"
 	"github.com/gin-gonic/gin"
-	"log"
-	"net/http"
 )
 
 func (s *Server) SendEmailForPasswordReset() gin.HandlerFunc {
@@ -53,22 +54,29 @@ func (s *Server) ResetPassword() gin.HandlerFunc {
 		token := c.Param("token")
 		err = s.AuthRepository.IsTokenInBlacklist(token)
 		if err != nil {
-			response.JSON(c, "expired token, Please request a new password reset link", http.StatusUnauthorized, nil, nil)
+			// expired token, Please request a new password reset link
+			response.JSON(c, "", http.StatusUnauthorized, nil, nil)
+			return
+		}
+		tk, err := validateToken(token, s.Config.JWTSecret)
+		if err != nil {
+			response.JSON(c, "", http.StatusUnauthorized, nil, err)
 			return
 		}
 		//TODO Refactor the test server, remove repository from the actual server
 		//getClaims function contains verifyToken function
 		//where token validity is verified
-		claims, errr := getClaims(token, s.Config.JWTSecret)
+		claims, errr := getClaims(tk)
 		if errr != nil {
-			response.JSON(c, "invalid link, please try again", http.StatusUnauthorized, nil, errr)
+			response.JSON(c, "", http.StatusUnauthorized, nil, errr)
 			return
 		}
-		err = claims.Valid()
-		if err != nil {
-			response.JSON(c, "your token has expired, cant update password, Request a new password reset link", http.StatusUnauthorized, nil, errr)
-			return
-		}
+		// FIXME: no need to check this anymore because it is checked already in getClaims
+		// err = claims.Valid()
+		// if err != nil {
+		// 	response.JSON(c, "your token has expired, cant update password, Request a new password reset link", http.StatusUnauthorized, nil, errr)
+		// 	return
+		// }
 		email := claims["email"].(string)
 		errr = s.AuthRepository.UpdatePassword(user.HashedPassword, email)
 		if errr != nil {

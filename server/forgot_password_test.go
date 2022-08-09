@@ -3,15 +3,16 @@ package server
 import (
 	"bytes"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/decagonhq/meddle-api/mocks"
 	"github.com/decagonhq/meddle-api/models"
 	"github.com/decagonhq/meddle-api/services"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 func TestResetPassword(t *testing.T) {
@@ -41,7 +42,7 @@ func TestResetPassword(t *testing.T) {
 			ExpectedError:   "",
 			mockDB: func(ctrl *mocks.MockAuthRepository) {
 				ctrl.EXPECT().IsTokenInBlacklist(token).Return(nil).AnyTimes()
-				ctrl.EXPECT().UpdatePassword(user.HashedPassword, email).Return(nil).AnyTimes()
+				ctrl.EXPECT().UpdatePassword(gomock.Any(), email).Return(nil).AnyTimes()
 				ctrl.EXPECT().AddToBlackList(gomock.Any()).Return(nil).AnyTimes()
 			},
 		},

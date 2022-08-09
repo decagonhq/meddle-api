@@ -1,13 +1,14 @@
 package server
 
 import (
+	"log"
+	"net/http"
+	"time"
+
 	"github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/models"
 	"github.com/decagonhq/meddle-api/server/response"
 	"github.com/gin-gonic/gin"
-	"log"
-	"net/http"
-	"time"
 )
 
 func (s *Server) HandleSignup() gin.HandlerFunc {
@@ -72,9 +73,15 @@ func (s *Server) handleLogout() gin.HandlerFunc {
 			return
 		}
 
-		claims, errr := getClaims(token, s.Config.JWTSecret)
+		tk, errr := validateToken(token, s.Config.JWTSecret)
 		if errr != nil {
 			response.JSON(c, "", http.StatusInternalServerError, nil, errr)
+			return
+		}
+		// TODO: rethink the error handling here
+		claims, errr := getClaims(tk)
+		if errr != nil {
+			response.JSON(c, "", http.StatusUnauthorized, nil, errr)
 			return
 		}
 		convertClaims, _ := claims["exp"].(int64) //jwt pkg to validate
