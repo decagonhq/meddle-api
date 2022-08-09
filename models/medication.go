@@ -7,7 +7,7 @@ import (
 type MedicationIcon int64
 
 const (
-	HeartIcon MedicationIcon = iota
+	HeartIcon MedicationIcon = iota + 1
 	BrainIcon
 	StomachIcon
 	ToothIcon
@@ -18,14 +18,35 @@ const (
 
 // String returns the string value of the status
 func (m MedicationIcon) String() string {
-	icons := [...]string{"HeartIcon", "BrainIcon", "StomachIcon", "ToothIcon", "EyeIcon", "BoneIcon", "MosquitoIcon"}
+	icons := [...]string{"Heart Icon", "Brain Icon", "Stomach Icon", "Tooth Icon", "Eye Icon", "Bone Icon", "Mosquito Icon"}
 
 	// prevent panicking in case of status is out-of-range
 	if m < HeartIcon || m > MosquitoIcon {
 		return "Unknown"
 	}
 
-	return icons[m]
+	return icons[m-1]
+}
+
+func StringToEnum(str string) MedicationIcon {
+	switch str {
+	case "Heart Icon":
+		return HeartIcon
+	case "Brain Icon":
+		return BrainIcon
+	case "Stomach Icon":
+		return StomachIcon
+	case "Tooth Icon":
+		return ToothIcon
+	case "Eye Icon":
+		return EyeIcon
+	case "Bone Icon":
+		return BoneIcon
+	case "Mosquito Icon":
+		return MosquitoIcon
+	default:
+		return HeartIcon
+	}
 }
 
 type Medication struct {

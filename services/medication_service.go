@@ -54,6 +54,7 @@ func (m *medicationService) CreateMedication(request *models.MedicationRequest) 
 	medication.MedicationStartTime = startTime
 	medication.NextDosageTime = medication.MedicationStartTime.Add(time.Hour * time.Duration(medication.TimeInterval))
 	medication.IsMedicationDone = false
+	medication.MedicationIcon = models.StringToEnum(request.MedicationIcon)
 
 	response, err := m.medicationRepo.CreateMedication(medication)
 	if err != nil {
