@@ -1,10 +1,13 @@
 package services
 
 import (
+	"fmt"
 	"github.com/decagonhq/meddle-api/config"
 	"github.com/decagonhq/meddle-api/db"
 	"github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/models"
+	"github.com/go-co-op/gocron"
+	"log"
 	"net/http"
 	"time"
 )
@@ -15,6 +18,7 @@ type MedicationService interface {
 	CreateMedication(request *models.MedicationRequest) (*models.MedicationResponse, *errors.Error)
 	GetNextMedications(userID uint) ([]models.MedicationResponse, *errors.Error)
 	GetAllMedications(userID uint) ([]models.MedicationResponse, *errors.Error)
+	CronUpdateMedicationForNextTime() error
 }
 
 // medicationService struct
@@ -53,7 +57,7 @@ func (m *medicationService) CreateMedication(request *models.MedicationRequest) 
 	medication.MedicationStartTime = startTime
 	nextTime := medication.MedicationStartTime.Add(time.Hour * time.Duration(medication.TimeInterval))
 
-	medication.NextDosageTime = db.SetNextDosageTime(nextTime, medication.MedicationStartTime)
+	medication.NextDosageTime = GetNextDosageTime(nextTime, medication.MedicationStartTime)
 
 	response, err := m.medicationRepo.CreateMedication(medication)
 	if err != nil {
@@ -89,4 +93,49 @@ func (m *medicationService) GetNextMedications(userID uint) ([]models.Medication
 	}
 	return nextMedicationResponses, nil
 
+}
+
+func (m *medicationService) CronUpdateMedicationForNextTime() error {
+	medications, err := m.medicationRepo.GetAllNextMedicationsToUpdate()
+	if err != nil {
+		return fmt.Errorf("could not get next medications while running update next dosage cron job: %v", err)
+	}
+	for _, medication := range medications {
+		timeSumation := medication.NextDosageTime.Add(time.Hour * time.Duration(medication.TimeInterval))
+		nextDosageTime := GetNextDosageTime(timeSumation, medication.NextDosageTime)
+
+		if nextDosageTime.Unix() < medication.MedicationStopDate.Unix() {
+			err = m.medicationRepo.UpdateNextMedicationTime(&medication, nextDosageTime)
+			if err != nil {
+				return fmt.Errorf("could not update next medication time while running update next dosage cron job: %v", err)
+			}
+		} else {
+			err = m.medicationRepo.UpdateMedicationDone(&medication)
+			if err != nil {
+				return fmt.Errorf("could not update is medication done while running update next dosage cron job: %v", err)
+			}
+		}
+	}
+	return nil
+}
+
+func UpdateMedicationCronJob(medicationService MedicationService) {
+	_, presentMinute, presentSecond := time.Now().UTC().Clock()
+	waitTime := time.Duration(60-presentMinute)*time.Minute + time.Duration(60-presentSecond)*time.Second
+	s := gocron.NewScheduler(time.UTC)
+	time.Sleep(waitTime)
+	s.Every(1).Hour().Do(func() {
+		err := medicationService.CronUpdateMedicationForNextTime()
+		if err != nil {
+			log.Printf("cron job error: %v", err)
+		}
+	})
+	s.StartBlocking()
+}
+
+func GetNextDosageTime(t1, t2 time.Time) time.Time {
+	if t1.Day()-t2.Day() <= 0 {
+		return time.Date(t1.Year(), t1.Month(), t1.Day(), t1.Hour(), 0, 0, 0, time.UTC)
+	}
+	return time.Date(t2.Year(), t2.Month(), t2.Day()+1, 9, 0, 0, 0, time.UTC)
 }
