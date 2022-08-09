@@ -101,3 +101,4 @@ func (a *authRepo) VerifyEmail(token, userid string) error {
 	return err
 }
 
+
