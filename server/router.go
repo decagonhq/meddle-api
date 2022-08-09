@@ -22,6 +22,7 @@ func (s *Server) defineRoutes(router *gin.Engine) {
 	authorized.PUT("/me/update", s.handleUpdateUserDetails())
 	authorized.GET("/me", s.handleShowProfile())
 	authorized.POST("/user/medications", s.handleCreateMedication())
+	authorized.GET("/user/medications/:id", s.handleGetMedDetail())
 	authorized.GET("/user/medications", s.handleGetAllMedications())
 
 }
