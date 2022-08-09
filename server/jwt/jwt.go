@@ -1,10 +1,9 @@
-package server
+package jwt
 
 import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/decagonhq/meddle-api/errors"
 	"github.com/golang-jwt/jwt"
@@ -20,13 +19,6 @@ func verifyToken(tokenString string, secret string) (*jwt.Token, error) {
 	})
 }
 
-func isTokenExpired(claims jwt.MapClaims) bool {
-	if exp, ok := claims["exp"].(float64); ok {
-		return float64(time.Now().Unix()) > exp
-	}
-	return true
-}
-
 func isJWTSecretEmpty(secret string) bool {
 	return secret == ""
 }
@@ -35,6 +27,7 @@ func isAccessTokenEmpty(token string) bool {
 	return token == ""
 }
 
+// DO NOT USE THIS FUNCTION
 func validateToken(token string, secret string) (*jwt.Token, error) {
 	tk, err := verifyToken(token, secret)
 	if err != nil {
@@ -53,4 +46,19 @@ func getClaims(token *jwt.Token) (jwt.MapClaims, error) {
 		return nil, fmt.Errorf("could not get claims")
 	}
 	return claims, claims.Valid()
+}
+
+func ValidateAndGetClaims(tokenString string, secret string) (jwt.MapClaims, error) {
+	if tokenString == "" {
+		return nil, errors.New("invalid token (token is empty)", http.StatusUnauthorized)
+	}
+	token, err := validateToken(tokenString, secret)
+	if err != nil {
+		return nil, fmt.Errorf("failed to validate token: %v", err)
+	}
+	claims, err := getClaims(token)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get claims: %v", err)
+	}
+	return claims, nil
 }
