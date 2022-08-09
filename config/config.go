@@ -22,7 +22,6 @@ type Config struct {
 	EmailFrom        string `envconfig:"email_from"`
 	Host             string `envconfig:"host"`
 }
-
 func Load() (*Config, error) {
 	env := os.Getenv("GIN_MODE")
 	if env != "release" {

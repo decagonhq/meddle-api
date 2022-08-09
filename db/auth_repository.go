@@ -96,6 +96,7 @@ func (a *authRepo) TokenInBlacklist(token string) bool {
 	return result.Error != nil
 }
 
+
 func (a *authRepo) IsTokenInBlacklist(token string) error {
 	var count int64
 	err := a.DB.Model(&models.BlackList{}).Where("token = ?", token).Count(&count).Error
