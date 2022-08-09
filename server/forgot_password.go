@@ -1,14 +1,10 @@
 package server
 
 import (
-	"log"
 	"net/http"
 
-	"github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/models"
-	"github.com/decagonhq/meddle-api/server/jwt"
 	"github.com/decagonhq/meddle-api/server/response"
-	"github.com/decagonhq/meddle-api/services"
 	"github.com/gin-gonic/gin"
 )
 
@@ -35,49 +31,11 @@ func (s *Server) ResetPassword() gin.HandlerFunc {
 			response.JSON(c, "error unmarshalling body", http.StatusBadRequest, nil, err)
 			return
 		}
-		err := models.ValidatePassword(password.Password)
+		err := s.AuthService.ResetPassword(&password, c.Param("token"))
 		if err != nil {
-			response.JSON(c, "", errors.ErrBadRequest.Status, nil, err)
+			err.Respond(c)
 			return
 		}
-		if password.Password != password.ConfirmPassword {
-			response.JSON(c, "password does not match", errors.ErrBadRequest.Status, nil, err)
-			return
-		}
-		var user models.User
-		user.Password = password.Password
-		user.HashedPassword, err = services.GenerateHashPassword(user.Password)
-		if err != nil {
-			log.Printf("error generating password hash: %v", err.Error())
-			response.JSON(c, "internal server error", errors.ErrInternalServerError.Status, nil, err)
-			return
-		}
-		token := c.Param("token")
-		err = s.AuthRepository.IsTokenInBlacklist(token)
-		if err != nil {
-			response.JSON(c, "", http.StatusUnauthorized, nil, nil)
-			return
-		}
-		claims, err := jwt.ValidateAndGetClaims(token, s.Config.JWTSecret)
-		if err != nil {
-			response.JSON(c, "", http.StatusUnauthorized, nil, err)
-			return
-		}
-		email := claims["email"].(string)
-		errr := s.AuthRepository.UpdatePassword(user.HashedPassword, email)
-		if errr != nil {
-			response.JSON(c, "An error occurred, try again", http.StatusInternalServerError, nil, errr)
-			return
-		}
-		accBlacklist := &models.BlackList{
-			Email: email,
-			Token: token,
-		}
-		if err := s.AuthRepository.AddToBlackList(accBlacklist); err != nil {
-			log.Printf("can't add access token to blacklist: %v\n", err)
-			response.JSON(c, "", http.StatusInternalServerError, nil, errors.New("", http.StatusInternalServerError))
-			return
-		}
-		response.JSON(c, "Reset successful, Login with your new password to continue", http.StatusCreated, nil, nil)
+		response.JSON(c, "password reset successfully, Login to continue", http.StatusCreated, nil, nil)
 	}
 }

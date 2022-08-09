@@ -31,6 +31,7 @@ type AuthService interface {
 	LoginUser(request *models.LoginRequest) (*models.LoginResponse, *apiError.Error)
 	SignupUser(request *models.User) (*models.User, *apiError.Error)
 	SendEmailForPasswordReset(user *models.ForgotPassword) *apiError.Error
+	ResetPassword(user *models.ResetPassword, token string) *apiError.Error
 }
 
 // authService struct
