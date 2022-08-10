@@ -14,6 +14,7 @@ type MedicationRepository interface {
 	GetNextMedications(userID uint) ([]models.Medication, error)
 	UpdateMedicationDone(medication *models.Medication) error
 	GetAllNextMedicationsToUpdate() ([]models.Medication, error)
+	GetMedicationDetail(id uint, userId uint) (*models.Medication, error)
 	GetAllMedications(userID uint) ([]models.Medication, error)
 	UpdateNextMedicationTime(medication *models.Medication, nextDosageTime time.Time) error
 }
@@ -69,6 +70,15 @@ func (m *medicationRepo) UpdateNextMedicationTime(medication *models.Medication,
 	return nil
 }
 
+func (m *medicationRepo) GetMedicationDetail(id uint, userId uint) (*models.Medication, error) {
+	var medication models.Medication
+	err := m.DB.Where("id = ? AND user_id = ?", id, userId).First(&medication).Error
+	if err != nil {
+		return nil, fmt.Errorf("could not get medication: %v", err)
+	}
+	return &medication, nil
+}
+
 func (m *medicationRepo) GetAllMedications(userID uint) ([]models.Medication, error) {
 	var medications []models.Medication
 	err := m.DB.Where("user_id = ?", userID).Find(&medications).Error
@@ -77,3 +87,4 @@ func (m *medicationRepo) GetAllMedications(userID uint) ([]models.Medication, er
 	}
 	return medications, nil
 }
+

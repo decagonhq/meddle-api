@@ -14,22 +14,14 @@ import (
 	"testing"
 )
 
-var mockRepository *mocks.MockAuthRepository
+//var mockRepository *mocks.MockAuthRepository
 
-func setup(t *testing.T) func() {
-	ctrl := gomock.NewController(t)
-	ctrl.Finish()
-	mockRepository = mocks.NewMockAuthRepository(ctrl)
-
-	return func() {
-		defer ctrl.Finish()
-	}
-}
-
-func Test_Logout(t *testing.T) {
+func Test_MedicationDetail(t *testing.T){
 	ctrl := gomock.NewController(t)
 	auth := mocks.NewMockAuthService(ctrl)
 	repo := mocks.NewMockAuthRepository(ctrl)
+	med := mocks.NewMockMedicationService(ctrl)
+
 
 	conf, err := config.Load()
 	if err != nil {
@@ -41,6 +33,11 @@ func Test_Logout(t *testing.T) {
 		Email:       "toluwase@gmail.com",
 		Password:    "12345678",
 	}
+	medication := &models.Medication{
+		Duration:               3,
+		MedicationPrescribedBy: "ken",
+		UserID:                 1,
+	}
 	conf.JWTSecret = "testSecret"
 	token, err := services.GenerateToken(user.Email, conf.JWTSecret)
 
@@ -48,15 +45,18 @@ func Test_Logout(t *testing.T) {
 		Config:         conf,
 		AuthRepository: repo,
 		AuthService:    auth,
+		MedicationService: med,
 	}
 
-	repo.EXPECT().AddToBlackList(&models.BlackList{Email: user.Email, Token: token}).Return(nil)
+	//repo.EXPECT().AddToBlackList(&models.BlackList{Email: user.Email, Token: token}).Return(nil)
 	repo.EXPECT().TokenInBlacklist(token).Return(false)
+	med.EXPECT().GetMedicationDetail(uint(1), user.ID).Return(medication, nil)
 	repo.EXPECT().FindUserByEmail(user.Email).Return(user, nil)
+
 
 	r := s.setupRouter()
 	resp := httptest.NewRecorder()
-	req, _ := http.NewRequest(http.MethodPost, "/api/v1/logout", strings.NewReader(string(user.Email)))
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1/user/medications/1", strings.NewReader(""))
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 
 	r.ServeHTTP(resp, req)

@@ -2,7 +2,6 @@ package db
 
 import (
 	"fmt"
-
 	"github.com/decagonhq/meddle-api/models"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -94,3 +93,4 @@ func (a *authRepo) TokenInBlacklist(token string) bool {
 	result := a.DB.Where("token = ?", token).Find(&models.BlackList{})
 	return result.Error != nil
 }
+

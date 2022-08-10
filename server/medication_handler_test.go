@@ -42,7 +42,6 @@ func TestCreateMedicationHandler(t *testing.T) {
 		NextDosageTime:         startTime.Add(time.Hour * time.Duration(8)),
 		PurposeOfMedication:    "malaria treatment",
 	}
-
 	// test cases
 	testCases := []struct {
 		name               string
