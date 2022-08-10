@@ -32,23 +32,6 @@ func (s *Server) handleCreateMedication() gin.HandlerFunc {
 	}
 }
 
-func (s *Server) handleGetAllMedications() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		_, user, err := GetValuesFromContext(c)
-		if err != nil {
-			err.Respond(c)
-			return
-		}
-
-		medications, err := s.MedicationService.GetAllMedications(user.ID)
-		if err != nil {
-			err.Respond(c)
-			return
-		}
-		response.JSON(c, "medications retrieved successfully", http.StatusOK, medications, nil)
-	}
-}
-
 func (s *Server) handleGetMedDetail() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		_, user, err := GetValuesFromContext(c)
