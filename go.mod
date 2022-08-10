@@ -5,7 +5,11 @@ go 1.18
 require (
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.8.1
+
+	github.com/go-passwd/validator v0.0.0-20180902184246-0b4c967e436b
+
 	github.com/go-co-op/gocron v1.16.1
+
 	github.com/go-playground/locales v0.14.0
 	github.com/go-playground/universal-translator v0.18.0
 	github.com/go-playground/validator/v10 v10.10.0

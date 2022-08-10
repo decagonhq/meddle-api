@@ -1,15 +1,12 @@
 package mailservice
 
 import (
-	"context"
-	"errors"
 	"github.com/decagonhq/meddle-api/config"
 	"github.com/mailgun/mailgun-go/v4"
-	"time"
 )
 
 type Mailer interface {
-	SendVerifyAccount(userEmail, link string)  error
+	SendMail(toEmail, title, body, template string, values map[string]interface{}) error
 }
 type Mailgun struct {
 	Client *mailgun.MailgunImpl
@@ -26,21 +23,6 @@ func NewMailService(conf *config.Config) Mailer {
 	}
 }
 
-func (mail *Mailgun) SendVerifyAccount(userEmail, link string) error {
-	EmailFrom := mail.Conf.EmailFrom
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
-	defer cancel()
-
-	m := mail.Client.NewMessage(EmailFrom, "Verify Account", "")
-	m.SetTemplate("verify.account")
-	if err := m.AddRecipient(userEmail); err != nil {
-		return errors.New("could not add recipient")
-	}
-	err := m.AddVariable("link", link)
-	if err != nil {
-		return err
-	}
-	_, _, err = mail.Client.Send(ctx, m)
-	return err
+func (mail *Mailgun) SendMail(toEmail, title, body, link string, v map[string]interface{}) error {
+	return nil
 }

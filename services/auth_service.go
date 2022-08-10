@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"github.com/decagonhq/meddle-api/mailservice"
 	"net/http"
 
 	"errors"
@@ -29,12 +30,15 @@ const RefreshTokenValidity = time.Hour * 24
 type AuthService interface {
 	LoginUser(request *models.LoginRequest) (*models.LoginResponse, *apiError.Error)
 	SignupUser(request *models.User) (*models.User, *apiError.Error)
+	SendEmailForPasswordReset(user *models.ForgotPassword) *apiError.Error
+	ResetPassword(user *models.ResetPassword, token string) *apiError.Error
 }
 
 // authService struct
 type authService struct {
 	Config   *config.Config
 	authRepo db.AuthRepository
+	mail     mailservice.Mailer
 }
 
 // NewAuthService instantiate an authService
