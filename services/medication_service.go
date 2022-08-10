@@ -98,7 +98,7 @@ func (m *medicationService) GetNextMedications(userID uint) ([]models.Medication
 func (m *medicationService) CronUpdateMedicationForNextTime() error {
 	medications, err := m.medicationRepo.GetAllNextMedicationsToUpdate()
 	if err != nil {
-		return fmt.Errorf("could not get next medications while running update next dosage cron job: %v", err)
+		return fmt.Errorf("could not get next medications while running update next dosage cron job")
 	}
 	for _, medication := range medications {
 		timeSumation := medication.NextDosageTime.Add(time.Hour * time.Duration(medication.TimeInterval))
@@ -107,12 +107,12 @@ func (m *medicationService) CronUpdateMedicationForNextTime() error {
 		if nextDosageTime.Unix() < medication.MedicationStopDate.Unix() {
 			err = m.medicationRepo.UpdateNextMedicationTime(&medication, nextDosageTime)
 			if err != nil {
-				return fmt.Errorf("could not update next medication time while running update next dosage cron job: %v", err)
+				return fmt.Errorf("could not update next medication time while running update next dosage cron job")
 			}
 		} else {
 			err = m.medicationRepo.UpdateMedicationDone(&medication)
 			if err != nil {
-				return fmt.Errorf("could not update is medication done while running update next dosage cron job: %v", err)
+				return fmt.Errorf("could not update is medication done while running update next dosage cron job")
 			}
 		}
 	}
