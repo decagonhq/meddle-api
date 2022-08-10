@@ -20,7 +20,7 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
-const AccessTokenValidity = time.Minute * 20
+const AccessTokenValidity = time.Hour * 24
 const RefreshTokenValidity = time.Hour * 24
 
 //go:generate mockgen -destination=../mocks/auth_mock.go -package=mocks github.com/decagonhq/meddle-api/services AuthService

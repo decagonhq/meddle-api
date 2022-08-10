@@ -26,6 +26,8 @@ func (s *Server) defineRoutes(router *gin.Engine) {
 	authorized.GET("/user/medications/:id", s.handleGetMedDetail())
 	authorized.GET("/user/medications", s.handleGetAllMedications())
 
+	authorized.GET("/user/medications/next", s.handleGetNextMedication())
+
 }
 
 func (s *Server) setupRouter() *gin.Engine {
