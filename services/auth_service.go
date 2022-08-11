@@ -182,7 +182,6 @@ func GenerateClaims(email string) jwt.MapClaims {
 
 func (a *authService) VerifyEmail(token string) error {
 	//validate token here
-
 	err := a.authRepo.VerifyEmail(token)
 	return err
 }
