@@ -2,10 +2,11 @@ package db
 
 import (
 	"fmt"
-	"gorm.io/driver/postgres"
 	"log"
 	"os"
 	"time"
+
+	"gorm.io/driver/postgres"
 
 	"github.com/decagonhq/meddle-api/config"
 	"github.com/decagonhq/meddle-api/models"
@@ -33,7 +34,7 @@ func (g *GormDB) Init(c *config.Config) {
 
 func getPostgresDB(c *config.Config) *gorm.DB {
 	log.Printf("Connecting to postgres: %+v", c)
-	postgresDSN := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=Africa/Lagos",
+	postgresDSN := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d TimeZone=Africa/Lagos",
 		c.PostgresHost, c.PostgresUser, c.PostgresPassword, c.PostgresDB, c.PostgresPort)
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer

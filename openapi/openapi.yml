@@ -13,7 +13,7 @@ schemes:
   - https
   - http
 paths:
-  /auth/user:
+  /auth/signup:
     post:
       tags:
         - user
@@ -449,4 +449,3 @@ definitions:
         format: date-time
     xml:
       name: MedicationResponse
-
