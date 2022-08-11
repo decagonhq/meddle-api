@@ -36,13 +36,15 @@ type AuthService interface {
 type authService struct {
 	Config   *config.Config
 	authRepo db.AuthRepository
+	mail    Mailer
 }
 
 // NewAuthService instantiate an authService
-func NewAuthService(authRepo db.AuthRepository, conf *config.Config) AuthService {
+func NewAuthService(authRepo db.AuthRepository, conf *config.Config, mailer Mailer) AuthService {
 	return &authService{
 		Config:   conf,
 		authRepo: authRepo,
+		mail:  mailer,
 	}
 }
 
@@ -66,7 +68,7 @@ func (a *authService) SignupUser(user *models.User) (*models.User, *apiError.Err
 	}
 
 	user.IsEmailActive = false
-
+	log.Printf("logged user here %+v",user)
 	user, err = a.authRepo.CreateUser(user)
 	if err != nil {
 		log.Printf("unable to create user: %v", err.Error())
@@ -81,7 +83,8 @@ func (a *authService) SignupUser(user *models.User) (*models.User, *apiError.Err
 	subject := "Verify your email"
 	body := "Please Click the link below to verify your email"
 	templateName := "verifyEmail"
-	err = a.Mailer.SendMail(user.Email,subject, body,templateName,map[string]string{"link":link})
+	log.Printf("link: %+v", user)
+	err = a.mail.SendMail(user.Email,subject, body,templateName, map[string]interface{}{link: link})
 	if err != nil {
 		log.Printf("Error: %v", err.Error())
 		return nil, apiError.New("mail couldn't be sent", http.StatusServiceUnavailable)
@@ -181,6 +184,7 @@ func GenerateClaims(email string) jwt.MapClaims {
 
 func (a *authService) VerifyEmail(token string) error {
 	//validate token here
+
 	err := a.authRepo.VerifyEmail(token)
 	return err
 }
