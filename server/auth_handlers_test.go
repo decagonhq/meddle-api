@@ -89,7 +89,8 @@ func TestSignup(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockAuthRepo := mocks.NewMockAuthRepository(ctrl)
-	authService := services.NewAuthService(mockAuthRepo, testServer.handler.Config)
+	mail := services.NewMailService(testServer.handler.Config)
+	authService := services.NewAuthService(mockAuthRepo, testServer.handler.Config, mail)
 	testServer.handler.AuthService = authService
 
 	for _, c := range cases {
