@@ -30,6 +30,8 @@ type AuthService interface {
 	LoginUser(request *models.LoginRequest) (*models.LoginResponse, *apiError.Error)
 	SignupUser(request *models.User) (*models.User, *apiError.Error)
 	VerifyEmail(token string) error
+	SendEmailForPasswordReset(user *models.ForgotPassword) *apiError.Error
+	ResetPassword(user *models.ResetPassword, token string) *apiError.Error
 }
 
 // authService struct
@@ -68,7 +70,6 @@ func (a *authService) SignupUser(user *models.User) (*models.User, *apiError.Err
 	}
 
 	user.IsEmailActive = false
-	log.Printf("logged user here %+v",user)
 	user, err = a.authRepo.CreateUser(user)
 	if err != nil {
 		log.Printf("unable to create user: %v", err.Error())

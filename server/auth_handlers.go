@@ -7,6 +7,7 @@ import (
 
 	"github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/models"
+	"github.com/decagonhq/meddle-api/server/jwt"
 	"github.com/decagonhq/meddle-api/server/response"
 	"github.com/gin-gonic/gin"
 )
@@ -72,10 +73,9 @@ func (s *Server) handleLogout() gin.HandlerFunc {
 			response.JSON(c, "", err.Status, nil, err)
 			return
 		}
-
-		claims, errr := getClaims(token, s.Config.JWTSecret)
+		claims, errr := jwt.ValidateAndGetClaims(token, s.Config.JWTSecret)
 		if errr != nil {
-			response.JSON(c, "", http.StatusInternalServerError, nil, errr)
+			response.JSON(c, "", http.StatusUnauthorized, nil, errr)
 			return
 		}
 		convertClaims, _ := claims["exp"].(int64) //jwt pkg to validate

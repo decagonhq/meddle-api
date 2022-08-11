@@ -14,6 +14,8 @@ func (s *Server) defineRoutes(router *gin.Engine) {
 	apirouter.POST("/auth/signup", s.HandleSignup())
 	apirouter.POST("/auth/login", s.handleLogin())
 	apirouter.GET("/verifyEmail/:token", s.HandleVerifyEmail())
+	apirouter.POST("/password/forgot", s.SendEmailForPasswordReset())
+	apirouter.POST("/password/reset/:token", s.ResetPassword())
 
 	authorized := apirouter.Group("/")
 	authorized.Use(s.Authorize())
