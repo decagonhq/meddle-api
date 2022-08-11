@@ -13,7 +13,7 @@ schemes:
   - https
   - http
 paths:
-  /auth/user:
+  /auth/signup:
     post:
       tags:
         - user
@@ -24,14 +24,16 @@ paths:
         - application/json
       parameters:
         - in: body
-          name: body
+          name: Signup
           description: Created user object
           required: true
           schema:
             $ref: '#/definitions/User'
       responses:
-        default:
-          description: successful operation
+        '200':
+          description: Created medication successfully
+          schema:
+            $ref: '#/definitions/SignupResponse'
   /auth/login:
     post:
       tags:
@@ -52,7 +54,7 @@ paths:
         '200':
           description: successful operation
           schema:
-            type: string
+            $ref: '#/definitions/LoginResponse'
           headers:
             X-Rate-Limit:
               type: integer
@@ -145,6 +147,30 @@ paths:
           description: Invalid email supplied
         '404':
           description: User not found
+  /verifyEmail/{token}:
+    get:
+      tags:
+        - user
+      summary: Verify users email
+      description: ''
+      operationId: veryfyEmail
+      produces:
+        - application/json
+      parameters:
+        - name: token
+          in: path
+          description: 'Gets the token sent by signup. '
+          required: true
+          type: string
+      responses:
+        '200':
+          description: successfully verified user
+          schema:
+            $ref: '#/definitions/User'
+        '400':
+          description: Invalid token supplied
+        '404':
+          description: Token is not valid
   /user/medications:
     post:
       tags:
@@ -234,36 +260,96 @@ definitions:
   UserResponse:
     type: object
     properties:
+      id:
+        type: integer
+        format: uint
+        example: 1
+      created_at:
+        type: string
+        format: date-time
+      updated_at:
+        type: string
+        format: date-time
+      deleted_at:
+        type: string
+        format: date-time
+      name:
+        type: string
+        format: string
+        example: "Ken"
       email:
         type: string
         format: email
+        example: "ken@gmail.com"
       password:
         type: string
         format: password
+        example: "password"
+      phone_number:
+        type: string
+        format: phone
+        example: "090834343"
     xml:
-      name: UserRequest
+      name: UserResponse
+  SignupResponse:
+    type: object
+    properties:
+      data:
+        $ref: '#/definitions/UserResponse'
+      errors:
+        type: string
+        example: ""
+      message:
+        type: string
+        example: "user created successfully"
+      status:
+        type: string
+        example: "Created"
+  LoginResponse:
+    type: object
+    properties:
+      data:
+        $ref: '#/definitions/loginResponseData'
+      errors:
+        type: string
+        example: ""
+      message:
+        type: string
+        example: "user created successfully"
+      status:
+        type: string
+        example: "Created"
   User:
+    type: object
+    properties:
+      name:
+        type: string
+      phone_number:
+        type: string
+      email:
+        type: string
+      password:
+        type: string
+    xml:
+      name: User
+  loginResponseData:
     type: object
     properties:
       id:
         type: integer
-        format: int64
-      firstName:
+        example: 1
+      name:
         type: string
-      lastName:
+        example: "Ken"
+      phone_number:
         type: string
+        example: "09043556"
       email:
         type: string
-      password:
+        example: "ken@gmail.com"
+      accessToken:
         type: string
-      phone:
-        type: string
-      userStatus:
-        type: integer
-        format: int32
-        description: User Status
-    xml:
-      name: User
+        example: "Rbhfwi2PUXndOWVlUpsy0"
   Medication:
     type: object
     properties:
@@ -363,4 +449,3 @@ definitions:
         format: date-time
     xml:
       name: MedicationResponse
-
