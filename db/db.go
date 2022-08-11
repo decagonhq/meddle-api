@@ -3,6 +3,8 @@ package db
 import (
 	"fmt"
 	"log"
+	"os"
+	"time"
 
 	"gorm.io/driver/postgres"
 
@@ -34,8 +36,17 @@ func getPostgresDB(c *config.Config) *gorm.DB {
 	log.Printf("Connecting to postgres: %+v", c)
 	postgresDSN := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d TimeZone=Africa/Lagos",
 		c.PostgresHost, c.PostgresUser, c.PostgresPassword, c.PostgresDB, c.PostgresPort)
+	newLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+		logger.Config{
+			SlowThreshold:             time.Second, // Slow SQL threshold
+			LogLevel:                  logger.Info, // Log level Info, Silent, Warn, Error
+			IgnoreRecordNotFoundError: true,        // Ignore ErrRecordNotFound error for logger
+			Colorful:                  false,       // Disable color
+		},
+	)
 	postgresDB, err := gorm.Open(postgres.Open(postgresDSN), &gorm.Config{
-		Logger: logger.Default,
+		Logger: newLogger,
 	})
 	if err != nil {
 		log.Fatal(err)
