@@ -7,7 +7,7 @@ info:
   title: Meddle
   contact:
     email: info@decagonhq.com
-host: meddle.herokuapp.com
+host: meddle-api.herokuapp.com
 basePath: /api/v1
 schemes:
   - https
