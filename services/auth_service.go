@@ -79,11 +79,9 @@ func (a *authService) SignupUser(user *models.User) (*models.User, *apiError.Err
 		return nil, apiError.New("internal server error", http.StatusInternalServerError)
 	}
 	link := fmt.Sprintf("http://localhost:8080/verifyEmail/%s", token)
-	log.Println("my token: ", token)
 	subject := "Verify your email"
 	body := "Please Click the link below to verify your email"
 	templateName := "verifyEmail"
-	log.Printf("link: %+v", user)
 	err = a.mail.SendMail(user.Email,subject, body,templateName, map[string]interface{}{link: link})
 	if err != nil {
 		log.Printf("Error: %v", err.Error())
