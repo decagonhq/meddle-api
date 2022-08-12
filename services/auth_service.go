@@ -174,13 +174,13 @@ func (a *authService) FacebookSignInUser(token string) (*string, *apiError.Error
 	fbUserDetails, fbUserDetailsError := GetUserInfoFromFacebook(token)
 
 	if fbUserDetailsError != nil {
-		return nil, apiError.ErrUnauthorized
+		return nil, apiError.New(fmt.Sprintf("unable to get user details from facebook: %v", fbUserDetailsError), http.StatusUnauthorized)
 	}
 
 	authToken, authTokenError := a.GetSignInToken(fbUserDetails)
 
 	if authTokenError != nil {
-		return nil, apiError.ErrUnauthorized
+		return nil, apiError.New(fmt.Sprintf("unable sign in user: %v", authTokenError), http.StatusUnauthorized)
 	}
 	return &authToken, nil
 }
@@ -238,10 +238,10 @@ func (a *authService) GetSignInToken(facebookUserDetails *models.FacebookUser) (
 		}
 	}
 
-	tokenString, _ := GenerateToken(facebookUserDetails.Email, a.Config.JWTSecret)
+	tokenString, err := GenerateToken(facebookUserDetails.Email, a.Config.JWTSecret)
 
 	if tokenString == "" {
-		return "", fmt.Errorf("unable to generate Auth token")
+		return "", fmt.Errorf("unable to generate Auth token: %+v", err)
 	}
 
 	return tokenString, nil
