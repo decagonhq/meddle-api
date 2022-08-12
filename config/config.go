@@ -21,15 +21,17 @@ type Config struct {
 	PostgresPassword  string        `envconfig:"postgres_password"`
 	PostgresDB        string        `envconfig:"postgres_db"`
 	JWTSecret         string        `envconfig:"jwt_secret"`
+	MailgunApiKey     string        `envconfig:"mg_public_api_key"`
+	MgDomain          string        `envconfig:"mg_domain"`
+	EmailFrom         string        `envconfig:"email_from"`
+	Host              string        `envconfig:"host"`
 	GoogleLoginConfig oauth2.Config `envconfig:"google_login_config"`
 }
-
-var AppConfig Config
 
 func Load() (*Config, error) {
 	env := os.Getenv("GIN_MODE")
 	if env != "release" {
-		if err := godotenv.Load("../.env"); err != nil {
+		if err := godotenv.Load("./.env"); err != nil {
 			log.Printf("couldn't load env vars: %v", err)
 		}
 	}

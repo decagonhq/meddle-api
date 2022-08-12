@@ -15,6 +15,8 @@ func (s *Server) defineRoutes(router *gin.Engine) {
 	apirouter.POST("/auth/login", s.handleLogin())
 	apirouter.GET("/google/login", s.HandleGoogleOauthLogin())
 	apirouter.GET("/google/callback", s.HandleGoogleCallback())
+	apirouter.POST("/password/forgot", s.SendEmailForPasswordReset())
+	apirouter.POST("/password/reset/:token", s.ResetPassword())
 
 	authorized := apirouter.Group("/")
 	authorized.Use(s.Authorize())
@@ -24,6 +26,10 @@ func (s *Server) defineRoutes(router *gin.Engine) {
 	authorized.GET("/me", s.handleShowProfile())
 
 	authorized.POST("/user/medications", s.handleCreateMedication())
+	authorized.GET("/user/medications/:id", s.handleGetMedDetail())
+	authorized.GET("/user/medications", s.handleGetAllMedications())
+
+	authorized.GET("/user/medications/next", s.handleGetNextMedication())
 
 }
 

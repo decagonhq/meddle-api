@@ -3,19 +3,25 @@ package server
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
-	"github.com/decagonhq/meddle-api/config"
-	"io/ioutil"
+	"github.com/decagonhq/meddle-api/services"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/models"
+	"github.com/decagonhq/meddle-api/server/jwt"
 	"github.com/decagonhq/meddle-api/server/response"
 	"github.com/gin-gonic/gin"
 )
+
+var state string
 
 func (s *Server) HandleSignup() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -51,68 +57,133 @@ func (s *Server) handleLogin() gin.HandlerFunc {
 
 func (s *Server) HandleGoogleOauthLogin() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Create oauthState cookie
-		oauthState := GenerateStateOauthCookie(c.Writer)
-		/*
-			AuthCodeURL receive state that is a token to protect the user
-			from CSRF attacks. You must always provide a non-empty string
-			and validate that it matches the the state query parameter
-			on your redirect callback.
-		*/
-		u := config.AppConfig.GoogleLoginConfig.AuthCodeURL(oauthState)
-		http.Redirect(c.Writer, c.Request, u, http.StatusTemporaryRedirect)
+		tempState, _ := services.GenerateRandomString()
+		state = tempState
+
+		url := oAuthGoogleConfig().AuthCodeURL(state)
+		response.JSON(c, "", http.StatusTemporaryRedirect, url, nil)
 	}
 }
-
 func (s *Server) HandleGoogleCallback() gin.HandlerFunc {
 	return func(c *gin.Context) {
-
-		// get oauth state from cookie for this user
-		oauthState, _ := c.Request.Cookie("oauthstate")
-		state := c.Request.FormValue("state")
-		code := c.Request.FormValue("code")
-		c.Writer.Header().Add("content-type", "application/json")
-
-		// ERROR : Invalid OAuth State
-		if state != oauthState.Value {
-			http.Redirect(c.Writer, c.Request, "/", http.StatusTemporaryRedirect)
-			fmt.Fprintf(c.Writer, "invalid oauth google state")
+		if c.Param("state") != state {
+			response.JSON(c, "", http.StatusTemporaryRedirect, nil, errors.New("invalid state", http.StatusTemporaryRedirect))
 			return
 		}
-
-		// Exchange Auth Code for Tokens
-		token, err := config.AppConfig.GoogleLoginConfig.Exchange(
-			context.Background(), code)
-
-		// ERROR : Auth Code Exchange Failed
+		token, err := oAuthGoogleConfig().Exchange(context.Background(), c.Param("code"))
 		if err != nil {
-			fmt.Fprintf(c.Writer, "falied code exchange: %s", err.Error())
+			fmt.Print(err)
+			response.JSON(c, "", http.StatusInternalServerError, nil, errors.New("invalid code", http.StatusInternalServerError))
 			return
 		}
 
-		// Fetch User Data from google server
-		resp, err := http.Get(config.OauthGoogleUrlAPI + token.AccessToken)
-
-		// ERROR : Unable to get user data from google
+		resp, err := http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token.AccessToken)
 		if err != nil {
-			fmt.Fprintf(c.Writer, "failed getting user info: %s", err.Error())
+			fmt.Print(err)
+			response.JSON(c, "", http.StatusInternalServerError, nil, errors.New("error", http.StatusInternalServerError))
 			return
 		}
-
-		// Parse user data JSON Object
 		defer resp.Body.Close()
-		contents, err := ioutil.ReadAll(resp.Body)
+
+		googleResponse := models.GoogleAuthResponse{}
+		err = json.NewDecoder(resp.Body).Decode(&googleResponse)
 		if err != nil {
-			fmt.Fprintf(c.Writer, "failed read response: %s", err.Error())
+			fmt.Println(err)
+			response.JSON(c, "", http.StatusInternalServerError, nil, errors.New("error", http.StatusInternalServerError))
 			return
 		}
-
-		// send back response to browser
-		fmt.Fprintln(c.Writer, string(contents))
-
-		response.JSON(c, "login successful", http.StatusOK, resp, nil)
+		var userData = models.User{
+			Name:        googleResponse.GivenName + " " + googleResponse.FamilyName,
+			Email:       googleResponse.Email,
+			AccessToken: token.AccessToken,
+			Social:      "google",
+		}
+		//Create new user if not exists else update access token
+		//err = s.AuthRepository.IsEmailExist(userData.Email)
+		//if err != nil {
+		//	if err.Error() == "email not found" {
+		//		userData.Password, _ = services.GenerateRandomString()
+		//		userResponse, err := s.AuthService.SignupUser(&userData)
+		//		if err != nil {
+		//			err.Respond(c)
+		//			return
+		//		}
+		//		response.JSON(c, "user created successfully", http.StatusCreated, userResponse, nil)
+		//	} else {
+		//		response.JSON(c, "", http.StatusInternalServerError, nil, errors.New("error", http.StatusInternalServerError))
+		//	}
+		//	return
+		//}
+		generateToken, err := services.GenerateToken(userData.Email, s.Config.JWTSecret)
+		if err != nil {
+			fmt.Println(err)
+			response.JSON(c, "", http.StatusInternalServerError, nil, errors.New("error", http.StatusInternalServerError))
+			return
+		}
+		userData.AccessToken = generateToken
+		response.JSON(c, "", http.StatusOK, userData, nil)
 	}
 }
+
+func oAuthGoogleConfig() *oauth2.Config {
+	return &oauth2.Config{
+		RedirectURL:  "http://localhost:3000/auth/google/callback",
+		ClientID:     os.Getenv("GOOGLE_OAUTH_CLIENT_ID"),
+		ClientSecret: os.Getenv("GOOGLE_OAUTH_CLIENT_SECRET"),
+		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email"},
+		Endpoint:     google.Endpoint,
+	}
+}
+
+//func (s *Server) HandleGoogleCallback() gin.HandlerFunc {
+//	return func(c *gin.Context) {
+//
+//		// get oauth state from cookie for this user
+//		oauthState, _ := c.Request.Cookie("oauthstate")
+//		state := c.Request.FormValue("state")
+//		code := c.Request.FormValue("code")
+//		c.Writer.Header().Add("content-type", "application/json")
+//
+//		// ERROR : Invalid OAuth State
+//		if state != oauthState.Value {
+//			http.Redirect(c.Writer, c.Request, "/", http.StatusTemporaryRedirect)
+//			fmt.Fprintf(c.Writer, "invalid oauth google state")
+//			return
+//		}
+//
+//		// Exchange Auth Code for Tokens
+//		token, err := config.AppConfig.GoogleLoginConfig.Exchange(
+//			context.Background(), code)
+//
+//		// ERROR : Auth Code Exchange Failed
+//		if err != nil {
+//			fmt.Fprintf(c.Writer, "falied code exchange: %s", err.Error())
+//			return
+//		}
+//
+//		// Fetch User Data from google server
+//		resp, err := http.Get(config.OauthGoogleUrlAPI + token.AccessToken)
+//
+//		// ERROR : Unable to get user data from google
+//		if err != nil {
+//			fmt.Fprintf(c.Writer, "failed getting user info: %s", err.Error())
+//			return
+//		}
+//
+//		// Parse user data JSON Object
+//		defer resp.Body.Close()
+//		contents, err := ioutil.ReadAll(resp.Body)
+//		if err != nil {
+//			fmt.Fprintf(c.Writer, "failed read response: %s", err.Error())
+//			return
+//		}
+//
+//		// send back response to browser
+//		fmt.Fprintln(c.Writer, string(contents))
+//
+//		response.JSON(c, "login successful", http.StatusOK, resp, nil)
+//	}
+//}
 
 func GetValuesFromContext(c *gin.Context) (string, *models.User, *errors.Error) {
 	var tokenI, userI interface{}
@@ -133,7 +204,6 @@ func GetValuesFromContext(c *gin.Context) (string, *models.User, *errors.Error) 
 	if !ok {
 		return "", nil, errors.New("internal server error", http.StatusInternalServerError)
 	}
-
 	return token, user, nil
 }
 
@@ -144,17 +214,13 @@ func (s *Server) handleLogout() gin.HandlerFunc {
 			response.JSON(c, "", err.Status, nil, err)
 			return
 		}
-
-		claims, errr := getClaims(token, s.Config.JWTSecret)
+		claims, errr := jwt.ValidateAndGetClaims(token, s.Config.JWTSecret)
 		if errr != nil {
-			response.JSON(c, "", http.StatusInternalServerError, nil, errr)
+			response.JSON(c, "", http.StatusUnauthorized, nil, errr)
 			return
 		}
 		convertClaims, _ := claims["exp"].(int64) //jwt pkg to validate
 		if convertClaims < time.Now().Unix() {
-			response.JSON(c, "successfully logged out", http.StatusOK, nil, nil)
-			return
-		} else {
 			accBlacklist := &models.BlackList{
 				Email: user.Email,
 				Token: token,
@@ -164,8 +230,9 @@ func (s *Server) handleLogout() gin.HandlerFunc {
 				response.JSON(c, "logout failed", http.StatusInternalServerError, nil, errors.New("can't add access token to blacklist", http.StatusInternalServerError))
 				return
 			}
-			response.JSON(c, "successfully added to blacklist", http.StatusOK, nil, nil)
 		}
+		response.JSON(c, "logout successful", http.StatusOK, nil, nil)
+
 	}
 }
 

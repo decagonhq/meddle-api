@@ -2,6 +2,8 @@ package services
 
 import (
 	"fmt"
+	"github.com/decagonhq/meddle-api/mailservice"
+	"math/rand"
 	"net/http"
 
 	"errors"
@@ -20,7 +22,7 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
-const AccessTokenValidity = time.Minute * 20
+const AccessTokenValidity = time.Hour * 24
 const RefreshTokenValidity = time.Hour * 24
 
 //go:generate mockgen -destination=../mocks/auth_mock.go -package=mocks github.com/decagonhq/meddle-api/services AuthService
@@ -29,12 +31,15 @@ const RefreshTokenValidity = time.Hour * 24
 type AuthService interface {
 	LoginUser(request *models.LoginRequest) (*models.LoginResponse, *apiError.Error)
 	SignupUser(request *models.User) (*models.User, *apiError.Error)
+	SendEmailForPasswordReset(user *models.ForgotPassword) *apiError.Error
+	ResetPassword(user *models.ResetPassword, token string) *apiError.Error
 }
 
 // authService struct
 type authService struct {
 	Config   *config.Config
 	authRepo db.AuthRepository
+	mail     mailservice.Mailer
 }
 
 // NewAuthService instantiate an authService
@@ -164,4 +169,14 @@ func GenerateClaims(email string) jwt.MapClaims {
 	}
 
 	return accessClaims
+}
+
+func GenerateRandomString() (string, error) {
+	n := 5
+	b := make([]byte, n)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	s := fmt.Sprintf("%X", b)
+	return s, nil
 }
