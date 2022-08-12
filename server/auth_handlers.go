@@ -91,13 +91,11 @@ func (s *Server) handleLogout() gin.HandlerFunc {
 			}
 		}
 		response.JSON(c, "logout successful", http.StatusOK, nil, nil)
-
 	}
 }
 
 func (s *Server) handleGetUsers() gin.HandlerFunc {
 	return func(c *gin.Context) {
-
 		response.JSON(c, "successful", http.StatusOK, nil, nil)
 	}
 }
@@ -113,5 +111,19 @@ func (s *Server) handleShowProfile() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		response.JSON(c, "successful", http.StatusOK, nil, nil)
+	}
+}
+
+func (s *Server) HandleVerifyEmail() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		paramToken, ok := c.Get("token")
+		if !ok {
+			response.JSON(c, "", http.StatusBadRequest, nil, errors.New("token not found", http.StatusBadRequest))
+			return
+		}
+		err := s.AuthService.VerifyEmail(paramToken.(string))
+		if err != nil {
+			response.JSON(c, "", http.StatusBadRequest, nil, err)
+		}
 	}
 }

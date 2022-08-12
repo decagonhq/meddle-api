@@ -19,8 +19,10 @@ type AuthRepository interface {
 	UpdateUser(user *models.User) error
 	AddToBlackList(blacklist *models.BlackList) error
 	TokenInBlacklist(token string) bool
+	VerifyEmail(token string) error
 	IsTokenInBlacklist(token string) error
 	UpdatePassword(password string, email string) error
+
 }
 
 type authRepo struct {
@@ -96,6 +98,15 @@ func (a *authRepo) TokenInBlacklist(token string) bool {
 	return result.Error != nil
 }
 
+func (a *authRepo) VerifyEmail(token string) error {
+	var user models.User
+	err := a.DB.Model(&user).Where("id = ?", user.ID).Update("is_email_active",true).Error
+	if err != nil {
+		return errors.Wrap(err, "gorm.update error")
+	}
+	err = a.AddToBlackList(&models.BlackList{Token: token})
+	return err
+}
 
 func (a *authRepo) IsTokenInBlacklist(token string) error {
 	var count int64
