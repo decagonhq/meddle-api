@@ -38,7 +38,11 @@ type AuthService interface {
 type authService struct {
 	Config   *config.Config
 	authRepo db.AuthRepository
+<<<<<<< Updated upstream
 	mail    Mailer
+=======
+	mail Mailer
+>>>>>>> Stashed changes
 }
 
 // NewAuthService instantiate an authService
