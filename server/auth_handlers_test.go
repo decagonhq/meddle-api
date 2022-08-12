@@ -30,11 +30,15 @@ func TestSignup(t *testing.T) {
 		Email:       "toluwase@gmail.com",
 		Password:    "12345678",
 	}
-	//token, _ := services.GenerateToken(newReq.Email, testServer.handler.Config.JWTSecret)
-	//link := fmt.Sprintf("http://localhost:8080/verifyEmail/%s", token)
-	//subject := "Verify your email"
-	//body := "Please Click the link below to verify your email"
-	//templateName := "verifyEmail"
+	noEmail := &models.User{
+		PhoneNumber: "+2348163608141",
+		Password:    "12345678",
+	}
+	noPhone := &models.User{
+		Name:  "Tolu",
+		Email: "toluwase@gmail.com",
+	}
+
 	user := &models.User{
 		Name:        newReq.Name,
 		PhoneNumber: newReq.PhoneNumber,
@@ -60,29 +64,30 @@ func TestSignup(t *testing.T) {
 			ExpectedMessage: "user created successfully",
 			ExpectedError:   "",
 			mockDB: func(ctrl *mocks.MockAuthRepository, service *mocks.MockAuthService) {
-				//ctrl.EXPECT().IsEmailExist(newReq.Email).Return(nil)
-				//ctrl.EXPECT().IsPhoneExist(newReq.PhoneNumber).Return(nil)
-				//ctrl.EXPECT().CreateUser(gomock.Any()).Return(user, nil)
-				//service.EXPECT().SendMail(newReq.Email,subject,body,templateName,
-				//	map[string]interface{}{"link": link})
 				service.EXPECT().SignupUser(newReq)
 			},
 		},
 		{
 			Name:            "Test Signup with no email",
-			Request:         &models.User{Name: "Tolu", PhoneNumber: "08141636082"},
+			Request:         noEmail,
 			ExpectedCode:    http.StatusBadRequest,
 			ExpectedMessage: "",
 			ExpectedError:   "Email is invalid: toluwase.tt.com",
-			mockDB:          func(ctrl *mocks.MockAuthRepository, service *mocks.MockAuthService) {},
+			mockDB: func(ctrl *mocks.MockAuthRepository, service *mocks.MockAuthService) {
+				service.EXPECT().SignupUser(noEmail).
+					Return(&models.User{}, nil).AnyTimes()
+			},
 		},
 		{
 			Name:            "Test Signup with invalid fields",
-			Request:         &models.User{Name: "Tolu", PhoneNumber: "08141", Email: "tolut.a"},
+			Request:         noPhone,
 			ExpectedCode:    http.StatusBadRequest,
 			ExpectedMessage: "",
 			ExpectedError:   "Email is invalid: toluwase.tt.com",
-			mockDB:          func(ctrl *mocks.MockAuthRepository, service *mocks.MockAuthService) {},
+			mockDB: func(ctrl *mocks.MockAuthRepository, service *mocks.MockAuthService) {
+				service.EXPECT().SignupUser(noPhone).
+					Return(&models.User{}, nil).AnyTimes()
+			},
 		},
 		{
 			Name:            "Test Signup with duplicate email address",
@@ -90,18 +95,19 @@ func TestSignup(t *testing.T) {
 			ExpectedCode:    http.StatusBadRequest,
 			ExpectedMessage: "",
 			ExpectedError:   "user already exists",
-			mockDB:          func(ctrl *mocks.MockAuthRepository, service *mocks.MockAuthService) {},
+			mockDB: func(ctrl *mocks.MockAuthRepository, service *mocks.MockAuthService) {
+				service.EXPECT().SignupUser(newReq).
+					Return(&models.User{}, nil).AnyTimes()
+			},
 		},
 	}
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockAuthRepo := mocks.NewMockAuthRepository(ctrl)
-	//mockMailService := mocks.NewMockMailer(ctrl)
-	//mail := mocks.NewMockMailer(ctrl)
 	authService := mocks.NewMockAuthService(ctrl)
 	testServer.handler.AuthService = authService
-
+	testServer.handler.AuthRepository = mockAuthRepo
 	for _, c := range cases {
 		t.Run(c.Name, func(t *testing.T) {
 			// FIXME: refactor this test
