@@ -19,7 +19,8 @@ func setup(t *testing.T) func() {
 	ctrl := gomock.NewController(t)
 	ctrl.Finish()
 	mockRepository = mocks.NewMockAuthRepository(ctrl)
-	testLoginService = NewAuthService(mockRepository, testConfig)
+	mailService := mocks.NewMockMailer(ctrl)
+	testLoginService = NewAuthService(mockRepository, testConfig, mailService)
 
 	mockMedicationRepository = mocks.NewMockMedicationRepository(ctrl)
 	testMedicationService = NewMedicationService(mockMedicationRepository, testConfig)

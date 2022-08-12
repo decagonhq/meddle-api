@@ -17,18 +17,17 @@ func main() {
 
 	gormDB := db.GetDB(conf)
 	authRepo := db.NewAuthRepo(gormDB)
-	authService := services.NewAuthService(authRepo, conf)
+	mail := services.NewMailService(conf)
+	authService := services.NewAuthService(authRepo, conf, mail)
 
 	medicationRepo := db.NewMedicationRepo(gormDB)
 	medicationService := services.NewMedicationService(medicationRepo, conf)
-	mailService := services.NewMailService(conf)
 
 	s := &server.Server{
 		Config:            conf,
 		AuthRepository:    authRepo,
 		AuthService:       authService,
 		MedicationService: medicationService,
-		Mail:              mailService,
 	}
 	go services.UpdateMedicationCronJob(medicationService)
 	s.Start()
