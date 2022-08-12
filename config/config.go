@@ -23,6 +23,10 @@ type Config struct {
 	FacebookClientSecret string `envconfig:"facebook_client_secret"`
 	FacebookRedirectURL  string `envconfig:"facebook_redirect_url"`
 	OauthStateString     string `envconfig:"oauth_state_string"`
+	MailgunApiKey        string `envconfig:"mg_public_api_key"`
+	MgDomain             string `envconfig:"mg_domain"`
+	EmailFrom            string `envconfig:"email_from"`
+	Host                 string `envconfig:"host"`
 }
 
 func Load() (*Config, error) {

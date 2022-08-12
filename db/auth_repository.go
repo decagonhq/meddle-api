@@ -2,7 +2,6 @@ package db
 
 import (
 	"fmt"
-
 	"github.com/decagonhq/meddle-api/models"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -20,6 +19,10 @@ type AuthRepository interface {
 	UpdateUser(user *models.User) error
 	AddToBlackList(blacklist *models.BlackList) error
 	TokenInBlacklist(token string) bool
+	VerifyEmail(token string) error
+	IsTokenInBlacklist(token string) error
+	UpdatePassword(password string, email string) error
+
 }
 
 type authRepo struct {
@@ -93,4 +96,34 @@ func (a *authRepo) AddToBlackList(blacklist *models.BlackList) error {
 func (a *authRepo) TokenInBlacklist(token string) bool {
 	result := a.DB.Where("token = ?", token).Find(&models.BlackList{})
 	return result.Error != nil
+}
+
+func (a *authRepo) VerifyEmail(token string) error {
+	var user models.User
+	err := a.DB.Model(&user).Where("id = ?", user.ID).Update("is_email_active",true).Error
+	if err != nil {
+		return errors.Wrap(err, "gorm.update error")
+	}
+	err = a.AddToBlackList(&models.BlackList{Token: token})
+	return err
+}
+
+func (a *authRepo) IsTokenInBlacklist(token string) error {
+	var count int64
+	err := a.DB.Model(&models.BlackList{}).Where("token = ?", token).Count(&count).Error
+	if err != nil {
+		return errors.Wrap(err, "gorm.count error")
+	}
+	if count > 0 {
+		return fmt.Errorf("token expired, request a new link")
+	}
+	return nil
+}
+
+func (a *authRepo) UpdatePassword(password string, email string) error {
+	err := a.DB.Model(&models.User{}).Where("email = ?", email).Updates(models.User{HashedPassword: password}).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }

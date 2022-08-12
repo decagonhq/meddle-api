@@ -11,6 +11,7 @@ import (
 
 	"github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/models"
+	"github.com/decagonhq/meddle-api/server/jwt"
 	"github.com/decagonhq/meddle-api/server/response"
 	"github.com/gin-gonic/gin"
 )
@@ -66,7 +67,6 @@ func GetValuesFromContext(c *gin.Context) (string, *models.User, *errors.Error) 
 	if !ok {
 		return "", nil, errors.New("internal server error", http.StatusInternalServerError)
 	}
-
 	return token, user, nil
 }
 
@@ -77,10 +77,9 @@ func (s *Server) handleLogout() gin.HandlerFunc {
 			response.JSON(c, "", err.Status, nil, err)
 			return
 		}
-
-		claims, errr := getClaims(token, s.Config.JWTSecret)
+		claims, errr := jwt.ValidateAndGetClaims(token, s.Config.JWTSecret)
 		if errr != nil {
-			response.JSON(c, "", http.StatusInternalServerError, nil, errr)
+			response.JSON(c, "", http.StatusUnauthorized, nil, errr)
 			return
 		}
 		convertClaims, _ := claims["exp"].(int64) //jwt pkg to validate
@@ -96,7 +95,6 @@ func (s *Server) handleLogout() gin.HandlerFunc {
 			}
 		}
 		response.JSON(c, "logout successful", http.StatusOK, nil, nil)
-
 	}
 }
 
@@ -140,7 +138,6 @@ func (s *Server) fbCallbackHandler() gin.HandlerFunc {
 
 func (s *Server) handleGetUsers() gin.HandlerFunc {
 	return func(c *gin.Context) {
-
 		response.JSON(c, "successful", http.StatusOK, nil, nil)
 	}
 }
@@ -156,5 +153,19 @@ func (s *Server) handleShowProfile() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		response.JSON(c, "successful", http.StatusOK, nil, nil)
+	}
+}
+
+func (s *Server) HandleVerifyEmail() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		paramToken, ok := c.Get("token")
+		if !ok {
+			response.JSON(c, "", http.StatusBadRequest, nil, errors.New("token not found", http.StatusBadRequest))
+			return
+		}
+		err := s.AuthService.VerifyEmail(paramToken.(string))
+		if err != nil {
+			response.JSON(c, "", http.StatusBadRequest, nil, err)
+		}
 	}
 }

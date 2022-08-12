@@ -3,6 +3,8 @@ package server
 import (
 	"context"
 	"fmt"
+	"github.com/decagonhq/meddle-api/config"
+	"github.com/decagonhq/meddle-api/db"
 	"github.com/decagonhq/meddle-api/services"
 	"log"
 	"net/http"
@@ -10,9 +12,6 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-
-	"github.com/decagonhq/meddle-api/config"
-	"github.com/decagonhq/meddle-api/db"
 )
 
 // Server serves requests to DB with router
@@ -65,6 +64,5 @@ func gracefulShutdown(srv *http.Server) {
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Fatal("Server forced to shutdown:", err)
 	}
-
 	log.Println("Server exiting")
 }

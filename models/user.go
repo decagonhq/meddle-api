@@ -1,8 +1,10 @@
 package models
 
 import (
+	"errors"
 	"fmt"
 
+	goval "github.com/go-passwd/validator"
 	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
@@ -33,7 +35,12 @@ func ValidateStruct(req interface{}) []error {
 	errs = translateError(err, trans)
 	return errs
 }
-
+func ValidatePassword(password string) error {
+	passwordValidator := goval.New(goval.MinLength(6, errors.New("password cant be less than 6 characters")),
+		goval.MaxLength(15, errors.New("password cant be more than 15 characters")))
+	err := passwordValidator.Validate(password)
+	return err
+}
 func validateWhiteSpaces(data interface{}) error {
 	return conform.Strings(data)
 }
@@ -62,6 +69,13 @@ type LoginRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
 }
+type ForgotPassword struct {
+	Email string `json:"email" binding:"required,email"`
+}
+type ResetPassword struct {
+	Password        string `json:"password" binding:"required"`
+	ConfirmPassword string `json:"confirm_password" binding:"required"`
+}
 
 type LoginResponse struct {
 	UserResponse
@@ -85,3 +99,4 @@ func (u *User) LoginUserToDto(token string) *LoginResponse {
 		AccessToken: token,
 	}
 }
+
