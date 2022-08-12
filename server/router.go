@@ -14,7 +14,7 @@ func (s *Server) defineRoutes(router *gin.Engine) {
 	apirouter.POST("/auth/signup", s.HandleSignup())
 	apirouter.POST("/auth/login", s.handleLogin())
 	apirouter.GET("/fb/auth", s.handleFBLogin())
-	apirouter.POST("fb/callback", s.fbCallbackHandler())
+	apirouter.GET("fb/callback", s.fbCallbackHandler())
 
 	authorized := apirouter.Group("/")
 	authorized.Use(s.Authorize())

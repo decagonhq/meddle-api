@@ -1,7 +1,10 @@
 package services
 
 import (
+	"crypto/rand"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"errors"
@@ -29,6 +32,7 @@ const RefreshTokenValidity = time.Hour * 24
 type AuthService interface {
 	LoginUser(request *models.LoginRequest) (*models.LoginResponse, *apiError.Error)
 	SignupUser(request *models.User) (*models.User, *apiError.Error)
+	FacebookSignInUser(token string) (*string, *apiError.Error)
 }
 
 // authService struct
@@ -157,11 +161,98 @@ func GenerateToken(email string, secret string) (string, error) {
 }
 
 func GenerateClaims(email string) jwt.MapClaims {
-
 	accessClaims := jwt.MapClaims{
 		"email": email,
 		"exp":   time.Now().Add(AccessTokenValidity).Unix(),
 	}
 
 	return accessClaims
+}
+
+func (a *authService) FacebookSignInUser(token string) (*string, *apiError.Error) {
+	// rename function
+	fbUserDetails, fbUserDetailsError := GetUserInfoFromFacebook(token)
+
+	if fbUserDetailsError != nil {
+		return nil, apiError.ErrUnauthorized
+	}
+
+	authToken, authTokenError := a.GetSignInToken(fbUserDetails)
+
+	if authTokenError != nil {
+		return nil, apiError.ErrUnauthorized
+	}
+	return &authToken, nil
+}
+
+// GetUserInfoFromFacebook will return information of user which is fetched from facebook
+func GetUserInfoFromFacebook(token string) (*models.FacebookUser, error) {
+	var fbUserDetails *models.FacebookUser
+	facebookUserDetailsRequest, _ := http.NewRequest("GET", "https://graph.facebook.com/me?fields=name,email&access_token="+token, nil)
+	facebookUserDetailsResponse, facebookUserDetailsResponseError := http.DefaultClient.Do(facebookUserDetailsRequest)
+
+	if facebookUserDetailsResponseError != nil {
+		return nil, fmt.Errorf("error occurred while getting information from Facebook: %+v", facebookUserDetailsResponseError)
+	}
+	body, err := ioutil.ReadAll(facebookUserDetailsResponse.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error occurred while getting information from Facebook: %+v", err)
+	}
+	defer facebookUserDetailsResponse.Body.Close()
+	err = json.Unmarshal(body, &fbUserDetails)
+
+	if err != nil {
+		return nil, fmt.Errorf("error occurred while getting information from Facebook: %+v", err)
+	}
+
+	return fbUserDetails, nil
+}
+
+// GetSignInToken Used for Signing In the Users
+func (a *authService) GetSignInToken(facebookUserDetails *models.FacebookUser) (string, error) {
+	var result *models.User
+
+	if facebookUserDetails == nil {
+		return "", fmt.Errorf("error: facebook user details can't be empty")
+	}
+
+	if facebookUserDetails.Email == "" {
+		return "", fmt.Errorf("error: email can't be empty")
+	}
+
+	if facebookUserDetails.Name == "" {
+		return "", fmt.Errorf("error: name can't be empty")
+	}
+
+	result, err := a.authRepo.FindUserByEmail(facebookUserDetails.Email)
+	if err != nil {
+		return "", fmt.Errorf("error finding user: %+v", err)
+	}
+
+	if result == nil {
+		result.Email = facebookUserDetails.Email
+		result.Name = facebookUserDetails.Name
+		_, err = a.authRepo.CreateUser(result)
+		if err != nil {
+			return "", fmt.Errorf("error occurred creating user: %+v", err)
+		}
+	}
+
+	tokenString, _ := GenerateToken(facebookUserDetails.Email, a.Config.JWTSecret)
+
+	if tokenString == "" {
+		return "", fmt.Errorf("unable to generate Auth token")
+	}
+
+	return tokenString, nil
+}
+
+func GenerateRandomString() (string, error) {
+	n := 5
+	b := make([]byte, n)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	s := fmt.Sprintf("%X", b)
+	return s, nil
 }

@@ -1,7 +1,9 @@
 package server
 
 import (
+	"context"
 	"github.com/decagonhq/meddle-api/config"
+	"github.com/decagonhq/meddle-api/services"
 	"golang.org/x/oauth2"
 	"log"
 	"net/http"
@@ -101,15 +103,38 @@ func (s *Server) handleLogout() gin.HandlerFunc {
 func (s *Server) handleFBLogin() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		conf := config.GetFacebookOAuthConfig(s.Config.FacebookClientID, s.Config.FacebookClientSecret, s.Config.FacebookRedirectURL)
-		url := conf.AuthCodeURL(s.Config.OauthStateString, oauth2.AccessTypeOffline)
+		s.Config.OauthStateString, _ = services.GenerateRandomString()
+		url := conf.AuthCodeURL(s.Config.OauthStateString, oauth2.AccessTypeOnline)
+		log.Println("url: ", url)
 		c.Redirect(http.StatusTemporaryRedirect, url)
 	}
 }
 
 func (s *Server) fbCallbackHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		var state = c.Query("state")
+		var code = c.Query("code")
 
-		response.JSON(c, "successful", http.StatusOK, nil, nil)
+		if state != s.Config.OauthStateString {
+			respondAndAbort(c, "", http.StatusUnauthorized, nil, errors.New("invalid login", http.StatusUnauthorized))
+			return
+		}
+
+		var OAuth2Config = config.GetFacebookOAuthConfig(s.Config.FacebookClientID, s.Config.FacebookClientSecret, s.Config.FacebookRedirectURL)
+
+		token, err := OAuth2Config.Exchange(context.Background(), code)
+		if err != nil || token == nil {
+			respondAndAbort(c, "", http.StatusUnauthorized, nil, errors.New("invalid token", http.StatusUnauthorized))
+			return
+		}
+
+		authToken, errr := s.AuthService.FacebookSignInUser(token.AccessToken)
+		if errr != nil {
+			respondAndAbort(c, "", http.StatusUnauthorized, nil, errors.New("invalid authToken", http.StatusUnauthorized))
+			return
+		}
+
+		response.JSON(c, "", http.StatusOK, authToken, nil)
 	}
 }
 
