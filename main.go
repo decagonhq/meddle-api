@@ -23,6 +23,9 @@ func main() {
 	medicationRepo := db.NewMedicationRepo(gormDB)
 	medicationService := services.NewMedicationService(medicationRepo, conf)
 
+	mailService := services.NewMailService(conf)
+
+
 	s := &server.Server{
 		Config:            conf,
 		AuthRepository:    authRepo,

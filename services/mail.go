@@ -1,6 +1,7 @@
 package services
 
 import (
+
 	"context"
 	"errors"
 	"github.com/decagonhq/meddle-api/config"
@@ -9,7 +10,7 @@ import (
 )
 
 type Mailer interface {
-	SendMail(toEmail, subject, body, template string, values map[string]interface{}) error
+	SendMail(toEmail, title, body, template string, values map[string]interface{}) error
 }
 type Mailgun struct {
 	Client *mailgun.MailgunImpl
@@ -25,6 +26,7 @@ func NewMailService(conf *config.Config) Mailer {
 		Conf:   conf,
 	}
 }
+
 
 func (m *Mailgun) SendMail(toEmail, subject, body, template string, values map[string]interface{}) error {
 	message := m.Client.NewMessage(m.Conf.EmailFrom, subject, body)
@@ -43,5 +45,3 @@ func (m *Mailgun) SendMail(toEmail, subject, body, template string, values map[s
 	_, _, err := m.Client.Send(ctx, message)
 	return err
 }
-
-
