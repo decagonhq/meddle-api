@@ -1,4 +1,4 @@
-package mailservice
+package services
 
 import (
 	"github.com/decagonhq/meddle-api/config"

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/decagonhq/meddle-api/config"
 	"github.com/decagonhq/meddle-api/db"
-	"github.com/decagonhq/meddle-api/mailservice"
 	"github.com/decagonhq/meddle-api/services"
 	"log"
 	"net/http"
@@ -21,7 +20,7 @@ type Server struct {
 	AuthRepository    db.AuthRepository
 	AuthService       services.AuthService
 	MedicationService services.MedicationService
-	Mail              mailservice.Mailer
+	Mail              services.Mailer
 }
 
 func (s *Server) Start() {
