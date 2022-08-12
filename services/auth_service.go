@@ -83,7 +83,7 @@ func (a *authService) SignupUser(user *models.User) (*models.User, *apiError.Err
 	subject := "Verify your email"
 	body := "Please Click the link below to verify your email"
 	templateName := "verifyEmail"
-	err = a.mail.SendMail(user.Email,subject, body,templateName, map[string]interface{}{link: link})
+	err = a.mail.SendMail(user.Email,subject, body,templateName, map[string]interface{}{link:link})
 	if err != nil {
 		log.Printf("Error: %v", err.Error())
 		return nil, apiError.New("mail couldn't be sent", http.StatusServiceUnavailable)

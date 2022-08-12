@@ -19,8 +19,8 @@ func setup(t *testing.T) func() {
 	ctrl := gomock.NewController(t)
 	ctrl.Finish()
 	mockRepository = mocks.NewMockAuthRepository(ctrl)
-	mailRepository := mocks.NewMockMailer(ctrl)
-	testLoginService = NewAuthService(mockRepository, testConfig,mailRepository)
+	mailService := mocks.NewMockMailer(ctrl)
+	testLoginService = NewAuthService(mockRepository, testConfig, mailService)
 
 	mockMedicationRepository = mocks.NewMockMedicationRepository(ctrl)
 	testMedicationService = NewMedicationService(mockMedicationRepository, testConfig)
@@ -122,8 +122,8 @@ func Test_AuthLoginService(t *testing.T) {
 				require.Equal(t, tc.loginResponse, loginResponse)
 				require.Equal(t, tc.loginError, err)
 			} else {
-				//require.NotZero(t, loginResponse.AccessToken)
-				//require.Equal(t, tc.loginError, err)
+				require.NotZero(t, loginResponse.AccessToken)
+				require.Equal(t, tc.loginError, err)
 			}
 
 		})
