@@ -30,5 +30,6 @@ func main() {
 		MedicationService: medicationService,
 		Mail:              mailService,
 	}
+	go services.UpdateMedicationCronJob(medicationService)
 	s.Start()
 }

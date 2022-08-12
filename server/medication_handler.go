@@ -69,3 +69,20 @@ func (s *Server) handleGetAllMedications() gin.HandlerFunc {
 		response.JSON(c, "medications retrieved successfully", http.StatusOK, medications, nil)
 	}
 }
+
+func (s *Server) handleGetNextMedication() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		_, user, err := GetValuesFromContext(c)
+		if err != nil {
+			err.Respond(c)
+			return
+		}
+
+		medication, err := s.MedicationService.GetNextMedications(user.ID)
+		if err != nil {
+			err.Respond(c)
+			return
+		}
+		response.JSON(c, "medication retrieved successfully", http.StatusOK, medication, nil)
+	}
+}
