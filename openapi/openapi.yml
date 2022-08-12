@@ -7,7 +7,7 @@ info:
     email: info@decagonhq.com
   version: 3.0.0
 servers:
-  - url: https://meddle-api.herokuapp.com/api/v1
+  - url: https://meddle-api.herokuapp.com/
   - url: http://localhost:8080/api/v1
 paths:
   /auth/signup:

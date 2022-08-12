@@ -18,6 +18,7 @@ type Medication struct {
 	NextDosageTime         time.Time `gorm:"column:next_dosage_time"`
 	PurposeOfMedication    string    `gorm:"column:purpose_of_medication"`
 	IsMedicationDone       bool      `gorm:"column:is_medication_done"`
+	MedicationIcon         string    `gorm:"column:medication_icon"`
 	UserID                 uint      `gorm:"column:user_id"`
 }
 
@@ -31,6 +32,7 @@ type MedicationRequest struct {
 	MedicationStopDate     string `json:"medication_stop_date" binding:"required"`
 	MedicationStartTime    string `json:"medication_start_time" binding:"required"`
 	PurposeOfMedication    string `json:"purpose_of_medication" binding:"required"`
+	MedicationIcon         string `json:"medication_icon" binding:"required"`
 	UserID                 uint   `json:"user_id"`
 }
 
@@ -48,6 +50,7 @@ type MedicationResponse struct {
 	MedicationStartTime    string `json:"medication_start_time"`
 	NextDosageTime         string `json:"next_dosage_time"`
 	PurposeOfMedication    string `json:"purpose_of_medication"`
+	MedicationIcon         string `json:"medication_icon"`
 	UserID                 uint   `json:"user_id"`
 }
 
@@ -59,6 +62,7 @@ func (m *MedicationRequest) ReqToMedicationModel() *Medication {
 		Duration:               m.Duration,
 		MedicationPrescribedBy: m.MedicationPrescribedBy,
 		PurposeOfMedication:    m.PurposeOfMedication,
+		MedicationIcon:         m.MedicationIcon,
 		UserID:                 m.UserID,
 	}
 }
@@ -78,6 +82,7 @@ func (m *Medication) MedicationToResponse() *MedicationResponse {
 		MedicationStartTime:    m.MedicationStartTime.String(),
 		NextDosageTime:         m.NextDosageTime.String(),
 		PurposeOfMedication:    m.PurposeOfMedication,
+		MedicationIcon:         m.MedicationIcon,
 		UserID:                 m.UserID,
 	}
 }

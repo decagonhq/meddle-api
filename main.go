@@ -2,6 +2,8 @@ package main
 
 import (
 	"log"
+	"net/http"
+	"time"
 
 	"github.com/decagonhq/meddle-api/config"
 	"github.com/decagonhq/meddle-api/db"
@@ -10,6 +12,7 @@ import (
 )
 
 func main() {
+	http.DefaultClient.Timeout = time.Second * 10
 	conf, err := config.Load()
 	if err != nil {
 		log.Fatal(err)
