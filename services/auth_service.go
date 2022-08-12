@@ -2,7 +2,6 @@ package services
 
 import (
 	"fmt"
-	"github.com/decagonhq/meddle-api/mailservice"
 	"net/http"
 
 	"errors"
