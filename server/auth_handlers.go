@@ -116,12 +116,8 @@ func (s *Server) handleShowProfile() gin.HandlerFunc {
 
 func (s *Server) HandleVerifyEmail() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		paramToken, ok := c.Get("token")
-		if !ok {
-			response.JSON(c, "", http.StatusBadRequest, nil, errors.New("token not found", http.StatusBadRequest))
-			return
-		}
-		err := s.AuthService.VerifyEmail(paramToken.(string))
+		paramToken := c.Param("token")
+		err := s.AuthService.VerifyEmail(paramToken)
 		if err != nil {
 			response.JSON(c, "", http.StatusBadRequest, nil, err)
 		}

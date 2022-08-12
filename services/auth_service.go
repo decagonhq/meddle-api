@@ -16,8 +16,8 @@ import (
 	"github.com/decagonhq/meddle-api/db"
 	apiError "github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/models"
-
-	"github.com/golang-jwt/jwt"
+	"github.com/decagonhq/meddle-api/server/jwt"
+	jwToken "github.com/golang-jwt/jwt"
 )
 
 const AccessTokenValidity = time.Hour * 24
@@ -79,11 +79,15 @@ func (a *authService) SignupUser(user *models.User) (*models.User, *apiError.Err
 	if err != nil {
 		return nil, apiError.New("internal server error", http.StatusInternalServerError)
 	}
-	link := fmt.Sprintf("http://localhost:8080/verifyEmail/%s", token)
+
+	link := fmt.Sprintf("http://localhost:8080/api/v1/verifyEmail/%s", token)
+	log.Println(link)
+	value := map[string]interface{}{}
+	value["link"] = link
 	subject := "Verify your email"
 	body := "Please Click the link below to verify your email"
 	templateName := "verifyEmail"
-	err = a.mail.SendMail(user.Email,subject, body,templateName, map[string]interface{}{link: link})
+	err = a.mail.SendMail(user.Email,subject, body,templateName, value)
 	if err != nil {
 		log.Printf("Error: %v", err.Error())
 		return nil, apiError.New("mail couldn't be sent", http.StatusServiceUnavailable)
@@ -101,10 +105,10 @@ func GetTokenFromHeader(c *gin.Context) string {
 }
 
 // verifyAccessToken verifies a token
-func verifyToken(tokenString *string, claims jwt.MapClaims, secret *string) (*jwt.Token, error) {
-	parser := &jwt.Parser{SkipClaimsValidation: true}
-	return parser.ParseWithClaims(*tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+func verifyToken(tokenString *string, claims jwToken.MapClaims, secret *string) (*jwToken.Token, error) {
+	parser := &jwToken.Parser{SkipClaimsValidation: true}
+	return parser.ParseWithClaims(*tokenString, claims, func(token *jwToken.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwToken.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 		return []byte(*secret), nil
@@ -112,9 +116,9 @@ func verifyToken(tokenString *string, claims jwt.MapClaims, secret *string) (*jw
 }
 
 // AuthorizeToken check if a refresh token is valid
-func AuthorizeToken(token *string, secret *string) (*jwt.Token, jwt.MapClaims, error) {
+func AuthorizeToken(token *string, secret *string) (*jwToken.Token, jwToken.MapClaims, error) {
 	if token != nil && *token != "" && secret != nil && *secret != "" {
-		claims := jwt.MapClaims{}
+		claims := jwToken.MapClaims{}
 		token, err := verifyToken(token, claims, secret)
 		if err != nil {
 			return nil, nil, err
@@ -163,7 +167,7 @@ func GenerateToken(email string, secret string) (string, error) {
 
 	// Create a new token object, specifying signing method and the claims
 	// you would like it to contain.
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token := jwToken.NewWithClaims(jwToken.SigningMethodHS256, claims)
 
 	// Sign and get the complete encoded token as a string using the secret
 	tokenString, err := token.SignedString([]byte(secret))
@@ -173,8 +177,8 @@ func GenerateToken(email string, secret string) (string, error) {
 	return tokenString, nil
 }
 
-func GenerateClaims(email string) jwt.MapClaims {
-	accessClaims := jwt.MapClaims{
+func GenerateClaims(email string) jwToken.MapClaims {
+	accessClaims := jwToken.MapClaims{
 		"email": email,
 		"exp":   time.Now().Add(AccessTokenValidity).Unix(),
 	}
@@ -183,6 +187,10 @@ func GenerateClaims(email string) jwt.MapClaims {
 
 func (a *authService) VerifyEmail(token string) error {
 	//validate token here
-	err := a.authRepo.VerifyEmail(token)
+	_, err := jwt.ValidateAndGetClaims(token, a.Config.JWTSecret)
+	if err != nil {
+		return err
+	}
+	err = a.authRepo.VerifyEmail(token)
 	return err
 }
