@@ -87,4 +87,3 @@ func (m *medicationRepo) GetAllMedications(userID uint) ([]models.Medication, er
 	}
 	return medications, nil
 }
-

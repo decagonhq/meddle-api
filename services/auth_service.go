@@ -33,6 +33,7 @@ const RefreshTokenValidity = time.Hour * 24
 type AuthService interface {
 	LoginUser(request *models.LoginRequest) (*models.LoginResponse, *apiError.Error)
 	SignupUser(request *models.User) (*models.User, *apiError.Error)
+	VerifyEmail(token string) error
 	SendEmailForPasswordReset(user *models.ForgotPassword) *apiError.Error
 	ResetPassword(user *models.ResetPassword, token string) *apiError.Error
 	GoogleSignInUser(token string) (*string, *apiError.Error)
@@ -42,14 +43,15 @@ type AuthService interface {
 type authService struct {
 	Config   *config.Config
 	authRepo db.AuthRepository
-	mail     mailservice.Mailer
+	mail    Mailer
 }
 
 // NewAuthService instantiate an authService
-func NewAuthService(authRepo db.AuthRepository, conf *config.Config) AuthService {
+func NewAuthService(authRepo db.AuthRepository, conf *config.Config, mailer Mailer) AuthService {
 	return &authService{
 		Config:   conf,
 		authRepo: authRepo,
+		mail:  mailer,
 	}
 }
 
@@ -73,11 +75,23 @@ func (a *authService) SignupUser(user *models.User) (*models.User, *apiError.Err
 	}
 
 	user.IsEmailActive = false
-
 	user, err = a.authRepo.CreateUser(user)
 	if err != nil {
 		log.Printf("unable to create user: %v", err.Error())
 		return nil, apiError.New("internal server error", http.StatusInternalServerError)
+	}
+	token, err := GenerateToken(user.Email, a.Config.JWTSecret)
+	if err != nil {
+		return nil, apiError.New("internal server error", http.StatusInternalServerError)
+	}
+	link := fmt.Sprintf("http://localhost:8080/verifyEmail/%s", token)
+	subject := "Verify your email"
+	body := "Please Click the link below to verify your email"
+	templateName := "verifyEmail"
+	err = a.mail.SendMail(user.Email,subject, body,templateName, map[string]interface{}{link:link})
+	if err != nil {
+		log.Printf("Error: %v", err.Error())
+		return nil, apiError.New("mail couldn't be sent", http.StatusServiceUnavailable)
 	}
 	return user, nil
 }
@@ -249,12 +263,10 @@ func GenerateToken(email string, secret string) (string, error) {
 }
 
 func GenerateClaims(email string) jwt.MapClaims {
-
 	accessClaims := jwt.MapClaims{
 		"email": email,
 		"exp":   time.Now().Add(AccessTokenValidity).Unix(),
 	}
-
 	return accessClaims
 }
 
@@ -266,4 +278,10 @@ func GenerateRandomString() (string, error) {
 	}
 	s := fmt.Sprintf("%X", b)
 	return s, nil
+}
+
+func (a *authService) VerifyEmail(token string) error {
+	//validate token here
+	err := a.authRepo.VerifyEmail(token)
+	return err
 }

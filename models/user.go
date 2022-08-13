@@ -111,3 +111,4 @@ func (u *User) LoginUserToDto(token string) *LoginResponse {
 		AccessToken: token,
 	}
 }
+

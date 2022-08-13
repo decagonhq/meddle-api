@@ -40,6 +40,7 @@ func TestCreateMedicationHandler(t *testing.T) {
 		MedicationStopDate:     stopDate,
 		MedicationStartTime:    startTime,
 		NextDosageTime:         startTime.Add(time.Hour * time.Duration(8)),
+		MedicationIcon:         "Heart Icon",
 		PurposeOfMedication:    "malaria treatment",
 	}
 	// test cases
@@ -62,6 +63,7 @@ func TestCreateMedicationHandler(t *testing.T) {
 				"medication_prescribed_by": "Dr Tolu",
 				"medication_stop_date":     "2012-04-23T18:25:43.511Z",
 				"medication_start_time":    "2012-04-23T18:25:43.511Z",
+				"medication_icon":          "Heart Icon",
 				"purpose_of_medication":    "malaria treatment",
 			},
 			medicationRequest: &models.MedicationRequest{
@@ -74,6 +76,7 @@ func TestCreateMedicationHandler(t *testing.T) {
 				MedicationStopDate:     "2012-04-23T18:25:43.511Z",
 				MedicationStartTime:    "2012-04-23T18:25:43.511Z",
 				PurposeOfMedication:    "malaria treatment",
+				MedicationIcon:         "Heart Icon",
 				UserID:                 user.ID,
 			},
 			medicationResponse: &models.MedicationResponse{
@@ -90,6 +93,7 @@ func TestCreateMedicationHandler(t *testing.T) {
 				MedicationStartTime:    medication.MedicationStartTime.String(),
 				NextDosageTime:         medication.NextDosageTime.String(),
 				PurposeOfMedication:    medication.PurposeOfMedication,
+				MedicationIcon:         medication.MedicationIcon,
 				UserID:                 user.ID,
 			},
 			buildStubs: func(service *mocks.MockMedicationService, request *models.MedicationRequest, response *models.MedicationResponse) {
@@ -110,6 +114,7 @@ func TestCreateMedicationHandler(t *testing.T) {
 				"medication_stop_date":     "2012-04-23T18:25:43.511Z",
 				"medication_start_time":    "2012-04-23T18:25:43.511Z",
 				"purpose_of_medication":    "malaria treatment",
+				"medication_icon":          "Heart Icon",
 			},
 			medicationRequest:  nil,
 			medicationResponse: nil,
@@ -131,6 +136,7 @@ func TestCreateMedicationHandler(t *testing.T) {
 				"medication_prescribed_by": "Dr Tolu",
 				"medication_stop_date":     "2012-04-23T18:25:43.511Z",
 				"medication_start_time":    "2013-11-12",
+				"medication_icon":          "Heart Icon",
 				"purpose_of_medication":    "malaria treatment",
 			},
 			medicationRequest: &models.MedicationRequest{
@@ -143,6 +149,7 @@ func TestCreateMedicationHandler(t *testing.T) {
 				MedicationStopDate:     "2012-04-23T18:25:43.511Z",
 				MedicationStartTime:    "2013-11-12",
 				PurposeOfMedication:    "malaria treatment",
+				MedicationIcon:         "Heart Icon",
 				UserID:                 user.ID,
 			},
 			medicationResponse: nil,
@@ -164,6 +171,7 @@ func TestCreateMedicationHandler(t *testing.T) {
 				"medication_prescribed_by": "Dr Tolu",
 				"medication_stop_date":     "2012-04-23T18:25:43.511Z",
 				"medication_start_time":    "2012-04-23T18:25:43.511Z",
+				"medication_icon":          "Heart Icon",
 				"purpose_of_medication":    "malaria treatment",
 			},
 			medicationRequest: &models.MedicationRequest{
@@ -176,6 +184,7 @@ func TestCreateMedicationHandler(t *testing.T) {
 				MedicationStopDate:     "2012-04-23T18:25:43.511Z",
 				MedicationStartTime:    "2012-04-23T18:25:43.511Z",
 				PurposeOfMedication:    "malaria treatment",
+				MedicationIcon:         "Heart Icon",
 				UserID:                 user.ID,
 			},
 			medicationResponse: nil,
