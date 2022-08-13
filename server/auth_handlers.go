@@ -51,10 +51,6 @@ func (s *Server) handleLogin() gin.HandlerFunc {
 func (s *Server) HandleGoogleOauthLogin() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		conf := config.GetGoogleOAuthConfig(s.Config.GoogleClientID, s.Config.GoogleClientSecret, s.Config.GoogleRedirectURL)
-		log.Println("conf", conf)
-		log.Println("clientID", s.Config.GoogleClientID)
-		log.Println("clientSecret", s.Config.GoogleClientSecret)
-		log.Println("redirectURL", s.Config.GoogleRedirectURL)
 		s.Config.OauthStateString, _ = services.GenerateRandomString()
 		url := conf.AuthCodeURL(s.Config.OauthStateString, oauth2.AccessTypeOnline)
 		log.Println("url: ", url)
