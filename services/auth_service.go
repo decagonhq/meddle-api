@@ -3,7 +3,7 @@ package services
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/decagonhq/meddle-api/mailservice"
+	"github.com/decagonhq/meddle-api/config"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -16,7 +16,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
-	"github.com/decagonhq/meddle-api/config"
 	"github.com/decagonhq/meddle-api/db"
 	apiError "github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/models"
@@ -43,7 +42,7 @@ type AuthService interface {
 type authService struct {
 	Config   *config.Config
 	authRepo db.AuthRepository
-	mail    Mailer
+	mail     Mailer
 }
 
 // NewAuthService instantiate an authService
@@ -51,7 +50,7 @@ func NewAuthService(authRepo db.AuthRepository, conf *config.Config, mailer Mail
 	return &authService{
 		Config:   conf,
 		authRepo: authRepo,
-		mail:  mailer,
+		mail:     mailer,
 	}
 }
 
@@ -88,7 +87,7 @@ func (a *authService) SignupUser(user *models.User) (*models.User, *apiError.Err
 	subject := "Verify your email"
 	body := "Please Click the link below to verify your email"
 	templateName := "verifyEmail"
-	err = a.mail.SendMail(user.Email,subject, body,templateName, map[string]interface{}{link:link})
+	err = a.mail.SendMail(user.Email, subject, body, templateName, map[string]interface{}{link: link})
 	if err != nil {
 		log.Printf("Error: %v", err.Error())
 		return nil, apiError.New("mail couldn't be sent", http.StatusServiceUnavailable)
