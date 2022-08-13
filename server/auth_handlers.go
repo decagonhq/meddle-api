@@ -2,12 +2,10 @@ package server
 
 import (
 	"context"
-	"encoding/base64"
 	"github.com/decagonhq/meddle-api/config"
 	"github.com/decagonhq/meddle-api/services"
 	"golang.org/x/oauth2"
 	"log"
-	"math/rand"
 	"net/http"
 	"time"
 
@@ -162,22 +160,6 @@ func (s *Server) handleShowProfile() gin.HandlerFunc {
 
 		response.JSON(c, "successful", http.StatusOK, nil, nil)
 	}
-}
-
-func GenerateStateOauthCookie(w http.ResponseWriter) string {
-	var expiration = time.Now().Add(2 * time.Minute)
-	b := make([]byte, 16)
-	rand.Read(b)
-	state := base64.URLEncoding.EncodeToString(b)
-	cookie := http.Cookie{
-		Name:     "oauthstate",
-		Value:    state,
-		Expires:  expiration,
-		HttpOnly: true,
-	}
-	http.SetCookie(w, &cookie)
-
-	return state
 }
 
 func (s *Server) HandleVerifyEmail() gin.HandlerFunc {
