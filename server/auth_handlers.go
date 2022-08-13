@@ -53,7 +53,6 @@ func (s *Server) HandleGoogleOauthLogin() gin.HandlerFunc {
 		conf := config.GetGoogleOAuthConfig(s.Config.GoogleClientID, s.Config.GoogleClientSecret, s.Config.GoogleRedirectURL)
 		s.Config.OauthStateString, _ = services.GenerateRandomString()
 		url := conf.AuthCodeURL(s.Config.OauthStateString, oauth2.AccessTypeOnline)
-		log.Println("url: ", url)
 		c.Redirect(http.StatusTemporaryRedirect, url)
 	}
 }
