@@ -9,8 +9,6 @@ import (
 	"os"
 )
 
-const OauthGoogleUrlAPI = "https://www.googleapis.com/oauth2/v2/userinfo?access_token="
-
 type Config struct {
 	Debug              bool   `envconfig:"debug"`
 	Port               int    `envconfig:"port"`
