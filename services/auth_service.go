@@ -67,7 +67,7 @@ func (a *authService) SignupUser(user *models.User) (*models.User, *apiError.Err
 		log.Printf("error generating password hash: %v", err.Error())
 		return nil, apiError.New("internal server error", http.StatusInternalServerError)
 	}
-
+	user.Password = ""
 	user.IsEmailActive = false
 	user, err = a.authRepo.CreateUser(user)
 	if err != nil {
