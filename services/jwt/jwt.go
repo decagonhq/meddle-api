@@ -4,10 +4,14 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/decagonhq/meddle-api/errors"
 	"github.com/golang-jwt/jwt"
 )
+
+const AccessTokenValidity = time.Hour * 24
+const RefreshTokenValidity = time.Hour * 24
 
 // verifyAccessToken verifies a token
 func verifyToken(tokenString string, secret string) (*jwt.Token, error) {
@@ -27,8 +31,7 @@ func isAccessTokenEmpty(token string) bool {
 	return token == ""
 }
 
-// DO NOT USE THIS FUNCTION
-func validateToken(token string, secret string) (*jwt.Token, error) {
+func ValidateToken(token string, secret string) (*jwt.Token, error) {
 	tk, err := verifyToken(token, secret)
 	if err != nil {
 		log.Println(err)                                 // TODO: remove
@@ -52,7 +55,7 @@ func ValidateAndGetClaims(tokenString string, secret string) (jwt.MapClaims, err
 	if tokenString == "" {
 		return nil, errors.New("invalid token (token is empty)", http.StatusUnauthorized)
 	}
-	token, err := validateToken(tokenString, secret)
+	token, err := ValidateToken(tokenString, secret)
 	if err != nil {
 		return nil, fmt.Errorf("failed to validate token: %v", err)
 	}
@@ -61,4 +64,32 @@ func ValidateAndGetClaims(tokenString string, secret string) (jwt.MapClaims, err
 		return nil, fmt.Errorf("failed to get claims: %v", err)
 	}
 	return claims, nil
+}
+
+// GenerateToken generates only an access token
+func GenerateToken(email string, secret string) (string, error) {
+	if secret == "" {
+		return "", errors.New("", http.StatusInternalServerError)
+	}
+	// Generate claims
+	claims := GenerateClaims(email)
+
+	// Create a new token object, specifying signing method and the claims
+	// you would like it to contain.
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	// Sign and get the complete encoded token as a string using the secret
+	tokenString, err := token.SignedString([]byte(secret))
+	if err != nil {
+		return "", err
+	}
+	return tokenString, nil
+}
+
+func GenerateClaims(email string) jwt.MapClaims {
+	accessClaims := jwt.MapClaims{
+		"email": email,
+		"exp":   time.Now().Add(AccessTokenValidity).Unix(),
+	}
+	return accessClaims
 }
