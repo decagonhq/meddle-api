@@ -281,7 +281,7 @@ func TestLoginHandler(t *testing.T) {
 }
 
 func Test_FacebookCallBackHandler(t *testing.T) {
-	testOuthState, err := jwt.GenerateToken("", testServer.handler.Config.JWTSecret)
+	testOauthState, err := jwt.GenerateToken("", testServer.handler.Config.JWTSecret)
 	require.NoError(t, err)
 
 	// test cases
@@ -307,7 +307,7 @@ func Test_FacebookCallBackHandler(t *testing.T) {
 		},
 		{
 			name:  "invalid token",
-			state: testOuthState,
+			state: testOauthState,
 			code:  "",
 			buildStubs: func(service *mocks.MockAuthService, token string, response *string) {
 				service.EXPECT().FacebookSignInUser(token).Times(0)
