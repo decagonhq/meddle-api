@@ -5,10 +5,7 @@ import (
 	"github.com/decagonhq/meddle-api/config"
 	"github.com/decagonhq/meddle-api/services/jwt"
 	"golang.org/x/oauth2"
-	"context"
-	"github.com/decagonhq/meddle-api/config"
-	"github.com/decagonhq/meddle-api/services"
-	"golang.org/x/oauth2"
+
 	"log"
 	"net/http"
 	"time"
@@ -54,8 +51,12 @@ func (s *Server) handleLogin() gin.HandlerFunc {
 func (s *Server) HandleGoogleOauthLogin() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		conf := config.GetGoogleOAuthConfig(s.Config.GoogleClientID, s.Config.GoogleClientSecret, s.Config.GoogleRedirectURL)
-		s.Config.OauthStateString, _ = services.GenerateRandomString()
-		url := conf.AuthCodeURL(s.Config.OauthStateString, oauth2.AccessTypeOnline)
+		state, err := jwt.GenerateToken("", s.Config.JWTSecret)
+		if err != nil {
+			response.JSON(c, "", http.StatusInternalServerError, nil, err)
+			return
+		}
+		url := conf.AuthCodeURL(state, oauth2.AccessTypeOffline)
 		c.Redirect(http.StatusTemporaryRedirect, url)
 	}
 }
@@ -65,7 +66,8 @@ func (s *Server) HandleGoogleCallback() gin.HandlerFunc {
 		var state = c.Query("state")
 		var code = c.Query("code")
 
-		if state != s.Config.OauthStateString {
+		_, err := jwt.ValidateToken(state, s.Config.JWTSecret)
+		if err != nil {
 			respondAndAbort(c, "", http.StatusUnauthorized, nil, errors.New("invalid login", http.StatusUnauthorized))
 			return
 		}
@@ -84,7 +86,7 @@ func (s *Server) HandleGoogleCallback() gin.HandlerFunc {
 			return
 		}
 
-		response.JSON(c, "", http.StatusOK, authToken, nil)
+		response.JSON(c, "facebook sign in successful", http.StatusOK, authToken, nil)
 	}
 }
 
