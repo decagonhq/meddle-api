@@ -105,7 +105,7 @@ func (s *Server) handleFBLogin() gin.HandlerFunc {
 			response.JSON(c, "", http.StatusInternalServerError, nil, err)
 			return
 		}
-		url := conf.AuthCodeURL(state, oauth2.AccessTypeOnline)
+		url := conf.AuthCodeURL(state, oauth2.AccessTypeOffline)
 		c.Redirect(http.StatusTemporaryRedirect, url)
 	}
 }
