@@ -12,7 +12,7 @@ func (s *Server) defineRoutes(router *gin.Engine) {
 	apirouter := router.Group("/api/v1")
 	apirouter.POST("/auth/signup", s.HandleSignup())
 	apirouter.POST("/auth/login", s.handleLogin())
-	apirouter.PATCH("/verifyEmail/:token", s.HandleVerifyEmail())
+	apirouter.GET("/verifyEmail/:token", s.HandleVerifyEmail())
 	apirouter.POST("/password/forgot", s.SendEmailForPasswordReset())
 	apirouter.POST("/password/reset/:token", s.ResetPassword())
 
