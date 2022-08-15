@@ -26,3 +26,6 @@ jobs:
         export MEDDLE_JWT_SECRET=veryLONGsecret
         go install github.com/golang/mock/mockgen@v1.6.0
         make test
+    - uses: readmeio/rdme@7.3.0
+      with:
+        rdme: openapi openapi/openapi.yml --key=${{secrets.README_API_KEY}} --id=${{secrets.README_API_DEFINITION_ID}}

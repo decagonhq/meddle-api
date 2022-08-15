@@ -7,8 +7,8 @@ info:
     email: info@decagonhq.com
   version: 3.0.0
 servers:
-  - url: https://meddle-api.herokuapp.com/
-  - url: http://localhost:8080/api/v1
+  - url: https://meddle-api.herokuapp.com/api/v1
+  - url: http://localhost:8081/api/v1
 paths:
   /auth/signup:
     post:
@@ -76,80 +76,6 @@ paths:
       responses:
         default:
           description: successful operation
-          content: {}
-  /user/{email}:
-    get:
-      tags:
-        - user
-      summary: Get user by user email
-      operationId: getUserByEmail
-      parameters:
-        - name: email
-          in: path
-          description: 'The name that needs to be fetched. Use user1 for testing. '
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-        400:
-          description: Invalid username supplied
-          content: {}
-        404:
-          description: User not found
-          content: {}
-    put:
-      tags:
-        - user
-      summary: Updated user
-      description: This can only be done by the logged in user.
-      operationId: updateUser
-      parameters:
-        - name: email
-          in: path
-          description: name that need to be updated
-          required: true
-          schema:
-            type: string
-      requestBody:
-        description: Updated user object
-        content:
-          '*/*':
-            schema:
-              $ref: '#/components/schemas/User'
-        required: true
-      responses:
-        400:
-          description: Invalid user supplied
-          content: {}
-        404:
-          description: User not found
-          content: {}
-      x-codegen-request-body-name: body
-    delete:
-      tags:
-        - user
-      summary: Delete user
-      description: This can only be done by the logged in user.
-      operationId: deleteUser
-      parameters:
-        - name: email
-          in: path
-          description: The email that needs to be deleted
-          required: true
-          schema:
-            type: string
-      responses:
-        400:
-          description: Invalid email supplied
-          content: {}
-        404:
-          description: User not found
           content: {}
   /verifyEmail/{token}:
     get:
@@ -402,6 +328,20 @@ components:
       xml:
         name: Medication
     MedicationResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/medicationResponseData'
+        errors:
+          type: string
+          example: ""
+        message:
+          type: string
+          example: user created successfully
+        status:
+          type: string
+          example: Created
+    medicationResponseData:
       type: object
       properties:
         id:

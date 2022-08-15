@@ -52,25 +52,25 @@ func NewAuthService(authRepo db.AuthRepository, conf *config.Config, mailer Mail
 
 func (a *authService) SignupUser(user *models.User) (*models.User, *apiError.Error) {
 	err := a.authRepo.IsEmailExist(user.Email)
+
 	if err != nil {
 		// FIXME: return the proper error message from the function
 		// TODO: handle internal server error later
 		return nil, apiError.New("email already exist", http.StatusBadRequest)
 	}
-
 	err = a.authRepo.IsPhoneExist(user.PhoneNumber)
 	if err != nil {
 		return nil, apiError.New("phone already exist", http.StatusBadRequest)
 	}
-
 	user.HashedPassword, err = GenerateHashPassword(user.Password)
+
 	if err != nil {
 		log.Printf("error generating password hash: %v", err.Error())
 		return nil, apiError.New("internal server error", http.StatusInternalServerError)
 	}
-
 	user.IsEmailActive = false
 	user, err = a.authRepo.CreateUser(user)
+
 	if err != nil {
 		log.Printf("unable to create user: %v", err.Error())
 		return nil, apiError.New("internal server error", http.StatusInternalServerError)
@@ -81,7 +81,6 @@ func (a *authService) SignupUser(user *models.User) (*models.User, *apiError.Err
 	}
 
 	link := fmt.Sprintf("http://localhost:8080/api/v1/verifyEmail/%s", token)
-	log.Println(link)
 	value := map[string]interface{}{}
 	value["link"] = link
 	subject := "Verify your email"
@@ -92,6 +91,7 @@ func (a *authService) SignupUser(user *models.User) (*models.User, *apiError.Err
 		log.Printf("Error: %v", err.Error())
 		return nil, apiError.New("mail couldn't be sent", http.StatusServiceUnavailable)
 	}
+
 	return user, nil
 }
 
@@ -186,11 +186,11 @@ func GenerateClaims(email string) jwToken.MapClaims {
 }
 
 func (a *authService) VerifyEmail(token string) error {
-	//validate token here
-	_, err := jwt.ValidateAndGetClaims(token, a.Config.JWTSecret)
+	claims, err := jwt.ValidateAndGetClaims(token, a.Config.JWTSecret)
 	if err != nil {
-		return err
+		return apiError.New("invalid link", http.StatusUnauthorized)
 	}
-	err = a.authRepo.VerifyEmail(token)
+	email := claims["email"].(string)
+	err = a.authRepo.VerifyEmail(email, token)
 	return err
 }
