@@ -280,6 +280,63 @@ func TestLoginHandler(t *testing.T) {
 	}
 }
 
+func Test_FacebookCallBackHandler(t *testing.T) {
+	//random facebook user
+	testOuthState, err := services.GenerateRandomString()
+	testServer.handler.Config.OauthStateString = testOuthState
+	require.NoError(t, err)
+
+	// test cases
+	testCases := []struct {
+		name                  string
+		state                 string
+		code                  interface{}
+		inputToken            interface{}
+		facebookLoginResponse *string
+		buildStubs            func(service *mocks.MockAuthService, request interface{}, response *string)
+		checkResponse         func(t *testing.T, recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name:  "invalid state case",
+			state: "invalidState",
+			code:  "code",
+			buildStubs: func(service *mocks.MockAuthService, token interface{}, response *string) {
+				service.EXPECT().FacebookSignInUser(token).Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+		{
+			name:  "invalid token",
+			state: testOuthState,
+			code:  "",
+			buildStubs: func(service *mocks.MockAuthService, token interface{}, response *string) {
+				service.EXPECT().FacebookSignInUser(token).Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+	}
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockService := mocks.NewMockAuthService(ctrl)
+	testServer.handler.AuthService = mockService
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.buildStubs(mockService, tc.inputToken, tc.facebookLoginResponse)
+
+			recorder := httptest.NewRecorder()
+			url := fmt.Sprintf("/api/v1/fb/callback?state=%s&code=%s", tc.state, tc.code)
+			req, err := http.NewRequest(http.MethodGet, url, nil)
+			require.NoError(t, err)
+			testServer.router.ServeHTTP(recorder, req)
+			tc.checkResponse(t, recorder)
+		})
+	}
+}
+
 func randomUser(t *testing.T) (user models.User, password string) {
 	password = RandomString(6)
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)

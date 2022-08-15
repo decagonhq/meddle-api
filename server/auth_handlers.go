@@ -132,7 +132,7 @@ func (s *Server) fbCallbackHandler() gin.HandlerFunc {
 			return
 		}
 
-		response.JSON(c, "", http.StatusOK, authToken, nil)
+		response.JSON(c, "facebook sign in successful", http.StatusOK, authToken, nil)
 	}
 }
 
