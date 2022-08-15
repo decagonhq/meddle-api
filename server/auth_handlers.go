@@ -121,8 +121,7 @@ func (s *Server) HandleVerifyEmail() gin.HandlerFunc {
 		if err != nil {
 			response.JSON(c, "", http.StatusBadRequest, nil, err)
 		}
-		c.HTML(http.StatusOK, "index.tmpl", gin.H{
-			"title": "Your email has been verified",
-		})
+
+		response.JSON(c, "user successfully verified", http.StatusOK, nil, nil)
 	}
 }
