@@ -3,6 +3,10 @@ package server
 import (
 	"context"
 	"github.com/decagonhq/meddle-api/config"
+	"github.com/decagonhq/meddle-api/services/jwt"
+	"golang.org/x/oauth2"
+	"context"
+	"github.com/decagonhq/meddle-api/config"
 	"github.com/decagonhq/meddle-api/services"
 	"golang.org/x/oauth2"
 	"log"
@@ -11,7 +15,6 @@ import (
 
 	"github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/models"
-	"github.com/decagonhq/meddle-api/server/jwt"
 	"github.com/decagonhq/meddle-api/server/response"
 	"github.com/gin-gonic/gin"
 )
@@ -133,6 +136,48 @@ func (s *Server) handleLogout() gin.HandlerFunc {
 		}
 		response.JSON(c, "logout successful", http.StatusOK, nil, nil)
 
+	}
+}
+
+func (s *Server) handleFBLogin() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		conf := config.GetFacebookOAuthConfig(s.Config.FacebookClientID, s.Config.FacebookClientSecret, s.Config.FacebookRedirectURL)
+		state, err := jwt.GenerateToken("", s.Config.JWTSecret)
+		if err != nil {
+			response.JSON(c, "", http.StatusInternalServerError, nil, err)
+			return
+		}
+		url := conf.AuthCodeURL(state, oauth2.AccessTypeOffline)
+		c.Redirect(http.StatusTemporaryRedirect, url)
+	}
+}
+
+func (s *Server) fbCallbackHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var state = c.Query("state")
+		var code = c.Query("code")
+
+		_, err := jwt.ValidateToken(state, s.Config.JWTSecret)
+		if err != nil {
+			respondAndAbort(c, "", http.StatusUnauthorized, nil, errors.New("invalid login", http.StatusUnauthorized))
+			return
+		}
+
+		var OAuth2Config = config.GetFacebookOAuthConfig(s.Config.FacebookClientID, s.Config.FacebookClientSecret, s.Config.FacebookRedirectURL)
+
+		token, err := OAuth2Config.Exchange(context.Background(), code)
+		if err != nil || token == nil {
+			respondAndAbort(c, "", http.StatusUnauthorized, nil, errors.New("invalid token", http.StatusUnauthorized))
+			return
+		}
+
+		authToken, errr := s.AuthService.FacebookSignInUser(token.AccessToken)
+		if errr != nil {
+			respondAndAbort(c, "", http.StatusUnauthorized, nil, errors.New("invalid authToken", http.StatusUnauthorized))
+			return
+		}
+
+		response.JSON(c, "facebook sign in successful", http.StatusOK, authToken, nil)
 	}
 }
 

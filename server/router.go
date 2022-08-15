@@ -13,6 +13,10 @@ func (s *Server) defineRoutes(router *gin.Engine) {
 	apirouter := router.Group("/api/v1")
 	apirouter.POST("/auth/signup", s.HandleSignup())
 	apirouter.POST("/auth/login", s.handleLogin())
+
+	apirouter.GET("/fb/auth", s.handleFBLogin())
+	apirouter.GET("fb/callback", s.fbCallbackHandler())
+
 	apirouter.GET("/google/login", s.HandleGoogleOauthLogin())
 	apirouter.GET("/google/callback", s.HandleGoogleCallback())
 	apirouter.GET("/verifyEmail/:token", s.HandleVerifyEmail())
