@@ -290,17 +290,17 @@ func Test_FacebookCallBackHandler(t *testing.T) {
 	testCases := []struct {
 		name                  string
 		state                 string
-		code                  interface{}
-		inputToken            interface{}
+		code                  string
+		inputToken            string
 		facebookLoginResponse *string
-		buildStubs            func(service *mocks.MockAuthService, request interface{}, response *string)
+		buildStubs            func(service *mocks.MockAuthService, request string, response *string)
 		checkResponse         func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
 		{
 			name:  "invalid state case",
 			state: "invalidState",
 			code:  "code",
-			buildStubs: func(service *mocks.MockAuthService, token interface{}, response *string) {
+			buildStubs: func(service *mocks.MockAuthService, token string, response *string) {
 				service.EXPECT().FacebookSignInUser(token).Times(0)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
@@ -311,7 +311,7 @@ func Test_FacebookCallBackHandler(t *testing.T) {
 			name:  "invalid token",
 			state: testOuthState,
 			code:  "",
-			buildStubs: func(service *mocks.MockAuthService, token interface{}, response *string) {
+			buildStubs: func(service *mocks.MockAuthService, token string, response *string) {
 				service.EXPECT().FacebookSignInUser(token).Times(0)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
