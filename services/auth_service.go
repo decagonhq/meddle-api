@@ -17,7 +17,7 @@ import (
 	apiError "github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/models"
 	"github.com/decagonhq/meddle-api/server/jwt"
-	jwToken "github.com/golang-jwt/jwt"
+	JWT "github.com/golang-jwt/jwt"
 )
 
 const AccessTokenValidity = time.Hour * 24
@@ -106,10 +106,10 @@ func GetTokenFromHeader(c *gin.Context) string {
 }
 
 // verifyAccessToken verifies a token
-func verifyToken(tokenString *string, claims jwToken.MapClaims, secret *string) (*jwToken.Token, error) {
-	parser := &jwToken.Parser{SkipClaimsValidation: true}
-	return parser.ParseWithClaims(*tokenString, claims, func(token *jwToken.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwToken.SigningMethodHMAC); !ok {
+func verifyToken(tokenString *string, claims JWT.MapClaims, secret *string) (*JWT.Token, error) {
+	parser := JWT.Parser{SkipClaimsValidation: true}
+	return parser.ParseWithClaims(*tokenString, claims, func(token *JWT.Token) (interface{}, error) {
+		if _, ok := token.Method.(*JWT.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 		return []byte(*secret), nil
@@ -117,9 +117,9 @@ func verifyToken(tokenString *string, claims jwToken.MapClaims, secret *string) 
 }
 
 // AuthorizeToken check if a refresh token is valid
-func AuthorizeToken(token *string, secret *string) (*jwToken.Token, jwToken.MapClaims, error) {
+func AuthorizeToken(token *string, secret *string) (*JWT.Token, JWT.MapClaims, error) {
 	if token != nil && *token != "" && secret != nil && *secret != "" {
-		claims := jwToken.MapClaims{}
+		claims := JWT.MapClaims{}
 		token, err := verifyToken(token, claims, secret)
 		if err != nil {
 			return nil, nil, err
@@ -168,7 +168,7 @@ func GenerateToken(email string, secret string) (string, error) {
 
 	// Create a new token object, specifying signing method and the claims
 	// you would like it to contain.
-	token := jwToken.NewWithClaims(jwToken.SigningMethodHS256, claims)
+	token := JWT.NewWithClaims(JWT.SigningMethodHS256, claims)
 
 	// Sign and get the complete encoded token as a string using the secret
 	tokenString, err := token.SignedString([]byte(secret))
@@ -178,8 +178,8 @@ func GenerateToken(email string, secret string) (string, error) {
 	return tokenString, nil
 }
 
-func GenerateClaims(email string) jwToken.MapClaims {
-	accessClaims := jwToken.MapClaims{
+func GenerateClaims(email string) JWT.MapClaims {
+	accessClaims := JWT.MapClaims{
 		"email": email,
 		"exp":   time.Now().Add(AccessTokenValidity).Unix(),
 	}
