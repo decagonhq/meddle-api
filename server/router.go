@@ -2,18 +2,17 @@ package server
 
 import (
 	"fmt"
-	"os"
-	"time"
-
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"os"
+	"time"
 )
 
 func (s *Server) defineRoutes(router *gin.Engine) {
 	apirouter := router.Group("/api/v1")
 	apirouter.POST("/auth/signup", s.HandleSignup())
 	apirouter.POST("/auth/login", s.handleLogin())
-	apirouter.POST("/verifyEmail/:token", s.HandleVerifyEmail())
+	apirouter.PATCH("/verifyEmail/:token", s.HandleVerifyEmail())
 	apirouter.POST("/password/forgot", s.SendEmailForPasswordReset())
 	apirouter.POST("/password/reset/:token", s.ResetPassword())
 
@@ -40,7 +39,8 @@ func (s *Server) setupRouter() *gin.Engine {
 	}
 
 	r := gin.New()
-	r.Static("/openapi", "./openapi")
+	r.Static("/templates", "../templates")
+	r.LoadHTMLGlob("templates/*.tmpl")
 
 	// LoggerWithFormatter middleware will write the logs to gin.DefaultWriter
 	// By default gin.DefaultWriter = os.Stdout

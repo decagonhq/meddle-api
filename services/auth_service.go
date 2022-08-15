@@ -80,7 +80,7 @@ func (a *authService) SignupUser(user *models.User) (*models.User, *apiError.Err
 		return nil, apiError.New("internal server error", http.StatusInternalServerError)
 	}
 
-	link := fmt.Sprintf("http://localhost:8080/api/v1/verifyEmail/%s", token)
+	link := fmt.Sprintf("%s:%d/api/v1/verifyEmail/%s", a.Config.Host, a.Config.Port, token)
 	value := map[string]interface{}{}
 	value["link"] = link
 	subject := "Verify your email"
