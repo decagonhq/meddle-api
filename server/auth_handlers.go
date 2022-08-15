@@ -86,7 +86,7 @@ func (s *Server) HandleGoogleCallback() gin.HandlerFunc {
 			return
 		}
 
-		response.JSON(c, "facebook sign in successful", http.StatusOK, authToken, nil)
+		response.JSON(c, "google sign in successful", http.StatusOK, authToken, nil)
 	}
 }
 
