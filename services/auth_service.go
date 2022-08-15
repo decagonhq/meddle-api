@@ -4,14 +4,13 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
+	"github.com/decagonhq/meddle-api/services/jwt"
 	"io/ioutil"
 	"net/http"
 
 	"errors"
 	"log"
-	"time"
 
-	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
@@ -19,12 +18,8 @@ import (
 	"github.com/decagonhq/meddle-api/db"
 	apiError "github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/models"
-
-	"github.com/golang-jwt/jwt"
+	//"github.com/golang-jwt/jwt"
 )
-
-const AccessTokenValidity = time.Hour * 24
-const RefreshTokenValidity = time.Hour * 24
 
 //go:generate mockgen -destination=../mocks/auth_mock.go -package=mocks github.com/decagonhq/meddle-api/services AuthService
 
@@ -42,7 +37,7 @@ type AuthService interface {
 type authService struct {
 	Config   *config.Config
 	authRepo db.AuthRepository
-	mail    Mailer
+	mail     Mailer
 }
 
 // NewAuthService instantiate an authService
@@ -50,7 +45,7 @@ func NewAuthService(authRepo db.AuthRepository, conf *config.Config, mailer Mail
 	return &authService{
 		Config:   conf,
 		authRepo: authRepo,
-		mail:  mailer,
+		mail:     mailer,
 	}
 }
 
@@ -79,7 +74,7 @@ func (a *authService) SignupUser(user *models.User) (*models.User, *apiError.Err
 		log.Printf("unable to create user: %v", err.Error())
 		return nil, apiError.New("internal server error", http.StatusInternalServerError)
 	}
-	token, err := GenerateToken(user.Email, a.Config.JWTSecret)
+	token, err := jwt.GenerateToken(user.Email, a.Config.JWTSecret)
 	if err != nil {
 		return nil, apiError.New("internal server error", http.StatusInternalServerError)
 	}
@@ -87,45 +82,12 @@ func (a *authService) SignupUser(user *models.User) (*models.User, *apiError.Err
 	subject := "Verify your email"
 	body := "Please Click the link below to verify your email"
 	templateName := "verifyEmail"
-	err = a.mail.SendMail(user.Email,subject, body,templateName, map[string]interface{}{link:link})
+	err = a.mail.SendMail(user.Email, subject, body, templateName, map[string]interface{}{link: link})
 	if err != nil {
 		log.Printf("Error: %v", err.Error())
 		return nil, apiError.New("mail couldn't be sent", http.StatusServiceUnavailable)
 	}
 	return user, nil
-}
-
-// GetTokenFromHeader returns the token string in the authorization header
-func GetTokenFromHeader(c *gin.Context) string {
-	authHeader := c.Request.Header.Get("Authorization")
-	if len(authHeader) > 8 {
-		return authHeader[7:]
-	}
-	return ""
-}
-
-// verifyAccessToken verifies a token
-func verifyToken(tokenString *string, claims jwt.MapClaims, secret *string) (*jwt.Token, error) {
-	parser := &jwt.Parser{SkipClaimsValidation: true}
-	return parser.ParseWithClaims(*tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-		return []byte(*secret), nil
-	})
-}
-
-// AuthorizeToken check if a refresh token is valid
-func AuthorizeToken(token *string, secret *string) (*jwt.Token, jwt.MapClaims, error) {
-	if token != nil && *token != "" && secret != nil && *secret != "" {
-		claims := jwt.MapClaims{}
-		token, err := verifyToken(token, claims, secret)
-		if err != nil {
-			return nil, nil, err
-		}
-		return token, claims, nil
-	}
-	return nil, nil, fmt.Errorf("empty token or secret")
 }
 
 func GenerateHashPassword(password string) (string, error) {
@@ -148,7 +110,7 @@ func (a *authService) LoginUser(loginRequest *models.LoginRequest) (*models.Logi
 		return nil, apiError.ErrInvalidPassword
 	}
 
-	accessToken, err := GenerateToken(foundUser.Email, a.Config.JWTSecret)
+	accessToken, err := jwt.GenerateToken(foundUser.Email, a.Config.JWTSecret)
 	if err != nil {
 		log.Printf("error generating token %s", err)
 		return nil, apiError.ErrInternalServerError
@@ -161,35 +123,6 @@ func (a *authService) VerifyEmail(token string) error {
 	//validate token here
 	err := a.authRepo.VerifyEmail(token)
 	return err
-}
-
-
-// GenerateToken generates only an access token
-func GenerateToken(email string, secret string) (string, error) {
-	if secret == "" {
-		return "", errors.New("empty secret")
-	}
-	// Generate claims
-	claims := GenerateClaims(email)
-
-	// Create a new token object, specifying signing method and the claims
-	// you would like it to contain.
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	// Sign and get the complete encoded token as a string using the secret
-	tokenString, err := token.SignedString([]byte(secret))
-	if err != nil {
-		return "", err
-	}
-	return tokenString, nil
-}
-
-func GenerateClaims(email string) jwt.MapClaims {
-	accessClaims := jwt.MapClaims{
-		"email": email,
-		"exp":   time.Now().Add(AccessTokenValidity).Unix(),
-	}
-	return accessClaims
 }
 
 func (a *authService) FacebookSignInUser(token string) (*string, *apiError.Error) {
@@ -261,7 +194,7 @@ func (a *authService) GetSignInToken(facebookUserDetails *models.FacebookUser) (
 		}
 	}
 
-	tokenString, err := GenerateToken(facebookUserDetails.Email, a.Config.JWTSecret)
+	tokenString, err := jwt.GenerateToken(facebookUserDetails.Email, a.Config.JWTSecret)
 
 	if tokenString == "" {
 		return "", fmt.Errorf("unable to generate Auth token: %+v", err)

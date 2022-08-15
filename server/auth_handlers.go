@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 	"github.com/decagonhq/meddle-api/config"
-	"github.com/decagonhq/meddle-api/services"
+	"github.com/decagonhq/meddle-api/services/jwt"
 	"golang.org/x/oauth2"
 	"log"
 	"net/http"
@@ -11,7 +11,6 @@ import (
 
 	"github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/models"
-	"github.com/decagonhq/meddle-api/server/jwt"
 	"github.com/decagonhq/meddle-api/server/response"
 	"github.com/gin-gonic/gin"
 )
@@ -101,9 +100,12 @@ func (s *Server) handleLogout() gin.HandlerFunc {
 func (s *Server) handleFBLogin() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		conf := config.GetFacebookOAuthConfig(s.Config.FacebookClientID, s.Config.FacebookClientSecret, s.Config.FacebookRedirectURL)
-		s.Config.OauthStateString, _ = services.GenerateRandomString()
-		url := conf.AuthCodeURL(s.Config.OauthStateString, oauth2.AccessTypeOnline)
-		log.Println("url: ", url)
+		state, err := jwt.GenerateToken("", s.Config.JWTSecret)
+		if err != nil {
+			response.JSON(c, "", http.StatusInternalServerError, nil, err)
+			return
+		}
+		url := conf.AuthCodeURL(state, oauth2.AccessTypeOnline)
 		c.Redirect(http.StatusTemporaryRedirect, url)
 	}
 }
@@ -113,7 +115,8 @@ func (s *Server) fbCallbackHandler() gin.HandlerFunc {
 		var state = c.Query("state")
 		var code = c.Query("code")
 
-		if state != s.Config.OauthStateString {
+		_, err := jwt.ValidateToken(state, s.Config.JWTSecret)
+		if err != nil {
 			respondAndAbort(c, "", http.StatusUnauthorized, nil, errors.New("invalid login", http.StatusUnauthorized))
 			return
 		}
