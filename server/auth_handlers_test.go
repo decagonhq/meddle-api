@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/decagonhq/meddle-api/config"
+	"github.com/decagonhq/meddle-api/services/jwt"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
@@ -15,7 +16,6 @@ import (
 	"github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/mocks"
 	"github.com/decagonhq/meddle-api/models"
-	"github.com/decagonhq/meddle-api/services"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -281,9 +281,7 @@ func TestLoginHandler(t *testing.T) {
 }
 
 func Test_FacebookCallBackHandler(t *testing.T) {
-	//random facebook user
-	testOuthState, err := services.GenerateRandomString()
-	testServer.handler.Config.OauthStateString = testOuthState
+	testOuthState, err := jwt.GenerateToken("", testServer.handler.Config.JWTSecret)
 	require.NoError(t, err)
 
 	// test cases
@@ -373,7 +371,7 @@ func Test_Logout(t *testing.T) {
 		Password:    "12345678",
 	}
 	conf.JWTSecret = "testSecret"
-	token, err := services.GenerateToken(user.Email, conf.JWTSecret)
+	token, err := jwt.GenerateToken(user.Email, conf.JWTSecret)
 
 	s := &Server{
 		Config:         conf,
