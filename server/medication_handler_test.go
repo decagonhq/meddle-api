@@ -226,7 +226,6 @@ func TestCreateMedicationHandler(t *testing.T) {
 	}
 }
 
-
 func TestGetAllMedicationHandler(t *testing.T) {
 
 	// generate a random user
@@ -338,8 +337,6 @@ func TestGetAllMedicationHandler(t *testing.T) {
 	}
 }
 
-
-
 func TestGetNextMedicationHandler(t *testing.T) {
 
 	// generate a random user
@@ -424,8 +421,148 @@ func TestGetNextMedicationHandler(t *testing.T) {
 
 			recorder := httptest.NewRecorder()
 
-
 			req, err := http.NewRequest(http.MethodGet, "/api/v1/user/medications/next", nil)
+			require.NoError(t, err)
+
+			req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", accToken))
+
+			testServer.router.ServeHTTP(recorder, req)
+			tc.checkResponse(t, recorder)
+		})
+	}
+}
+
+func Test_UpdateMedicationHandler(t *testing.T) {
+
+	// generate a random user
+	accToken, user := AuthorizeRoutes(t)
+
+	medication := models.UpdateMedicationRequest{
+		Name:                   "paracetamol",
+		Dosage:                 2,
+		TimeInterval:           8,
+		MedicationStartDate:    "2013-10-21T13:28:06.419Z",
+		Duration:               7,
+		MedicationPrescribedBy: "Dr Tolu",
+		MedicationStopDate:     "2013-10-21T13:28:06.419Z",
+		MedicationStartTime:    "2013-10-21T13:28:06.419Z",
+		PurposeOfMedication:    "malaria treatment",
+		MedicationIcon:         "Heart Icon",
+	}
+
+	// test cases
+	testCases := []struct {
+		name                    string
+		reqBody                 interface{}
+		routeParam              string
+		medicationID            uint
+		updateMedicationRequest models.UpdateMedicationRequest
+		errorResponse           *errors.Error
+		buildStubs              func(service *mocks.MockMedicationService, request models.UpdateMedicationRequest, medicationID uint, userID uint, errorResponse *errors.Error)
+		checkResponse           func(t *testing.T, recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "success case",
+			reqBody: gin.H{
+				"name":                     "paracetamol",
+				"dosage":                   2,
+				"time_interval":            8,
+				"medication_start_date":    "2013-10-21T13:28:06.419Z",
+				"duration":                 7,
+				"medication_prescribed_by": "Dr Tolu",
+				"medication_stop_date":     "2013-10-21T13:28:06.419Z",
+				"medication_start_time":    "2013-10-21T13:28:06.419Z",
+				"medication_icon":          "Heart Icon",
+				"purpose_of_medication":    "malaria treatment",
+			},
+			updateMedicationRequest: models.UpdateMedicationRequest{
+				Name:                   medication.Name,
+				Dosage:                 medication.Dosage,
+				TimeInterval:           medication.TimeInterval,
+				MedicationStartDate:    medication.MedicationStartDate,
+				Duration:               medication.Duration,
+				MedicationPrescribedBy: medication.MedicationPrescribedBy,
+				MedicationStopDate:     medication.MedicationStopDate,
+				MedicationStartTime:    medication.MedicationStartTime,
+				PurposeOfMedication:    medication.PurposeOfMedication,
+				MedicationIcon:         medication.MedicationIcon,
+			},
+			medicationID: 1,
+			routeParam:   "1",
+			buildStubs: func(service *mocks.MockMedicationService, request models.UpdateMedicationRequest, medicationID uint, userID uint, errorResponse *errors.Error) {
+				service.EXPECT().UpdateMedication(&request, medicationID, userID).Times(1).Return(errorResponse)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+			},
+		},
+		{
+			name: "internal server error",
+			reqBody: gin.H{
+				"name":                     "paracetamol",
+				"dosage":                   2,
+				"time_interval":            8,
+				"medication_start_date":    "2013-10-21T13:28:06.419Z",
+				"duration":                 7,
+				"medication_prescribed_by": "Dr Tolu",
+				"medication_stop_date":     "2013-10-21T13:28:06.419Z",
+				"medication_start_time":    "2013-10-21T13:28:06.419Z",
+				"medication_icon":          "Heart Icon",
+				"purpose_of_medication":    "malaria treatment",
+			},
+			updateMedicationRequest: models.UpdateMedicationRequest{
+				Name:                   medication.Name,
+				Dosage:                 medication.Dosage,
+				TimeInterval:           medication.TimeInterval,
+				MedicationStartDate:    medication.MedicationStartDate,
+				Duration:               medication.Duration,
+				MedicationPrescribedBy: medication.MedicationPrescribedBy,
+				MedicationStopDate:     medication.MedicationStopDate,
+				MedicationStartTime:    medication.MedicationStartTime,
+				PurposeOfMedication:    medication.PurposeOfMedication,
+				MedicationIcon:         medication.MedicationIcon,
+			},
+			medicationID:  1,
+			routeParam:    "1",
+			errorResponse: errors.ErrInternalServerError,
+			buildStubs: func(service *mocks.MockMedicationService, request models.UpdateMedicationRequest, medicationID uint, userID uint, errorResponse *errors.Error) {
+				service.EXPECT().UpdateMedication(&request, medicationID, userID).Times(1).Return(errorResponse)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			},
+		},
+		{
+			name:       "bad request from route param",
+			routeParam: "a",
+			buildStubs: func(service *mocks.MockMedicationService, request models.UpdateMedicationRequest, medicationID uint, userID uint, errorResponse *errors.Error) {
+				service.EXPECT().UpdateMedication(&request, medicationID, userID).Times(0).Return(errorResponse)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+	}
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockMedicationService := mocks.NewMockMedicationService(ctrl)
+	mockAuthRepository := mocks.NewMockAuthRepository(ctrl)
+	testServer.handler.MedicationService = mockMedicationService
+	testServer.handler.AuthRepository = mockAuthRepository
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockAuthRepository.EXPECT().FindUserByEmail(user.Email).Return(&user, nil)
+			mockAuthRepository.EXPECT().TokenInBlacklist(accToken).Return(false)
+
+			tc.buildStubs(mockMedicationService, tc.updateMedicationRequest, tc.medicationID, user.ID, tc.errorResponse)
+
+			jsonFile, err := json.Marshal(tc.reqBody)
+			require.NoError(t, err)
+			recorder := httptest.NewRecorder()
+
+			req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/user/medications/%v", tc.routeParam), strings.NewReader(string(jsonFile)))
 			require.NoError(t, err)
 
 			req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", accToken))

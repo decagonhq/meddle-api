@@ -602,3 +602,132 @@ func Test_CronUpdateMedicationForNextTime(t *testing.T) {
 	}
 
 }
+
+func Test_UpdateMedicationService(t *testing.T) {
+	// arrange
+	startDate, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
+	stopDate, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
+	startTime, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
+
+	medication := &models.Medication{
+		Model: models.Model{
+			ID:        0,
+			CreatedAt: time.Now().Unix(),
+			UpdatedAt: time.Now().Unix(),
+			DeletedAt: 0,
+		},
+		Name:                   "paracetamol",
+		Dosage:                 2,
+		TimeInterval:           8,
+		MedicationStartDate:    startDate,
+		Duration:               7,
+		MedicationPrescribedBy: "Dr Tolu",
+		MedicationStopDate:     stopDate,
+		MedicationStartTime:    startTime,
+		NextDosageTime:         time.Date(startTime.Add(time.Hour*time.Duration(8)).Year(), startTime.Add(time.Hour*time.Duration(8)).Month(), startTime.Add(time.Hour*time.Duration(8)).Day(), startTime.Add(time.Hour*time.Duration(8)).Hour(), 0, 0, 0, time.UTC),
+		PurposeOfMedication:    "malaria treatment",
+	}
+	testCases := []struct {
+		name                   string
+		input                  models.UpdateMedicationRequest
+		dbInput                *models.Medication
+		medicationID           uint
+		userID                 uint
+		dbError                error
+		updateMedResponseError *errors.Error
+		buildStubs             func(repository *mocks.MockMedicationRepository, dbInput *models.Medication, medicationID uint, userID uint, dbError error)
+	}{
+		{
+			name: "medication updates successfully case",
+			input: models.UpdateMedicationRequest{
+				Name:                   "paracetamol",
+				Dosage:                 2,
+				TimeInterval:           8,
+				MedicationStartDate:    "2013-10-21T13:28:06.419Z",
+				Duration:               7,
+				MedicationPrescribedBy: "Dr Tolu",
+				MedicationStopDate:     "2013-10-21T13:28:06.419Z",
+				MedicationStartTime:    "2013-10-21T13:28:06.419Z",
+				PurposeOfMedication:    "malaria treatment",
+			},
+			dbInput: &models.Medication{
+				Name:                   medication.Name,
+				Dosage:                 medication.Dosage,
+				TimeInterval:           medication.TimeInterval,
+				MedicationStartDate:    medication.MedicationStartDate,
+				Duration:               medication.Duration,
+				MedicationPrescribedBy: medication.MedicationPrescribedBy,
+				MedicationStopDate:     medication.MedicationStopDate,
+				MedicationStartTime:    medication.MedicationStartTime,
+				PurposeOfMedication:    medication.PurposeOfMedication,
+				NextDosageTime:         medication.NextDosageTime,
+			},
+			dbError:                nil,
+			updateMedResponseError: nil,
+			buildStubs: func(repository *mocks.MockMedicationRepository, dbInput *models.Medication, medicationID uint, userID uint, dbError error) {
+				repository.EXPECT().UpdateMedication(dbInput, medicationID, userID).Times(1).Return(dbError)
+			},
+		},
+		{
+			name: "bad request",
+			input: models.UpdateMedicationRequest{
+				Name:                   "paracetamol",
+				Dosage:                 2,
+				TimeInterval:           8,
+				MedicationStartDate:    "2013-10-21T13:28:06.419Z",
+				Duration:               7,
+				MedicationPrescribedBy: "Dr Tolu",
+				MedicationStopDate:     "2013-10-21T13:28:06.419Z",
+				MedicationStartTime:    "2013-11-12",
+				PurposeOfMedication:    "malaria treatment",
+			},
+			dbInput:                nil,
+			dbError:                nil,
+			updateMedResponseError: errors.New("wrong time format", http.StatusBadRequest),
+			buildStubs: func(repository *mocks.MockMedicationRepository, dbInput *models.Medication, medicationID uint, userID uint, dbError error) {
+				repository.EXPECT().UpdateMedication(dbInput, medicationID, userID).Times(0).Return(dbError)
+			},
+		},
+		{
+			name: "error updating medication due server error",
+			input: models.UpdateMedicationRequest{
+				Name:                   "paracetamol",
+				Dosage:                 2,
+				TimeInterval:           8,
+				MedicationStartDate:    "2013-10-21T13:28:06.419Z",
+				Duration:               7,
+				MedicationPrescribedBy: "Dr Tolu",
+				MedicationStopDate:     "2013-10-21T13:28:06.419Z",
+				MedicationStartTime:    "2013-10-21T13:28:06.419Z",
+				PurposeOfMedication:    "malaria treatment",
+			},
+			dbInput: &models.Medication{
+				Name:                   medication.Name,
+				Dosage:                 medication.Dosage,
+				TimeInterval:           medication.TimeInterval,
+				MedicationStartDate:    medication.MedicationStartDate,
+				Duration:               medication.Duration,
+				MedicationPrescribedBy: medication.MedicationPrescribedBy,
+				MedicationStopDate:     medication.MedicationStopDate,
+				MedicationStartTime:    medication.MedicationStartTime,
+				PurposeOfMedication:    medication.PurposeOfMedication,
+				NextDosageTime:         medication.NextDosageTime,
+			},
+			dbError:                gorm.ErrInvalidDB,
+			updateMedResponseError: errors.ErrInternalServerError,
+			buildStubs: func(repository *mocks.MockMedicationRepository, dbInput *models.Medication, medicationID uint, userID uint, dbError error) {
+				repository.EXPECT().UpdateMedication(dbInput, medicationID, userID).Times(1).Return(dbError)
+			},
+		},
+	}
+	teardown := setup(t)
+	defer teardown()
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.buildStubs(mockMedicationRepository, tc.dbInput, tc.medicationID, tc.userID, tc.dbError)
+			err := testMedicationService.UpdateMedication(&tc.input, tc.medicationID, tc.userID)
+
+			require.Equal(t, tc.updateMedResponseError, err)
+		})
+	}
+}
