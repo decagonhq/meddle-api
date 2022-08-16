@@ -67,13 +67,3 @@ func GetGoogleOAuthConfig(clientID, clientSecret, redirectURL string) *oauth2.Co
 		Scopes:       []string{"email"},
 	}
 }
-
-func GetAppleOAuthConfig(clientID, clientSecret, redirectURL string) *oauth2.Config {
-	return &oauth2.Config{
-		ClientID:     clientID,
-		ClientSecret: clientSecret,
-		RedirectURL:  redirectURL,
-		Endpoint:     google.Endpoint,
-		Scopes:       []string{"email"},
-	}
-}
