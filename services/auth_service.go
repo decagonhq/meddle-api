@@ -1,27 +1,23 @@
 package services
 
 import (
-	"fmt"
-	"net/http"
-
+	"crypto/rand"
+	"encoding/json"
 	"errors"
-	"log"
-	"time"
-
-	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
-
+	"fmt"
 	"github.com/decagonhq/meddle-api/config"
 	"github.com/decagonhq/meddle-api/db"
 	apiError "github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/models"
-	"github.com/decagonhq/meddle-api/server/jwt"
+	"github.com/decagonhq/meddle-api/services/jwt"
+	"github.com/gin-gonic/gin"
 	JWT "github.com/golang-jwt/jwt"
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
+	"io/ioutil"
+	"log"
+	"net/http"
 )
-
-const AccessTokenValidity = time.Hour * 24
-const RefreshTokenValidity = time.Hour * 24
 
 //go:generate mockgen -destination=../mocks/auth_mock.go -package=mocks github.com/decagonhq/meddle-api/services AuthService
 
@@ -29,6 +25,7 @@ const RefreshTokenValidity = time.Hour * 24
 type AuthService interface {
 	LoginUser(request *models.LoginRequest) (*models.LoginResponse, *apiError.Error)
 	SignupUser(request *models.User) (*models.User, *apiError.Error)
+	FacebookSignInUser(token string) (*string, *apiError.Error)
 	VerifyEmail(token string) error
 	SendEmailForPasswordReset(user *models.ForgotPassword) *apiError.Error
 	ResetPassword(user *models.ResetPassword, token string) *apiError.Error
@@ -38,7 +35,7 @@ type AuthService interface {
 type authService struct {
 	Config   *config.Config
 	authRepo db.AuthRepository
-	mail    Mailer
+	mail     Mailer
 }
 
 // NewAuthService instantiate an authService
@@ -46,7 +43,7 @@ func NewAuthService(authRepo db.AuthRepository, conf *config.Config, mailer Mail
 	return &authService{
 		Config:   conf,
 		authRepo: authRepo,
-		mail:  mailer,
+		mail:     mailer,
 	}
 }
 
@@ -76,7 +73,7 @@ func (a *authService) SignupUser(user *models.User) (*models.User, *apiError.Err
 		log.Printf("unable to create user: %v", err.Error())
 		return nil, apiError.New("internal server error", http.StatusInternalServerError)
 	}
-	token, err := GenerateToken(user.Email, a.Config.JWTSecret)
+	token, err := jwt.GenerateToken(user.Email, a.Config.JWTSecret)
 	if err != nil {
 		return nil, apiError.New("internal server error", http.StatusInternalServerError)
 	}
@@ -149,41 +146,13 @@ func (a *authService) LoginUser(loginRequest *models.LoginRequest) (*models.Logi
 		return nil, apiError.ErrInvalidPassword
 	}
 
-	accessToken, err := GenerateToken(foundUser.Email, a.Config.JWTSecret)
+	accessToken, err := jwt.GenerateToken(foundUser.Email, a.Config.JWTSecret)
 	if err != nil {
 		log.Printf("error generating token %s", err)
 		return nil, apiError.ErrInternalServerError
 	}
 
 	return foundUser.LoginUserToDto(accessToken), nil
-}
-
-// GenerateToken generates only an access token
-func GenerateToken(email string, secret string) (string, error) {
-	if secret == "" {
-		return "", errors.New("empty secret")
-	}
-	// Generate claims
-	claims := GenerateClaims(email)
-
-	// Create a new token object, specifying signing method and the claims
-	// you would like it to contain.
-	token := JWT.NewWithClaims(JWT.SigningMethodHS256, claims)
-
-	// Sign and get the complete encoded token as a string using the secret
-	tokenString, err := token.SignedString([]byte(secret))
-	if err != nil {
-		return "", err
-	}
-	return tokenString, nil
-}
-
-func GenerateClaims(email string) JWT.MapClaims {
-	accessClaims := JWT.MapClaims{
-		"email": email,
-		"exp":   time.Now().Add(AccessTokenValidity).Unix(),
-	}
-	return accessClaims
 }
 
 func (a *authService) VerifyEmail(token string) error {
@@ -194,4 +163,92 @@ func (a *authService) VerifyEmail(token string) error {
 	email := claims["email"].(string)
 	err = a.authRepo.VerifyEmail(email, token)
 	return err
+}
+
+func (a *authService) FacebookSignInUser(token string) (*string, *apiError.Error) {
+	// rename function
+	fbUserDetails, fbUserDetailsError := GetUserInfoFromFacebook(token)
+
+	if fbUserDetailsError != nil {
+		return nil, apiError.New(fmt.Sprintf("unable to get user details from facebook: %v", fbUserDetailsError), http.StatusUnauthorized)
+	}
+
+	authToken, authTokenError := a.GetSignInToken(fbUserDetails)
+
+	if authTokenError != nil {
+		return nil, apiError.New(fmt.Sprintf("unable sign in user: %v", authTokenError), http.StatusUnauthorized)
+	}
+	return &authToken, nil
+}
+
+// GetUserInfoFromFacebook will return information of user which is fetched from facebook
+func GetUserInfoFromFacebook(token string) (*models.FacebookUser, error) {
+	var fbUserDetails *models.FacebookUser
+	facebookUserDetailsRequest, _ := http.NewRequest("GET", "https://graph.facebook.com/me?fields=name,email&access_token="+token, nil)
+	facebookUserDetailsResponse, facebookUserDetailsResponseError := http.DefaultClient.Do(facebookUserDetailsRequest)
+
+	if facebookUserDetailsResponseError != nil {
+		return nil, fmt.Errorf("error occurred while getting information from Facebook: %+v", facebookUserDetailsResponseError)
+	}
+	body, err := ioutil.ReadAll(facebookUserDetailsResponse.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error occurred while getting information from Facebook: %+v", err)
+	}
+	defer facebookUserDetailsResponse.Body.Close()
+	err = json.Unmarshal(body, &fbUserDetails)
+
+	if err != nil {
+		return nil, fmt.Errorf("error occurred while getting information from Facebook: %+v", err)
+	}
+
+	return fbUserDetails, nil
+}
+
+// GetSignInToken Used for Signing In the Users
+func (a *authService) GetSignInToken(facebookUserDetails *models.FacebookUser) (string, error) {
+	var result *models.User
+
+	if facebookUserDetails == nil {
+		return "", fmt.Errorf("error: facebook user details can't be empty")
+	}
+
+	if facebookUserDetails.Email == "" {
+		return "", fmt.Errorf("error: email can't be empty")
+	}
+
+	if facebookUserDetails.Name == "" {
+		return "", fmt.Errorf("error: name can't be empty")
+	}
+
+	result, err := a.authRepo.FindUserByEmail(facebookUserDetails.Email)
+	if err != nil {
+		return "", fmt.Errorf("error finding user: %+v", err)
+	}
+
+	if result == nil {
+		result.Email = facebookUserDetails.Email
+		result.Name = facebookUserDetails.Name
+		_, err = a.authRepo.CreateUser(result)
+		if err != nil {
+			return "", fmt.Errorf("error occurred creating user: %+v", err)
+		}
+	}
+
+	tokenString, err := jwt.GenerateToken(facebookUserDetails.Email, a.Config.JWTSecret)
+
+	if tokenString == "" {
+		return "", fmt.Errorf("unable to generate Auth token: %+v", err)
+	}
+
+	return tokenString, nil
+}
+
+func GenerateRandomString() (string, error) {
+	n := 5
+	b := make([]byte, n)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	s := fmt.Sprintf("%X", b)
+	return s, nil
 }
