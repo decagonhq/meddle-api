@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
+	"runtime"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -47,10 +49,16 @@ func (s *Server) setupRouter() *gin.Engine {
 	}
 
 	r := gin.New()
-	// _, b, _, _ := runtime.Caller(0)
-	// basepath := filepath.Dir(b)
-	r.StaticFS("static", http.Dir("server/templates/static"))
-	r.LoadHTMLGlob("server/templates/*.html")
+	staticFiles := "server/templates/static"
+	htmlFiles := "server/templates/*.html"
+	if s.Config.Env == "test" {
+		_, b, _, _ := runtime.Caller(0)
+		basepath := filepath.Dir(b)
+		staticFiles = basepath + "/templates/static"
+		htmlFiles = basepath + "/templates/*.html"
+	}
+	r.StaticFS("static", http.Dir(staticFiles))
+	r.LoadHTMLGlob(htmlFiles)
 
 	// LoggerWithFormatter middleware will write the logs to gin.DefaultWriter
 	// By default gin.DefaultWriter = os.Stdout
