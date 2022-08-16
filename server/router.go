@@ -19,6 +19,9 @@ func (s *Server) defineRoutes(router *gin.Engine) {
 	apirouter.GET("/fb/auth", s.handleFBLogin())
 	apirouter.GET("fb/callback", s.fbCallbackHandler())
 
+	apirouter.GET("/google/login", s.HandleGoogleOauthLogin())
+	apirouter.GET("/google/callback", s.HandleGoogleCallback())
+
 	apirouter.GET("/verifyEmail/:token", s.HandleVerifyEmail())
 	apirouter.POST("/password/forgot", s.SendEmailForPasswordReset())
 	apirouter.POST("/password/reset/:token", s.ResetPassword())

@@ -21,6 +21,8 @@ type User struct {
 	Password       string `json:"password,omitempty" gorm:"-" binding:"required,min=8,max=15"`
 	HashedPassword string `json:"-" gorm:"password"`
 	IsEmailActive  bool   `json:"-"`
+	Social         string `json:"-"`
+	AccessToken    string `json:"-"`
 }
 
 func ValidateStruct(req interface{}) []error {
@@ -75,6 +77,16 @@ type ForgotPassword struct {
 type ResetPassword struct {
 	Password        string `json:"password" binding:"required"`
 	ConfirmPassword string `json:"confirm_password" binding:"required"`
+}
+type GoogleAuthResponse struct {
+	ID            string `json:"id"`
+	Email         string `json:"email"`
+	VerifiedEmail bool   `json:"verified_email"`
+	Name          string `json:"name"`
+	GivenName     string `json:"given_name"`
+	FamilyName    string `json:"family_name"`
+	Picture       string `json:"picture"`
+	Locale        string `json:"locale"`
 }
 
 type LoginResponse struct {
