@@ -22,6 +22,7 @@ func main() {
 	authRepo := db.NewAuthRepo(gormDB)
 	mail := services.NewMailService(conf)
 	authService := services.NewAuthService(authRepo, conf, mail)
+
 	medicationRepo := db.NewMedicationRepo(gormDB)
 	medicationService := services.NewMedicationService(medicationRepo, conf)
 
