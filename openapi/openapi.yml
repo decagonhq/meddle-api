@@ -337,7 +337,7 @@ components:
           example: ""
         message:
           type: string
-          example: user created successfully
+          example: Signup successful, check your email for verification
         status:
           type: string
           example: Created
