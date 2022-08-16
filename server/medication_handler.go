@@ -86,3 +86,29 @@ func (s *Server) handleGetNextMedication() gin.HandlerFunc {
 		response.JSON(c, "medication retrieved successfully", http.StatusOK, medication, nil)
 	}
 }
+
+func (s *Server) handleUpdateMedication() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		_, user, err := GetValuesFromContext(c)
+		if err != nil {
+			err.Respond(c)
+			return
+		}
+		medicationID, errr := strconv.ParseUint(c.Param("medicationID"), 10, 32)
+		if errr != nil {
+			response.JSON(c, "error parsing id", http.StatusBadRequest, nil, errr)
+			return
+		}
+		var updateMedicationRequest models.UpdateMedicationRequest
+		if err := c.ShouldBindJSON(&updateMedicationRequest); err != nil {
+			response.JSON(c, "", http.StatusBadRequest, nil, err)
+			return
+		}
+		err = s.MedicationService.UpdateMedication(&updateMedicationRequest, uint(medicationID), user.ID)
+		if err != nil {
+			err.Respond(c)
+			return
+		}
+		response.JSON(c, "medication updated successfully", http.StatusOK, nil, nil)
+	}
+}
