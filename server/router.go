@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -48,7 +47,6 @@ func (s *Server) setupRouter() *gin.Engine {
 	r := gin.New()
 	_, b, _, _ := runtime.Caller(0)
 	basepath := filepath.Dir(b)
-	log.Println("base is here", basepath)
 	r.StaticFS("static", http.Dir(basepath + "/templates/static"))
 	r.LoadHTMLGlob(basepath + "/templates/*.html")
 
