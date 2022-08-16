@@ -49,22 +49,31 @@ func NewAuthService(authRepo db.AuthRepository, conf *config.Config, mailer Mail
 
 func (a *authService) SignupUser(user *models.User) (*models.User, *apiError.Error) {
 	err := a.authRepo.IsEmailExist(user.Email)
-
 	if err != nil {
 		// FIXME: return the proper error message from the function
 		// TODO: handle internal server error later
 		return nil, apiError.New("email already exist", http.StatusBadRequest)
 	}
+
 	err = a.authRepo.IsPhoneExist(user.PhoneNumber)
 	if err != nil {
 		return nil, apiError.New("phone already exist", http.StatusBadRequest)
 	}
-	user.HashedPassword, err = GenerateHashPassword(user.Password)
 
+	user.HashedPassword, err = GenerateHashPassword(user.Password)
 	if err != nil {
 		log.Printf("error generating password hash: %v", err.Error())
 		return nil, apiError.New("internal server error", http.StatusInternalServerError)
 	}
+
+	token, err := jwt.GenerateToken(user.Email, a.Config.JWTSecret)
+	if err != nil {
+		return nil, apiError.New("internal server error", http.StatusInternalServerError)
+	}
+	if err := a.sendVerifyEmail(token, user.Email); err != nil {
+		return nil, err
+	}
+
 	user.Password = ""
 	user.IsEmailActive = false
 	user, err = a.authRepo.CreateUser(user)
@@ -73,23 +82,23 @@ func (a *authService) SignupUser(user *models.User) (*models.User, *apiError.Err
 		log.Printf("unable to create user: %v", err.Error())
 		return nil, apiError.New("internal server error", http.StatusInternalServerError)
 	}
-	token, err := jwt.GenerateToken(user.Email, a.Config.JWTSecret)
-	if err != nil {
-		return nil, apiError.New("internal server error", http.StatusInternalServerError)
-	}
 
-	link := fmt.Sprintf("%s/verifyEmail/%s", a.Config.MAILURL, token)
+	return user, nil
+}
+
+func (a *authService) sendVerifyEmail(token, email string) *apiError.Error {
+	link := fmt.Sprintf("%s/verifyEmail/%s", a.Config.MAILURL, token) //Todo change to baseUrl
 	value := map[string]interface{}{}
 	value["link"] = link
 	subject := "Verify your email"
 	body := "Please Click the link below to verify your email"
 	templateName := "verifyEmail"
-	err = a.mail.SendMail(user.Email, subject, body, templateName, value)
+	err := a.mail.SendMail(email, subject, body, templateName, value)
 	if err != nil {
 		log.Printf("Error: %v", err.Error())
-		return nil, apiError.New("mail couldn't be sent", http.StatusServiceUnavailable)
+		return apiError.New("Please verify your email", http.StatusServiceUnavailable)
 	}
-	return user, nil
+	return nil
 }
 
 func GenerateHashPassword(password string) (string, error) {

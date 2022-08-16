@@ -43,8 +43,8 @@ func (s *Server) setupRouter() *gin.Engine {
 	}
 
 	r := gin.New()
-	r.StaticFS("static", http.Dir("templates/static"))
-	r.LoadHTMLGlob("templates/*.html")
+	r.StaticFS("static", http.Dir("server/templates/static"))
+	r.LoadHTMLGlob("server/templates/*.html")
 
 	// LoggerWithFormatter middleware will write the logs to gin.DefaultWriter
 	// By default gin.DefaultWriter = os.Stdout
