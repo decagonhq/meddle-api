@@ -18,7 +18,7 @@ type Config struct {
 	PostgresDB           string `envconfig:"postgres_db"`
 	MailgunApiKey        string `envconfig:"mg_public_api_key"`
 	EmailFrom            string `envconfig:"email_from"`
-	BASEURL              string `envconfig:"base_url"`
+	BaseUrl              string `envconfig:"base_url"`
 	Env                  string `envconfig:"env"`
 	PostgresPort         int    `envconfig:"postgres_port"`
 	PostgresPassword     string `envconfig:"postgres_password"`

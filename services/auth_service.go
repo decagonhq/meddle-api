@@ -88,7 +88,7 @@ func (a *authService) SignupUser(user *models.User) (*models.User, *apiError.Err
 }
 
 func (a *authService) sendVerifyEmail(token, email string) *apiError.Error {
-	link := fmt.Sprintf("%s/verifyEmail/%s", a.Config.BASEURL, token) //Todo change to baseUrl
+	link := fmt.Sprintf("%s/verifyEmail/%s", a.Config.BaseUrl, token)
 	value := map[string]interface{}{}
 	value["link"] = link
 	subject := "Verify your email"
@@ -262,6 +262,7 @@ func (a *authService) GetGoogleSignInToken(googleUserDetails *models.GoogleUser)
 
 	return tokenString, nil
 }
+
 // GetSignInToken Used for Signing In the Users
 func (a *authService) GetSignInToken(facebookUserDetails *models.FacebookUser) (string, error) {
 	var result *models.User
