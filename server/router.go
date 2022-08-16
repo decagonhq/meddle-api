@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"time"
 
@@ -48,8 +49,8 @@ func (s *Server) setupRouter() *gin.Engine {
 	r := gin.New()
 	// _, b, _, _ := runtime.Caller(0)
 	// basepath := filepath.Dir(b)
-	// r.StaticFS("static", http.Dir(basepath + "/templates/static"))
-	// r.LoadHTMLGlob(basepath + "/templates/*.html")
+	r.StaticFS("static", http.Dir("templates/static"))
+	r.LoadHTMLGlob("templates/*.html")
 
 	// LoggerWithFormatter middleware will write the logs to gin.DefaultWriter
 	// By default gin.DefaultWriter = os.Stdout
