@@ -10,8 +10,8 @@ import (
 	apiError "github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/models"
 	"github.com/decagonhq/meddle-api/services/jwt"
-	"github.com/gin-gonic/gin"
-	JWT "github.com/golang-jwt/jwt"
+	_ "github.com/gin-gonic/gin"
+	_ "github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"io/ioutil"
@@ -89,41 +89,7 @@ func (a *authService) SignupUser(user *models.User) (*models.User, *apiError.Err
 		log.Printf("Error: %v", err.Error())
 		return nil, apiError.New("mail couldn't be sent", http.StatusServiceUnavailable)
 	}
-
 	return user, nil
-}
-
-// GetTokenFromHeader returns the token string in the authorization header
-func GetTokenFromHeader(c *gin.Context) string {
-	authHeader := c.Request.Header.Get("Authorization")
-	if len(authHeader) > 8 {
-		return authHeader[7:]
-	}
-	return ""
-}
-
-// verifyAccessToken verifies a token
-func verifyToken(tokenString *string, claims JWT.MapClaims, secret *string) (*JWT.Token, error) {
-	parser := JWT.Parser{SkipClaimsValidation: true}
-	return parser.ParseWithClaims(*tokenString, claims, func(token *JWT.Token) (interface{}, error) {
-		if _, ok := token.Method.(*JWT.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-		return []byte(*secret), nil
-	})
-}
-
-// AuthorizeToken check if a refresh token is valid
-func AuthorizeToken(token *string, secret *string) (*JWT.Token, JWT.MapClaims, error) {
-	if token != nil && *token != "" && secret != nil && *secret != "" {
-		claims := JWT.MapClaims{}
-		token, err := verifyToken(token, claims, secret)
-		if err != nil {
-			return nil, nil, err
-		}
-		return token, claims, nil
-	}
-	return nil, nil, fmt.Errorf("empty token or secret")
 }
 
 func GenerateHashPassword(password string) (string, error) {
@@ -174,7 +140,6 @@ func (a *authService) FacebookSignInUser(token string) (*string, *apiError.Error
 	}
 
 	authToken, authTokenError := a.GetSignInToken(fbUserDetails)
-
 	if authTokenError != nil {
 		return nil, apiError.New(fmt.Sprintf("unable sign in user: %v", authTokenError), http.StatusUnauthorized)
 	}
@@ -252,3 +217,4 @@ func GenerateRandomString() (string, error) {
 	s := fmt.Sprintf("%X", b)
 	return s, nil
 }
+
