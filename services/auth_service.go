@@ -5,6 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
+
 	"github.com/decagonhq/meddle-api/config"
 	"github.com/decagonhq/meddle-api/db"
 	apiError "github.com/decagonhq/meddle-api/errors"
@@ -14,9 +18,6 @@ import (
 	_ "github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
-	"io/ioutil"
-	"log"
-	"net/http"
 )
 
 //go:generate mockgen -destination=../mocks/auth_mock.go -package=mocks github.com/decagonhq/meddle-api/services AuthService
@@ -88,7 +89,7 @@ func (a *authService) SignupUser(user *models.User) (*models.User, *apiError.Err
 }
 
 func (a *authService) sendVerifyEmail(token, email string) *apiError.Error {
-	link := fmt.Sprintf("%s/verifyEmail/%s", a.Config.BASEURL, token) //Todo change to baseUrl
+	link := fmt.Sprintf("%s/verifyEmail/%s", a.Config.BaseURL, token) 
 	value := map[string]interface{}{}
 	value["link"] = link
 	subject := "Verify your email"
@@ -262,6 +263,7 @@ func (a *authService) GetGoogleSignInToken(googleUserDetails *models.GoogleUser)
 
 	return tokenString, nil
 }
+
 // GetSignInToken Used for Signing In the Users
 func (a *authService) GetSignInToken(facebookUserDetails *models.FacebookUser) (string, error) {
 	var result *models.User
