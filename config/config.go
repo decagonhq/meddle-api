@@ -1,13 +1,14 @@
 package config
 
 import (
+	"log"
+	"os"
+
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/facebook"
 	"golang.org/x/oauth2/google"
-	"log"
-	"os"
 )
 
 type Config struct {
