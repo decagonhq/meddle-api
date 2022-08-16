@@ -18,7 +18,7 @@ func (s *Server) handleCreateMedication() gin.HandlerFunc {
 			return
 		}
 		userId := user.ID
-		if err := c.ShouldBindJSON(&medicationRequest); err != nil {
+		if err := decode(c, &medicationRequest); err != nil {
 			response.JSON(c, "", http.StatusBadRequest, nil, err)
 			return
 		}
