@@ -5,6 +5,7 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/facebook"
+	"golang.org/x/oauth2/google"
 	"log"
 	"os"
 )
@@ -26,6 +27,9 @@ type Config struct {
 	MgDomain             string `envconfig:"mg_domain"`
 	EmailFrom            string `envconfig:"email_from"`
 	Host                 string `envconfig:"host"`
+	GoogleClientID       string `envconfig:"google_client_id"`
+	GoogleClientSecret   string `envconfig:"google_client_secret"`
+	GoogleRedirectURL    string `envconfig:"google_redirect_url"`
 }
 
 func Load() (*Config, error) {
@@ -50,6 +54,16 @@ func GetFacebookOAuthConfig(clientID, clientSecret, redirectURL string) *oauth2.
 		ClientSecret: clientSecret,
 		RedirectURL:  redirectURL,
 		Endpoint:     facebook.Endpoint,
+		Scopes:       []string{"email"},
+	}
+}
+
+func GetGoogleOAuthConfig(clientID, clientSecret, redirectURL string) *oauth2.Config {
+	return &oauth2.Config{
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		RedirectURL:  redirectURL,
+		Endpoint:     google.Endpoint,
 		Scopes:       []string{"email"},
 	}
 }

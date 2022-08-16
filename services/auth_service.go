@@ -31,6 +31,7 @@ type AuthService interface {
 	VerifyEmail(token string) error
 	SendEmailForPasswordReset(user *models.ForgotPassword) *apiError.Error
 	ResetPassword(user *models.ResetPassword, token string) *apiError.Error
+	GoogleSignInUser(token string) (*string, *apiError.Error)
 }
 
 // authService struct
@@ -125,6 +126,51 @@ func (a *authService) VerifyEmail(token string) error {
 	return err
 }
 
+func (a *authService) GoogleSignInUser(token string) (*string, *apiError.Error) {
+
+	googleUserDetails, googleUserDetailsError := GetUserInfoFromGoogle(token)
+
+	if googleUserDetailsError != nil {
+		return nil, apiError.New(fmt.Sprintf("unable to get user details from google: %v", googleUserDetailsError), http.StatusUnauthorized)
+	}
+
+	authToken, authTokenError := a.GetGoogleSignInToken(googleUserDetails)
+
+	if authTokenError != nil {
+		return nil, apiError.New(fmt.Sprintf("unable sign in user: %v", authTokenError), http.StatusUnauthorized)
+	}
+	return &authToken, nil
+}
+
+// GetUserInfoFromGoogle will return information of user which is fetched from Google
+func GetUserInfoFromGoogle(token string) (*models.GoogleUser, error) {
+	var googleUserDetails *models.GoogleUser
+
+	url := "https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token
+	googleUserDetailsRequest, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error occurred while getting information from Google: %+v", err)
+	}
+
+	googleUserDetailsResponse, googleDetailsResponseError := http.DefaultClient.Do(googleUserDetailsRequest)
+	if googleDetailsResponseError != nil {
+		return nil, fmt.Errorf("error occurred while getting information from Google: %+v", googleDetailsResponseError)
+	}
+
+	body, err := ioutil.ReadAll(googleUserDetailsResponse.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error occurred while getting information from Google: %+v", err)
+	}
+	defer googleUserDetailsResponse.Body.Close()
+
+	err = json.Unmarshal(body, &googleUserDetails)
+	if err != nil {
+		return nil, fmt.Errorf("error occurred while getting information from Google: %+v", err)
+	}
+
+	return googleUserDetails, nil
+}
+
 func (a *authService) FacebookSignInUser(token string) (*string, *apiError.Error) {
 	// rename function
 	fbUserDetails, fbUserDetailsError := GetUserInfoFromFacebook(token)
@@ -164,6 +210,44 @@ func GetUserInfoFromFacebook(token string) (*models.FacebookUser, error) {
 	return fbUserDetails, nil
 }
 
+// GetGoogleSignInToken Used for Signing In the Users
+func (a *authService) GetGoogleSignInToken(googleUserDetails *models.GoogleUser) (string, error) {
+	var result *models.User
+
+	if googleUserDetails == nil {
+		return "", fmt.Errorf("error: google user details can't be empty")
+	}
+
+	if googleUserDetails.Email == "" {
+		return "", fmt.Errorf("error: email can't be empty")
+	}
+
+	if googleUserDetails.Name == "" {
+		return "", fmt.Errorf("error: name can't be empty")
+	}
+
+	result, err := a.authRepo.FindUserByEmail(googleUserDetails.Email)
+	if err != nil {
+		return "", fmt.Errorf("error finding user: %+v", err)
+	}
+
+	if result == nil {
+		result.Email = googleUserDetails.Email
+		result.Name = googleUserDetails.Name
+		_, err = a.authRepo.CreateUser(result)
+		if err != nil {
+			return "", fmt.Errorf("error occurred creating user: %+v", err)
+		}
+	}
+
+	tokenString, err := jwt.GenerateToken(googleUserDetails.Email, a.Config.JWTSecret)
+
+	if tokenString == "" {
+		return "", fmt.Errorf("unable to generate Auth token: %+v", err)
+	}
+
+	return tokenString, nil
+}
 // GetSignInToken Used for Signing In the Users
 func (a *authService) GetSignInToken(facebookUserDetails *models.FacebookUser) (string, error) {
 	var result *models.User
