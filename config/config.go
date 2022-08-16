@@ -30,6 +30,9 @@ type Config struct {
 	GoogleClientID       string `envconfig:"google_client_id"`
 	GoogleClientSecret   string `envconfig:"google_client_secret"`
 	GoogleRedirectURL    string `envconfig:"google_redirect_url"`
+	AppleClientID       string `envconfig:"apple_client_id"`
+	AppleClientSecret   string `envconfig:"apple_client_secret"`
+	AppleRedirectURL    string `envconfig:"apple_redirect_url"`
 }
 
 func Load() (*Config, error) {
@@ -59,6 +62,16 @@ func GetFacebookOAuthConfig(clientID, clientSecret, redirectURL string) *oauth2.
 }
 
 func GetGoogleOAuthConfig(clientID, clientSecret, redirectURL string) *oauth2.Config {
+	return &oauth2.Config{
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		RedirectURL:  redirectURL,
+		Endpoint:     google.Endpoint,
+		Scopes:       []string{"email"},
+	}
+}
+
+func GetAppleOAuthConfig(clientID, clientSecret, redirectURL string) *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     clientID,
 		ClientSecret: clientSecret,

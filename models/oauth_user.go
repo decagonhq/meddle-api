@@ -5,17 +5,18 @@ type FacebookUser struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
 }
-<<<<<<< Updated upstream
+
 type GoogleUser struct {
 	ID    string `json:"id"`
 	Name  string `json:"name"`
 	Email string `json:"email"`
 }
-=======
 
 type AppleUser struct {
 	ID    string `json:"id"`
 	Name  string `json:"name"`
 	Email string `json:"email"`
 }
->>>>>>> Stashed changes
+
+
+

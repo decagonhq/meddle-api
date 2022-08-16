@@ -17,14 +17,12 @@ func (s *Server) defineRoutes(router *gin.Engine) {
 	apirouter.GET("/fb/auth", s.handleFBLogin())
 	apirouter.GET("fb/callback", s.fbCallbackHandler())
 
-<<<<<<< Updated upstream
 	apirouter.GET("/google/login", s.HandleGoogleOauthLogin())
 	apirouter.GET("/google/callback", s.HandleGoogleCallback())
-=======
-	apirouter.GET("/apple/auth", s.handleAppleLogin())
-	apirouter.GET("apple/callback", s.appleCallbackHandler())
-  
->>>>>>> Stashed changes
+
+	apirouter.GET("/apple/auth", s.HandleAppleOauthLogin())
+	apirouter.GET("apple/callback", s.HandleAppleCallback())
+
 	apirouter.GET("/verifyEmail/:token", s.HandleVerifyEmail())
 	apirouter.POST("/password/forgot", s.SendEmailForPasswordReset())
 	apirouter.POST("/password/reset/:token", s.ResetPassword())
