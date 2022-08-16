@@ -21,8 +21,6 @@ type User struct {
 	Password       string `json:"password,omitempty" gorm:"-" binding:"required,min=8,max=15"`
 	HashedPassword string `json:"-" gorm:"password"`
 	IsEmailActive  bool   `json:"-"`
-	Social         string `json:"-"`
-	AccessToken    string `json:"-"`
 }
 
 func ValidateStruct(req interface{}) []error {
@@ -111,4 +109,3 @@ func (u *User) LoginUserToDto(token string) *LoginResponse {
 		AccessToken: token,
 	}
 }
-
