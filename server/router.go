@@ -16,7 +16,7 @@ func (s *Server) defineRoutes(router *gin.Engine) {
 
 	apirouter.GET("/fb/auth", s.handleFBLogin())
 	apirouter.GET("fb/callback", s.fbCallbackHandler())
-  
+
 	apirouter.GET("/verifyEmail/:token", s.HandleVerifyEmail())
 	apirouter.POST("/password/forgot", s.SendEmailForPasswordReset())
 	apirouter.POST("/password/reset/:token", s.ResetPassword())
@@ -44,7 +44,7 @@ func (s *Server) setupRouter() *gin.Engine {
 
 	r := gin.New()
 	r.StaticFS("static", http.Dir("templates/static"))
-	r.LoadHTMLGlob("/templates/*.html")
+	r.LoadHTMLGlob("templates/*.html")
 
 	// LoggerWithFormatter middleware will write the logs to gin.DefaultWriter
 	// By default gin.DefaultWriter = os.Stdout

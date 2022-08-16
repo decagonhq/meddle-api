@@ -78,13 +78,13 @@ func (a *authService) SignupUser(user *models.User) (*models.User, *apiError.Err
 		return nil, apiError.New("internal server error", http.StatusInternalServerError)
 	}
 
-	link := fmt.Sprintf("%s/verifyEmail/%s", a.Config.Host, token)
+	link := fmt.Sprintf("%s/verifyEmail/%s", a.Config.MAILURL, token)
 	value := map[string]interface{}{}
 	value["link"] = link
 	subject := "Verify your email"
 	body := "Please Click the link below to verify your email"
 	templateName := "verifyEmail"
-	err = a.mail.SendMail(user.Email,subject, body,templateName, value)
+	err = a.mail.SendMail(user.Email, subject, body, templateName, value)
 	if err != nil {
 		log.Printf("Error: %v", err.Error())
 		return nil, apiError.New("mail couldn't be sent", http.StatusServiceUnavailable)
@@ -217,4 +217,3 @@ func GenerateRandomString() (string, error) {
 	s := fmt.Sprintf("%X", b)
 	return s, nil
 }
-

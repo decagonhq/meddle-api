@@ -22,7 +22,6 @@ type AuthRepository interface {
 	VerifyEmail(email string, token string) error
 	IsTokenInBlacklist(token string) error
 	UpdatePassword(password string, email string) error
-
 }
 
 type authRepo struct {

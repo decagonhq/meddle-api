@@ -10,14 +10,14 @@ import (
 )
 
 type Config struct {
-	Debug            bool   `envconfig:"debug"`
-	Port             int    `envconfig:"port"`
-	PostgresHost     string `envconfig:"postgres_host"`
-	PostgresUser     string `envconfig:"postgres_user"`
-	PostgresDB       string `envconfig:"postgres_db"`
-	MailgunApiKey    string `envconfig:"mg_public_api_key"`
-	EmailFrom        string `envconfig:"email_from"`
-	URL				 string `envconfig:"url"`
+	Debug                bool   `envconfig:"debug"`
+	Port                 int    `envconfig:"port"`
+	PostgresHost         string `envconfig:"postgres_host"`
+	PostgresUser         string `envconfig:"postgres_user"`
+	PostgresDB           string `envconfig:"postgres_db"`
+	MailgunApiKey        string `envconfig:"mg_public_api_key"`
+	EmailFrom            string `envconfig:"email_from"`
+	MAILURL              string `envconfig:"mailurl"`
 	Env                  string `envconfig:"env"`
 	PostgresPort         int    `envconfig:"postgres_port"`
 	PostgresPassword     string `envconfig:"postgres_password"`

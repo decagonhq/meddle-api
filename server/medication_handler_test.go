@@ -226,7 +226,6 @@ func TestCreateMedicationHandler(t *testing.T) {
 	}
 }
 
-
 func TestGetAllMedicationHandler(t *testing.T) {
 
 	// generate a random user
@@ -338,8 +337,6 @@ func TestGetAllMedicationHandler(t *testing.T) {
 	}
 }
 
-
-
 func TestGetNextMedicationHandler(t *testing.T) {
 
 	// generate a random user
@@ -423,7 +420,6 @@ func TestGetNextMedicationHandler(t *testing.T) {
 			tc.buildStubs(mockMedicationService, user.ID, tc.medicationResponse)
 
 			recorder := httptest.NewRecorder()
-
 
 			req, err := http.NewRequest(http.MethodGet, "/api/v1/user/medications/next", nil)
 			require.NoError(t, err)
