@@ -30,9 +30,6 @@ type Config struct {
 	GoogleClientID       string `envconfig:"google_client_id"`
 	GoogleClientSecret   string `envconfig:"google_client_secret"`
 	GoogleRedirectURL    string `envconfig:"google_redirect_url"`
-	AppleClientID       string `envconfig:"apple_client_id"`
-	AppleClientSecret   string `envconfig:"apple_client_secret"`
-	AppleRedirectURL    string `envconfig:"apple_redirect_url"`
 }
 
 func Load() (*Config, error) {

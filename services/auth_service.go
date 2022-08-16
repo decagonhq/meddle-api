@@ -32,7 +32,6 @@ type AuthService interface {
 	SendEmailForPasswordReset(user *models.ForgotPassword) *apiError.Error
 	ResetPassword(user *models.ResetPassword, token string) *apiError.Error
 	GoogleSignInUser(token string) (*string, *apiError.Error)
-	AppleSignInUser(token string) (*string, *apiError.Error)
 }
 
 // authService struct
@@ -143,22 +142,6 @@ func (a *authService) GoogleSignInUser(token string) (*string, *apiError.Error) 
 	return &authToken, nil
 }
 
-func (a *authService) AppleSignInUser(token string) (*string, *apiError.Error) {
-
-	appleUserDetails, appleUserDetailsError := GetUserInfoFromApple(token)
-
-	if appleUserDetailsError != nil {
-		return nil, apiError.New(fmt.Sprintf("unable to get user details from google: %v", appleUserDetailsError), http.StatusUnauthorized)
-	}
-
-	authToken, authTokenError := a.GetAppleSignInToken(appleUserDetails)
-
-	if authTokenError != nil {
-		return nil, apiError.New(fmt.Sprintf("unable sign in user: %v", authTokenError), http.StatusUnauthorized)
-	}
-	return &authToken, nil
-}
-
 // GetUserInfoFromGoogle will return information of user which is fetched from Google
 func GetUserInfoFromGoogle(token string) (*models.GoogleUser, error) {
 	var googleUserDetails *models.GoogleUser
@@ -186,35 +169,6 @@ func GetUserInfoFromGoogle(token string) (*models.GoogleUser, error) {
 	}
 
 	return googleUserDetails, nil
-}
-
-// GetUserInfoFromApple will return information of user which is fetched from Apple
-func GetUserInfoFromApple(token string) (*models.AppleUser, error) {
-	var appleUserDetails *models.AppleUser
-
-	url := "https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token //do for apple
-	appleUserDetailsRequest, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, fmt.Errorf("error occurred while getting information from Apple: %+v", err)
-	}
-
-	appleUserDetailsResponse, appleDetailsResponseError := http.DefaultClient.Do(appleUserDetailsRequest)
-	if appleDetailsResponseError != nil {
-		return nil, fmt.Errorf("error occurred while getting information from Google: %+v", appleDetailsResponseError)
-	}
-
-	body, err := ioutil.ReadAll(appleUserDetailsResponse.Body)
-	if err != nil {
-		return nil, fmt.Errorf("error occurred while getting information from Google: %+v", err)
-	}
-	defer appleUserDetailsResponse.Body.Close()
-
-	err = json.Unmarshal(body, &appleUserDetails)
-	if err != nil {
-		return nil, fmt.Errorf("error occurred while getting information from Google: %+v", err)
-	}
-
-	return appleUserDetails, nil
 }
 
 func (a *authService) FacebookSignInUser(token string) (*string, *apiError.Error) {
@@ -254,45 +208,6 @@ func GetUserInfoFromFacebook(token string) (*models.FacebookUser, error) {
 	}
 
 	return fbUserDetails, nil
-}
-
-// GetAppleSignInToken Used for Signing In the Users
-func (a *authService) GetAppleSignInToken(appleUserDetails *models.AppleUser) (string, error) {
-	var result *models.User
-
-	if appleUserDetails == nil {
-		return "", fmt.Errorf("error: google user details can't be empty")
-	}
-
-	if appleUserDetails.Email == "" {
-		return "", fmt.Errorf("error: email can't be empty")
-	}
-
-	if appleUserDetails.Name == "" {
-		return "", fmt.Errorf("error: name can't be empty")
-	}
-
-	result, err := a.authRepo.FindUserByEmail(appleUserDetails.Email)
-	if err != nil {
-		return "", fmt.Errorf("error finding user: %+v", err)
-	}
-
-	if result == nil {
-		result.Email = appleUserDetails.Email
-		result.Name = appleUserDetails.Name
-		_, err = a.authRepo.CreateUser(result)
-		if err != nil {
-			return "", fmt.Errorf("error occurred creating user: %+v", err)
-		}
-	}
-
-	tokenString, err := jwt.GenerateToken(appleUserDetails.Email, a.Config.JWTSecret)
-
-	if tokenString == "" {
-		return "", fmt.Errorf("unable to generate Auth token: %+v", err)
-	}
-
-	return tokenString, nil
 }
 
 // GetGoogleSignInToken Used for Signing In the Users
