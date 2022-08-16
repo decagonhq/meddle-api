@@ -20,7 +20,6 @@ jobs:
 
       - name: Build
         run: go build -v ./...
-
       - name: Test
         run: |
           export MEDDLE_JWT_SECRET=veryLONGsecret
@@ -29,3 +28,4 @@ jobs:
       - uses: readmeio/rdme@7.3.0
         with:
           rdme: openapi openapi/openapi.yml --key=${{secrets.README_API_KEY}} --id=${{secrets.README_API_DEFINITION_ID}}
+

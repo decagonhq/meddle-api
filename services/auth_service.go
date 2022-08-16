@@ -3,22 +3,20 @@ package services
 import (
 	"crypto/rand"
 	"encoding/json"
-	"fmt"
-	"github.com/decagonhq/meddle-api/services/jwt"
-	"io/ioutil"
-	"net/http"
-
 	"errors"
-	"log"
-
-	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
-
+	"fmt"
 	"github.com/decagonhq/meddle-api/config"
 	"github.com/decagonhq/meddle-api/db"
 	apiError "github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/models"
-	//"github.com/golang-jwt/jwt"
+	"github.com/decagonhq/meddle-api/services/jwt"
+	_ "github.com/gin-gonic/gin"
+	_ "github.com/golang-jwt/jwt"
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
+	"io/ioutil"
+	"log"
+	"net/http"
 )
 
 //go:generate mockgen -destination=../mocks/auth_mock.go -package=mocks github.com/decagonhq/meddle-api/services AuthService
@@ -31,6 +29,7 @@ type AuthService interface {
 	VerifyEmail(token string) error
 	SendEmailForPasswordReset(user *models.ForgotPassword) *apiError.Error
 	ResetPassword(user *models.ResetPassword, token string) *apiError.Error
+	GoogleSignInUser(token string) (*string, *apiError.Error)
 }
 
 // authService struct
@@ -67,27 +66,40 @@ func (a *authService) SignupUser(user *models.User) (*models.User, *apiError.Err
 		log.Printf("error generating password hash: %v", err.Error())
 		return nil, apiError.New("internal server error", http.StatusInternalServerError)
 	}
-	user.Password = ""
-	user.IsEmailActive = false
-	user, err = a.authRepo.CreateUser(user)
-	if err != nil {
-		log.Printf("unable to create user: %v", err.Error())
-		return nil, apiError.New("internal server error", http.StatusInternalServerError)
-	}
+
 	token, err := jwt.GenerateToken(user.Email, a.Config.JWTSecret)
 	if err != nil {
 		return nil, apiError.New("internal server error", http.StatusInternalServerError)
 	}
-	link := fmt.Sprintf("http://localhost:8080/verifyEmail/%s", token)
+	if err := a.sendVerifyEmail(token, user.Email); err != nil {
+		return nil, err
+	}
+
+	user.Password = ""
+	user.IsEmailActive = false
+	user, err = a.authRepo.CreateUser(user)
+
+	if err != nil {
+		log.Printf("unable to create user: %v", err.Error())
+		return nil, apiError.New("internal server error", http.StatusInternalServerError)
+	}
+
+	return user, nil
+}
+
+func (a *authService) sendVerifyEmail(token, email string) *apiError.Error {
+	link := fmt.Sprintf("%s/verifyEmail/%s", a.Config.MAILURL, token) //Todo change to baseUrl
+	value := map[string]interface{}{}
+	value["link"] = link
 	subject := "Verify your email"
 	body := "Please Click the link below to verify your email"
 	templateName := "verifyEmail"
-	err = a.mail.SendMail(user.Email, subject, body, templateName, map[string]interface{}{link: link})
+	err := a.mail.SendMail(email, subject, body, templateName, value)
 	if err != nil {
 		log.Printf("Error: %v", err.Error())
-		return nil, apiError.New("mail couldn't be sent", http.StatusServiceUnavailable)
+		return apiError.New("Please verify your email", http.StatusServiceUnavailable)
 	}
-	return user, nil
+	return nil
 }
 
 func GenerateHashPassword(password string) (string, error) {
@@ -120,9 +132,58 @@ func (a *authService) LoginUser(loginRequest *models.LoginRequest) (*models.Logi
 }
 
 func (a *authService) VerifyEmail(token string) error {
-	//validate token here
-	err := a.authRepo.VerifyEmail(token)
+	claims, err := jwt.ValidateAndGetClaims(token, a.Config.JWTSecret)
+	if err != nil {
+		return apiError.New("invalid link", http.StatusUnauthorized)
+	}
+	email := claims["email"].(string)
+	err = a.authRepo.VerifyEmail(email, token)
 	return err
+}
+
+func (a *authService) GoogleSignInUser(token string) (*string, *apiError.Error) {
+
+	googleUserDetails, googleUserDetailsError := GetUserInfoFromGoogle(token)
+
+	if googleUserDetailsError != nil {
+		return nil, apiError.New(fmt.Sprintf("unable to get user details from google: %v", googleUserDetailsError), http.StatusUnauthorized)
+	}
+
+	authToken, authTokenError := a.GetGoogleSignInToken(googleUserDetails)
+
+	if authTokenError != nil {
+		return nil, apiError.New(fmt.Sprintf("unable sign in user: %v", authTokenError), http.StatusUnauthorized)
+	}
+	return &authToken, nil
+}
+
+// GetUserInfoFromGoogle will return information of user which is fetched from Google
+func GetUserInfoFromGoogle(token string) (*models.GoogleUser, error) {
+	var googleUserDetails *models.GoogleUser
+
+	url := "https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token
+	googleUserDetailsRequest, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error occurred while getting information from Google: %+v", err)
+	}
+
+	googleUserDetailsResponse, googleDetailsResponseError := http.DefaultClient.Do(googleUserDetailsRequest)
+	if googleDetailsResponseError != nil {
+		return nil, fmt.Errorf("error occurred while getting information from Google: %+v", googleDetailsResponseError)
+	}
+
+	body, err := ioutil.ReadAll(googleUserDetailsResponse.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error occurred while getting information from Google: %+v", err)
+	}
+	defer googleUserDetailsResponse.Body.Close()
+
+	err = json.Unmarshal(body, &googleUserDetails)
+	if err != nil {
+		return nil, fmt.Errorf("error occurred while getting information from Google: %+v", err)
+	}
+
+	return googleUserDetails, nil
 }
 
 func (a *authService) FacebookSignInUser(token string) (*string, *apiError.Error) {
@@ -134,7 +195,6 @@ func (a *authService) FacebookSignInUser(token string) (*string, *apiError.Error
 	}
 
 	authToken, authTokenError := a.GetSignInToken(fbUserDetails)
-
 	if authTokenError != nil {
 		return nil, apiError.New(fmt.Sprintf("unable sign in user: %v", authTokenError), http.StatusUnauthorized)
 	}
@@ -164,6 +224,44 @@ func GetUserInfoFromFacebook(token string) (*models.FacebookUser, error) {
 	return fbUserDetails, nil
 }
 
+// GetGoogleSignInToken Used for Signing In the Users
+func (a *authService) GetGoogleSignInToken(googleUserDetails *models.GoogleUser) (string, error) {
+	var result *models.User
+
+	if googleUserDetails == nil {
+		return "", fmt.Errorf("error: google user details can't be empty")
+	}
+
+	if googleUserDetails.Email == "" {
+		return "", fmt.Errorf("error: email can't be empty")
+	}
+
+	if googleUserDetails.Name == "" {
+		return "", fmt.Errorf("error: name can't be empty")
+	}
+
+	result, err := a.authRepo.FindUserByEmail(googleUserDetails.Email)
+	if err != nil {
+		return "", fmt.Errorf("error finding user: %+v", err)
+	}
+
+	if result == nil {
+		result.Email = googleUserDetails.Email
+		result.Name = googleUserDetails.Name
+		_, err = a.authRepo.CreateUser(result)
+		if err != nil {
+			return "", fmt.Errorf("error occurred creating user: %+v", err)
+		}
+	}
+
+	tokenString, err := jwt.GenerateToken(googleUserDetails.Email, a.Config.JWTSecret)
+
+	if tokenString == "" {
+		return "", fmt.Errorf("unable to generate Auth token: %+v", err)
+	}
+
+	return tokenString, nil
+}
 // GetSignInToken Used for Signing In the Users
 func (a *authService) GetSignInToken(facebookUserDetails *models.FacebookUser) (string, error) {
 	var result *models.User
