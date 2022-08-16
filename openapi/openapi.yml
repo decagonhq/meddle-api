@@ -69,6 +69,8 @@ paths:
       x-codegen-request-body-name: user
   /logout:
     get:
+      security:
+        - bearerAuth: []
       tags:
         - user
       summary: Logs out current logged in user session
@@ -79,10 +81,12 @@ paths:
           content: {}
   /verifyEmail/{token}:
     get:
+      security:
+        - bearerAuth: []
       tags:
         - user
       summary: Verify users email
-      operationId: veryfyEmail
+      operationId: verifyEmail
       parameters:
         - name: token
           in: path
@@ -105,6 +109,8 @@ paths:
           content: {}
   /user/medications:
     post:
+      security:
+        - bearerAuth: []
       tags:
         - medication
       summary: Create medication
@@ -136,6 +142,8 @@ paths:
       x-codegen-request-body-name: medication
   /user/medications/{id}:
     get:
+      security:
+        - bearerAuth: []
       tags:
         - medication
       summary: Get user medication by id and userid
@@ -162,6 +170,8 @@ paths:
           content: {}
   /user/medications/next:
     get:
+      security:
+        - bearerAuth: []
       tags:
         - medication
       summary: Get next medication for user
@@ -202,13 +212,13 @@ components:
           example: 1
         created_at:
           type: string
-          format: date-time
+          format: date-time # e.g 2022-08-09T06:35:43.511Z
         updated_at:
           type: string
-          format: date-time
+          format: date-time # e.g 2022-08-09T06:35:43.511Z
         deleted_at:
           type: string
-          format: date-time
+          format: date-time #e.g 2022-08-09T06:35:43.511Z
         name:
           type: string
           format: string
