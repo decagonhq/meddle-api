@@ -68,7 +68,7 @@ paths:
           content: {}
       x-codegen-request-body-name: user
   /logout:
-    get:
+    post:
       tags:
         - user
       summary: Logs out current logged in user session
