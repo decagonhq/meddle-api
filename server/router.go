@@ -2,7 +2,10 @@ package server
 
 import (
 	"fmt"
+	"net/http"
 	"os"
+	"path/filepath"
+	"runtime"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -13,6 +16,13 @@ func (s *Server) defineRoutes(router *gin.Engine) {
 	apirouter := router.Group("/api/v1")
 	apirouter.POST("/auth/signup", s.HandleSignup())
 	apirouter.POST("/auth/login", s.handleLogin())
+
+	apirouter.GET("/fb/auth", s.handleFBLogin())
+	apirouter.GET("fb/callback", s.fbCallbackHandler())
+
+	apirouter.GET("/google/login", s.HandleGoogleOauthLogin())
+	apirouter.GET("/google/callback", s.HandleGoogleCallback())
+
 	apirouter.GET("/verifyEmail/:token", s.HandleVerifyEmail())
 	apirouter.POST("/password/forgot", s.SendEmailForPasswordReset())
 	apirouter.POST("/password/reset/:token", s.ResetPassword())
@@ -23,11 +33,11 @@ func (s *Server) defineRoutes(router *gin.Engine) {
 	authorized.GET("/users", s.handleGetUsers())
 	authorized.PUT("/me/update", s.handleUpdateUserDetails())
 	authorized.GET("/me", s.handleShowProfile())
+  
 	authorized.POST("/user/medications", s.handleCreateMedication())
 	authorized.GET("/user/medications/:id", s.handleGetMedDetail())
 	authorized.GET("/user/medications", s.handleGetAllMedications())
 	authorized.PUT("/user/medications/:medicationID", s.handleUpdateMedication())
-
 	authorized.GET("/user/medications/next", s.handleGetNextMedication())
 
 }
@@ -41,7 +51,16 @@ func (s *Server) setupRouter() *gin.Engine {
 	}
 
 	r := gin.New()
-	r.Static("/openapi", "./openapi")
+	staticFiles := "server/templates/static"
+	htmlFiles := "server/templates/*.html"
+	if s.Config.Env == "test" {
+		_, b, _, _ := runtime.Caller(0)
+		basepath := filepath.Dir(b)
+		staticFiles = basepath + "/templates/static"
+		htmlFiles = basepath + "/templates/*.html"
+	}
+	r.StaticFS("static", http.Dir(staticFiles))
+	r.LoadHTMLGlob(htmlFiles)
 
 	// LoggerWithFormatter middleware will write the logs to gin.DefaultWriter
 	// By default gin.DefaultWriter = os.Stdout

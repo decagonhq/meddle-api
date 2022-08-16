@@ -4,7 +4,7 @@ import (
 	"fmt"
 	apiError "github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/models"
-	"github.com/decagonhq/meddle-api/server/jwt"
+	"github.com/decagonhq/meddle-api/services/jwt"
 	"log"
 	"net/http"
 )
@@ -15,7 +15,7 @@ func (a *authService) SendEmailForPasswordReset(user *models.ForgotPassword) *ap
 	if err != nil {
 		return apiError.New("email does not exist", http.StatusBadRequest)
 	}
-	token, err := GenerateToken(foundUser.Email, a.Config.JWTSecret)
+	token, err := jwt.GenerateToken(foundUser.Email, a.Config.JWTSecret)
 	if err != nil {
 		return apiError.New("", http.StatusInternalServerError)
 	}

@@ -43,5 +43,3 @@ func (m *Mailgun) SendMail(toEmail, subject, body, template string, values map[s
 	_, _, err := m.Client.Send(ctx, message)
 	return err
 }
-
-

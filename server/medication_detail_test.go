@@ -5,7 +5,7 @@ import (
 	"github.com/decagonhq/meddle-api/config"
 	"github.com/decagonhq/meddle-api/mocks"
 	"github.com/decagonhq/meddle-api/models"
-	"github.com/decagonhq/meddle-api/services"
+	"github.com/decagonhq/meddle-api/services/jwt"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -38,7 +38,7 @@ func Test_MedicationDetail(t *testing.T) {
 		UserID:                 1,
 	}
 	conf.JWTSecret = "testSecret"
-	token, err := services.GenerateToken(user.Email, conf.JWTSecret)
+	token, err := jwt.GenerateToken(user.Email, conf.JWTSecret)
 
 	s := &Server{
 		Config:            conf,

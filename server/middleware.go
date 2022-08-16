@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"github.com/decagonhq/meddle-api/services/jwt"
 	"log"
 	"net/http"
 	"time"
@@ -10,7 +11,6 @@ import (
 
 	errs "github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/models"
-	"github.com/decagonhq/meddle-api/server/jwt"
 	"github.com/decagonhq/meddle-api/server/response"
 	"github.com/gin-gonic/gin"
 )

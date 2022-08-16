@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/decagonhq/meddle-api/config"
+	"github.com/decagonhq/meddle-api/services/jwt"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
@@ -15,7 +16,6 @@ import (
 	"github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/mocks"
 	"github.com/decagonhq/meddle-api/models"
-	"github.com/decagonhq/meddle-api/services"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -280,6 +280,116 @@ func TestLoginHandler(t *testing.T) {
 	}
 }
 
+func Test_FacebookCallBackHandler(t *testing.T) {
+	testOauthState, err := jwt.GenerateToken("", testServer.handler.Config.JWTSecret)
+	require.NoError(t, err)
+
+	// test cases
+	testCases := []struct {
+		name                  string
+		state                 string
+		code                  string
+		inputToken            string
+		facebookLoginResponse *string
+		buildStubs            func(service *mocks.MockAuthService, request string, response *string)
+		checkResponse         func(t *testing.T, recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name:  "invalid state case",
+			state: "invalidState",
+			code:  "code",
+			buildStubs: func(service *mocks.MockAuthService, token string, response *string) {
+				service.EXPECT().FacebookSignInUser(token).Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+		{
+			name:  "invalid token",
+			state: testOauthState,
+			code:  "",
+			buildStubs: func(service *mocks.MockAuthService, token string, response *string) {
+				service.EXPECT().FacebookSignInUser(token).Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+	}
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockService := mocks.NewMockAuthService(ctrl)
+	testServer.handler.AuthService = mockService
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.buildStubs(mockService, tc.inputToken, tc.facebookLoginResponse)
+
+			recorder := httptest.NewRecorder()
+			url := fmt.Sprintf("/api/v1/fb/callback?state=%s&code=%s", tc.state, tc.code)
+			req, err := http.NewRequest(http.MethodGet, url, nil)
+			require.NoError(t, err)
+			testServer.router.ServeHTTP(recorder, req)
+			tc.checkResponse(t, recorder)
+		})
+	}
+}
+
+func Test_GoogleCallBackHandler(t *testing.T) {
+	testOauthState, err := jwt.GenerateToken("", testServer.handler.Config.JWTSecret)
+	require.NoError(t, err)
+
+	// test cases
+	testCases := []struct {
+		name                string
+		state               string
+		code                string
+		inputToken          string
+		googleLoginResponse *string
+		buildStubs          func(service *mocks.MockAuthService, request string, response *string)
+		checkResponse       func(t *testing.T, recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name:  "invalid state case",
+			state: "invalidState",
+			code:  "code",
+			buildStubs: func(service *mocks.MockAuthService, token string, response *string) {
+				service.EXPECT().GoogleSignInUser(token).Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+		{
+			name:  "invalid token",
+			state: testOauthState,
+			code:  "",
+			buildStubs: func(service *mocks.MockAuthService, token string, response *string) {
+				service.EXPECT().GoogleSignInUser(token).Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+	}
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockService := mocks.NewMockAuthService(ctrl)
+	testServer.handler.AuthService = mockService
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.buildStubs(mockService, tc.inputToken, tc.googleLoginResponse)
+
+			recorder := httptest.NewRecorder()
+			url := fmt.Sprintf("/api/v1/google/callback?state=%s&code=%s", tc.state, tc.code)
+			req, err := http.NewRequest(http.MethodGet, url, nil)
+			require.NoError(t, err)
+			testServer.router.ServeHTTP(recorder, req)
+			tc.checkResponse(t, recorder)
+		})
+	}
+}
+
 func randomUser(t *testing.T) (user models.User, password string) {
 	password = RandomString(6)
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -316,7 +426,7 @@ func Test_Logout(t *testing.T) {
 		Password:    "12345678",
 	}
 	conf.JWTSecret = "testSecret"
-	token, err := services.GenerateToken(user.Email, conf.JWTSecret)
+	token, err := jwt.GenerateToken(user.Email, conf.JWTSecret)
 
 	s := &Server{
 		Config:         conf,

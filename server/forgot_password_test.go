@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/decagonhq/meddle-api/services/jwt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -18,7 +19,7 @@ import (
 func TestResetPassword(t *testing.T) {
 	user := models.User{}
 	email := "toluwasethomas1@gmail.com"
-	token, _ := services.GenerateToken(email, testServer.handler.Config.JWTSecret)
+	token, _ := jwt.GenerateToken(email, testServer.handler.Config.JWTSecret)
 	newReq := &models.ResetPassword{
 		Password:        "12345678",
 		ConfirmPassword: "12345678",
