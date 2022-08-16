@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -51,6 +52,7 @@ func (s *Server) setupRouter() *gin.Engine {
 	r := gin.New()
 	staticFiles := "server/templates/static"
 	htmlFiles := "server/templates/*.html"
+	log.Printf("env: %v", s.Config.Env)
 	if s.Config.Env == "test" {
 		_, b, _, _ := runtime.Caller(0)
 		basepath := filepath.Dir(b)

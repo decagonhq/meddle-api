@@ -9,5 +9,5 @@ generate-mock:
 	 mockgen -destination=mocks/medication_repo_mock.go -package=mocks github.com/decagonhq/meddle-api/db MedicationRepository
 
 test: generate-mock
-	 MEDDLE_ENV=test go test ./server -run=TestResetPassword
+	 MEDDLE_ENV=test go test ./...
 # API_ENV=test go test ./...
