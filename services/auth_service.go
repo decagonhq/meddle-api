@@ -3,22 +3,20 @@ package services
 import (
 	"crypto/rand"
 	"encoding/json"
-	"fmt"
-	"github.com/decagonhq/meddle-api/services/jwt"
-	"io/ioutil"
-	"net/http"
-
 	"errors"
-	"log"
-
-	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
-
+	"fmt"
 	"github.com/decagonhq/meddle-api/config"
 	"github.com/decagonhq/meddle-api/db"
 	apiError "github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/models"
-	//"github.com/golang-jwt/jwt"
+	"github.com/decagonhq/meddle-api/services/jwt"
+	_ "github.com/gin-gonic/gin"
+	_ "github.com/golang-jwt/jwt"
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
+	"io/ioutil"
+	"log"
+	"net/http"
 )
 
 //go:generate mockgen -destination=../mocks/auth_mock.go -package=mocks github.com/decagonhq/meddle-api/services AuthService
@@ -68,27 +66,40 @@ func (a *authService) SignupUser(user *models.User) (*models.User, *apiError.Err
 		log.Printf("error generating password hash: %v", err.Error())
 		return nil, apiError.New("internal server error", http.StatusInternalServerError)
 	}
-	user.Password = ""
-	user.IsEmailActive = false
-	user, err = a.authRepo.CreateUser(user)
-	if err != nil {
-		log.Printf("unable to create user: %v", err.Error())
-		return nil, apiError.New("internal server error", http.StatusInternalServerError)
-	}
+
 	token, err := jwt.GenerateToken(user.Email, a.Config.JWTSecret)
 	if err != nil {
 		return nil, apiError.New("internal server error", http.StatusInternalServerError)
 	}
-	link := fmt.Sprintf("http://localhost:8080/verifyEmail/%s", token)
+	if err := a.sendVerifyEmail(token, user.Email); err != nil {
+		return nil, err
+	}
+
+	user.Password = ""
+	user.IsEmailActive = false
+	user, err = a.authRepo.CreateUser(user)
+
+	if err != nil {
+		log.Printf("unable to create user: %v", err.Error())
+		return nil, apiError.New("internal server error", http.StatusInternalServerError)
+	}
+
+	return user, nil
+}
+
+func (a *authService) sendVerifyEmail(token, email string) *apiError.Error {
+	link := fmt.Sprintf("%s/verifyEmail/%s", a.Config.MAILURL, token) //Todo change to baseUrl
+	value := map[string]interface{}{}
+	value["link"] = link
 	subject := "Verify your email"
 	body := "Please Click the link below to verify your email"
 	templateName := "verifyEmail"
-	err = a.mail.SendMail(user.Email, subject, body, templateName, map[string]interface{}{link: link})
+	err := a.mail.SendMail(email, subject, body, templateName, value)
 	if err != nil {
 		log.Printf("Error: %v", err.Error())
-		return nil, apiError.New("mail couldn't be sent", http.StatusServiceUnavailable)
+		return apiError.New("Please verify your email", http.StatusServiceUnavailable)
 	}
-	return user, nil
+	return nil
 }
 
 func GenerateHashPassword(password string) (string, error) {
@@ -121,8 +132,12 @@ func (a *authService) LoginUser(loginRequest *models.LoginRequest) (*models.Logi
 }
 
 func (a *authService) VerifyEmail(token string) error {
-	//validate token here
-	err := a.authRepo.VerifyEmail(token)
+	claims, err := jwt.ValidateAndGetClaims(token, a.Config.JWTSecret)
+	if err != nil {
+		return apiError.New("invalid link", http.StatusUnauthorized)
+	}
+	email := claims["email"].(string)
+	err = a.authRepo.VerifyEmail(email, token)
 	return err
 }
 
@@ -180,7 +195,6 @@ func (a *authService) FacebookSignInUser(token string) (*string, *apiError.Error
 	}
 
 	authToken, authTokenError := a.GetSignInToken(fbUserDetails)
-
 	if authTokenError != nil {
 		return nil, apiError.New(fmt.Sprintf("unable sign in user: %v", authTokenError), http.StatusUnauthorized)
 	}

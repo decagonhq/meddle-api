@@ -16,6 +16,7 @@ services:
       - "db"
     volumes:
       - ./:/src
+      - ./.env:/src/tmp/.env
       - gomodules:/go/pkg/mod
 
   db:

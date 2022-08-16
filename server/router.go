@@ -2,11 +2,13 @@ package server
 
 import (
 	"fmt"
-	"os"
-	"time"
-
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"net/http"
+	"os"
+	"path/filepath"
+	"runtime"
+	"time"
 )
 
 func (s *Server) defineRoutes(router *gin.Engine) {
@@ -33,7 +35,6 @@ func (s *Server) defineRoutes(router *gin.Engine) {
 	authorized.POST("/user/medications", s.handleCreateMedication())
 	authorized.GET("/user/medications/:id", s.handleGetMedDetail())
 	authorized.GET("/user/medications", s.handleGetAllMedications())
-
 	authorized.GET("/user/medications/next", s.handleGetNextMedication())
 
 }
@@ -47,7 +48,10 @@ func (s *Server) setupRouter() *gin.Engine {
 	}
 
 	r := gin.New()
-	r.Static("/openapi", "./openapi")
+	_, b, _, _ := runtime.Caller(0)
+	basepath := filepath.Dir(b)
+	r.StaticFS("static", http.Dir(basepath + "/templates/static"))
+	r.LoadHTMLGlob(basepath + "/templates/*.html")
 
 	// LoggerWithFormatter middleware will write the logs to gin.DefaultWriter
 	// By default gin.DefaultWriter = os.Stdout
