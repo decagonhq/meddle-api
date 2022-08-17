@@ -98,7 +98,7 @@ func (a *authService) sendVerifyEmail(token, email string) *apiError.Error {
 	err := a.mail.SendMail(email, subject, body, templateName, value)
 	if err != nil {
 		log.Printf("Error: %v", err.Error())
-		return apiError.New("Please verify your email", http.StatusServiceUnavailable)
+		return apiError.New("Internal server error", http.StatusInternalServerError)
 	}
 	return nil
 }
