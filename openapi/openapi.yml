@@ -1,348 +1,502 @@
-swagger: '2.0'
+openapi: 3.0.1
 info:
-  description: >-
-    This is meddle, an app that keeps track of medications with notification
-    feature.
-  version: 3.0.0
   title: Meddle
+  description: This is meddle, an app that keeps track of medications with notification
+    feature.
   contact:
     email: info@decagonhq.com
-host: meddle.herokuapp.com
-basePath: /api/v1
-schemes:
-  - https
-  - http
+  version: 3.0.0
+servers:
+  - url: https://meddle-api.herokuapp.com/api/v1
+  - url: http://localhost:8081/api/v1
 paths:
-  /auth/user:
+  /auth/signup:
     post:
       tags:
         - user
       summary: Create user
       description: This creates a new user entry in the data.
       operationId: createUser
-      produces:
-        - application/json
-      parameters:
-        - in: body
-          name: body
-          description: Created user object
-          required: true
-          schema:
-            $ref: '#/definitions/User'
+      requestBody:
+        description: Created user object
+        content:
+          '*/*':
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
       responses:
-        default:
-          description: successful operation
+        200:
+          description: Created medication successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignupResponse'
+      x-codegen-request-body-name: Signup
   /auth/login:
     post:
       tags:
         - user
       summary: Logs user into the system
-      description: ''
       operationId: loginUser
-      produces:
-        - application/json
-      parameters:
-        - in: body
-          name: user
-          description: login user to the system
-          required: true
-          schema:
-            $ref: '#/definitions/UserRequest'
+      requestBody:
+        description: login user to the system
+        content:
+          '*/*':
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+        required: true
       responses:
-        '200':
+        200:
           description: successful operation
-          schema:
-            type: string
           headers:
             X-Rate-Limit:
-              type: integer
-              format: int32
               description: calls per hour allowed by the user
+              schema:
+                type: integer
+                format: int32
             X-Expires-After:
-              type: string
-              format: date-time
               description: date in UTC when token expires
-        '400':
+              schema:
+                type: string
+                format: date-time
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        400:
           description: Invalid username/password supplied
+          content: {}
+      x-codegen-request-body-name: user
   /logout:
-    get:
+    post:
+      security:
+        - bearerAuth: [ ]
       tags:
         - user
       summary: Logs out current logged in user session
-      description: ''
       operationId: logoutUser
-      produces:
-        - application/json
-      parameters: []
       responses:
         default:
           description: successful operation
-  /user/{email}:
+          content: {}
+  /verifyEmail/{token}:
     get:
       tags:
         - user
-      summary: Get user by user email
-      description: ''
-      operationId: getUserByEmail
-      produces:
-        - application/json
+      summary: Verify users email
+      operationId: veryfyEmail
       parameters:
-        - name: email
+        - name: token
           in: path
-          description: 'The name that needs to be fetched. Use user1 for testing. '
-          required: true
-          type: string
-      responses:
-        '200':
-          description: successful operation
-          schema:
-            $ref: '#/definitions/User'
-        '400':
-          description: Invalid username supplied
-        '404':
-          description: User not found
-    put:
-      tags:
-        - user
-      summary: Updated user
-      description: This can only be done by the logged in user.
-      operationId: updateUser
-      produces:
-        - application/json
-      parameters:
-        - name: email
-          in: path
-          description: name that need to be updated
-          required: true
-          type: string
-        - in: body
-          name: body
-          description: Updated user object
+          description: 'Gets the token sent by signup. '
           required: true
           schema:
-            $ref: '#/definitions/User'
+            type: string
       responses:
-        '400':
-          description: Invalid user supplied
-        '404':
-          description: User not found
-    delete:
+        200:
+          description: successfully verified user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        400:
+          description: Invalid token supplied
+          content: {}
+  /password/forgot:
+    post:
       tags:
         - user
-      summary: Delete user
-      description: This can only be done by the logged in user.
-      operationId: deleteUser
-      produces:
-        - application/json
-      parameters:
-        - name: email
-          in: path
-          description: The email that needs to be deleted
-          required: true
-          type: string
+      summary: Sends the user email when forgot password is hit
+      operationId: ForgotPassword
+      requestBody:
+        description: Sends the user email when forgot password is hit
+        content:
+          '*/*':
+            schema:
+              $ref: '#/components/schemas/ForgotPasswordRequest'
+        required: true
       responses:
-        '400':
-          description: Invalid email supplied
-        '404':
-          description: User not found
+        200:
+          description: link to reset password successfully sent
+          headers:
+            X-Rate-Limit:
+              schema:
+                type: string
+                format: string
+            X-Expires-After:
+              description: date in UTC when token expires
+              schema:
+                type: string
+                format: date-time
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForgotPasswordResponse'
+        400:
+          description: email was not sent
+          content: {}
+      x-codegen-request-body-name: ForgortPassword
+  /password/reset/{token}:
+    post:
+      tags:
+        - user
+      summary: update a user's password
+      operationId: resetPassword
+      parameters:
+        - name: token
+          in: path
+          description: 'Gets the token sent to the user'
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: password reset successfully, Login to continue
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResetPasswordRequest'
+        400:
+          description: error unmarshalling body
+          content: {}
   /user/medications:
     post:
+      security:
+        - bearerAuth: []
       tags:
         - medication
       summary: Create medication
       description: This creates a new medication entry in the data.
       operationId: createMedication
-      produces:
-        - application/json
-      parameters:
-        - in: body
-          name: medication
-          description: medication to add the system
-          required: true
-          schema:
-            $ref: '#/definitions/Medication'
+      requestBody:
+        description: medication to add the system
+        content:
+          '*/*':
+            schema:
+              $ref: '#/components/schemas/Medication'
+        required: true
       responses:
-        '200':
+        200:
           description: Created medication successfully
-          schema:
-            $ref: '#/definitions/MedicationResponse'
-        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MedicationResponse'
+        400:
           description: Bad request from user
-        '403':
+          content: {}
+        403:
           description: Forbidden user
-        '500':
+          content: {}
+        500:
           description: Internal server error
+          content: {}
+      x-codegen-request-body-name: medication
   /user/medications/{id}:
     get:
+      security:
+        - bearerAuth: []
       tags:
         - medication
-      summary: Get user medication by id and userid
-      description: ''
+      summary: Get user medication by id
       operationId: getUserById
-      produces:
-        - application/json
       parameters:
         - name: id
           in: path
           description: 'The name that needs to be fetched. Use user1 for testing. '
           required: true
-          type: string
-      responses:
-        '200':
-          description: retrieved medications successfully
           schema:
-            $ref: '#/definitions/Medication'
-        '500':
-          description: Internal server error
-        '404':
+            type: string
+      responses:
+        200:
+          description: retrieved medications successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Medication'
+        404:
           description: Medication not found
-securityDefinitions:
-  bearerAuth:
-    type: apiKey
-    name: Authorization
-    in: header
-definitions:
-  UserRequest:
-    type: object
-    properties:
-      email:
-        type: string
-        format: email
-      password:
-        type: string
-        format: password
-    xml:
-      name: UserRequest
-  UserResponse:
-    type: object
-    properties:
-      email:
-        type: string
-        format: email
-      password:
-        type: string
-        format: password
-    xml:
-      name: UserRequest
-  User:
-    type: object
-    properties:
-      id:
-        type: integer
-        format: int64
-      firstName:
-        type: string
-      lastName:
-        type: string
-      email:
-        type: string
-      password:
-        type: string
-      phone:
-        type: string
-      userStatus:
-        type: integer
-        format: int32
-        description: User Status
-    xml:
-      name: User
-  Medication:
-    type: object
-    properties:
-      name:
-        type: string
-        example: "paracetamol"
-      dosage:
-        type: integer
-        format: int
-        example: 2
-        description: number of medication (dose) to take
-      time_interval:
-        type: integer
-        format: int
-        example: 8
-        description: the next time-interval of hours to take your medication
-      medication_start_date:
-        type: string
-        format: date-time
-        description: day for starting medication
-      duration:
-        type: integer
-        format: int
-        example: 7
-        description: number of days to take the medication
-      medication_prescribed_by:
-        type: string
-        example: "Dr Tolu"
-      medication_stop_date:
-        type: string
-        format: date-time
-        description: expected date to finish medication
-      medication_start_time:
-        type: string
-        format: date-time
-        description: expected day to start medication
-      purpose_of_medication:
-        type: string
-        example: "malaria treatment"
-    xml:
-      name: Medication
-  MedicationResponse:
-    type: object
-    properties:
-      id:
-        type: integer
-        format: uint
-        example: 1
-      name:
-        type: string
-        example: "paracetamol"
-      dosage:
-        type: integer
-        format: int
-        example: 2
-      time_interval:
-        type: integer
-        example: 8
-        description: the next time-interval of hours to take your medication
-      medication_start_date:
-        type: string
-        format: date-time
-        description: day for starting medication
-      duration:
-        type: integer
-        format: int
-        example: 7
-        description: number of days to take the medication
-      medication_prescribed_by:
-        type: string
-        example: "Dr Tolu"
-      medication_stop_date:
-        type: string
-        format: date-time
-        description: expected date to finish medication
-      medication_start_time:
-        type: string
-        format: date-time
-        description: expected day to start medication
-      next_dosage_time:
-        type: string
-        format: date-time
-        description: next time to take of medication (dose)
-      purpose_of_medication:
-        type: string
-        example: "malaria treatment"
-      user_id:
-        type: integer
-        format: uint
-        example: 2
-        description: owner of medication id
-      created_at:
-        type: string
-        format: date-time
-      updated_at:
-        type: string
-        format: date-time
-    xml:
-      name: MedicationResponse
-
+          content: {}
+        500:
+          description: Internal server error
+          content: {}
+  /user/medications/next:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - medication
+      summary: Get next medication for user
+      description: This gets next medication related to a logged in user.
+      operationId: getNextMedication
+      responses:
+        200:
+          description: get next medications successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MedicationResponse'
+        403:
+          description: Forbidden user
+          content: {}
+        500:
+          description: Internal server error
+          content: {}
+components:
+  schemas:
+    UserRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+      xml:
+        name: UserRequest
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: uint
+          example: 1
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+        name:
+          type: string
+          format: string
+          example: Ken
+        email:
+          type: string
+          format: email
+          example: ken@gmail.com
+        password:
+          type: string
+          format: password
+          example: password
+        phone_number:
+          type: string
+          format: phone
+          example: "090834343"
+      xml:
+        name: UserResponse
+    ForgotPasswordRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+      xml:
+        name: ForgotPasswordRequest
+    ForgotPasswordResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          format: object
+      xml:
+        name: ForgotPasswordResponse
+    ResetPasswordRequest:
+      type: object
+      properties:
+        password:
+          type: string
+          format: password
+        confirmPassword:
+          type: object
+      xml:
+        name: ForgotPasswordRequest
+    ResetPasswordResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          format: object
+      xml:
+        name: ResetPasswordResponse
+    SignupResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/UserResponse'
+        errors:
+          type: string
+          example: ""
+        message:
+          type: string
+          example: user created successfully
+        status:
+          type: string
+          example: Created
+    LoginResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/loginResponseData'
+        errors:
+          type: string
+          example: ""
+        message:
+          type: string
+          example: user created successfully
+        status:
+          type: string
+          example: Created
+    User:
+      type: object
+      properties:
+        name:
+          type: string
+        phone_number:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+      xml:
+        name: User
+    loginResponseData:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Ken
+        phone_number:
+          type: string
+          example: "09043556"
+        email:
+          type: string
+          example: ken@gmail.com
+        accessToken:
+          type: string
+          example: Rbhfwi2PUXndOWVlUpsy0
+    Medication:
+      type: object
+      properties:
+        name:
+          type: string
+          example: paracetamol
+        dosage:
+          type: integer
+          description: number of medication (dose) to take
+          format: int
+          example: 2
+        time_interval:
+          type: integer
+          description: the next time-interval of hours to take your medication
+          format: int
+          example: 8
+        medication_start_date:
+          type: string
+          description: day for starting medication
+          format: date-time
+        duration:
+          type: integer
+          description: number of days to take the medication
+          format: int
+          example: 7
+        medication_prescribed_by:
+          type: string
+          example: Dr Tolu
+        medication_stop_date:
+          type: string
+          description: expected date to finish medication
+          format: date-time
+        medication_start_time:
+          type: string
+          description: expected day to start medication
+          format: date-time
+        purpose_of_medication:
+          type: string
+          example: malaria treatment
+      xml:
+        name: Medication
+    MedicationResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/medicationResponseData'
+        errors:
+          type: string
+          example: ""
+        message:
+          type: string
+          example: Signup successful, check your email for verification
+        status:
+          type: string
+          example: Created
+    medicationResponseData:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: uint
+          example: 1
+        name:
+          type: string
+          example: paracetamol
+        dosage:
+          type: integer
+          format: int
+          example: 2
+        time_interval:
+          type: integer
+          description: the next time-interval of hours to take your medication
+          example: 8
+        medication_start_date:
+          type: string
+          description: day for starting medication
+          format: date-time
+        duration:
+          type: integer
+          description: number of days to take the medication
+          format: int
+          example: 7
+        medication_prescribed_by:
+          type: string
+          example: Dr Tolu
+        medication_stop_date:
+          type: string
+          description: expected date to finish medication
+          format: date-time
+        medication_start_time:
+          type: string
+          description: expected day to start medication
+          format: date-time
+        next_dosage_time:
+          type: string
+          description: next time to take of medication (dose)
+          format: date-time
+        purpose_of_medication:
+          type: string
+          example: malaria treatment
+        user_id:
+          type: integer
+          description: owner of medication id
+          format: uint
+          example: 2
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      xml:
+        name: MedicationResponse
+  securitySchemes:
+    bearerAuth:
+      type: apiKey
+      name: Authorization
+      in: header
