@@ -2,11 +2,10 @@ package db
 
 import (
 	"fmt"
+	"gorm.io/driver/postgres"
 	"log"
 	"os"
 	"time"
-
-	"gorm.io/driver/postgres"
 
 	"github.com/decagonhq/meddle-api/config"
 	"github.com/decagonhq/meddle-api/models"

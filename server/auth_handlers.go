@@ -35,7 +35,7 @@ func (s *Server) HandleSignup() gin.HandlerFunc {
 func (s *Server) handleLogin() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var loginRequest models.LoginRequest
-		if err := c.ShouldBindJSON(&loginRequest); err != nil {
+		if err := decode(c, &loginRequest); err != nil {
 			response.JSON(c, "", errors.ErrBadRequest.Status, nil, err)
 			return
 		}

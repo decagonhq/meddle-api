@@ -440,7 +440,7 @@ func Test_Logout(t *testing.T) {
 
 	r := s.setupRouter()
 	resp := httptest.NewRecorder()
-	req, _ := http.NewRequest(http.MethodPost, "/api/v1/logout", strings.NewReader(string(user.Email)))
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1/logout", strings.NewReader(string(user.Email)))
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 
 	r.ServeHTTP(resp, req)
