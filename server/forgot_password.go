@@ -11,7 +11,7 @@ import (
 func (s *Server) SendEmailForPasswordReset() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var foundUser models.ForgotPassword
-		if err := c.ShouldBindJSON(&foundUser); err != nil {
+		if err := decode(c, &foundUser); err != nil {
 			response.JSON(c, "error unmarshalling body", http.StatusBadRequest, nil, err)
 			return
 		}
@@ -27,7 +27,7 @@ func (s *Server) SendEmailForPasswordReset() gin.HandlerFunc {
 func (s *Server) ResetPassword() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var password models.ResetPassword
-		if err := c.ShouldBindJSON(&password); err != nil {
+		if err := decode(c, &password); err != nil {
 			response.JSON(c, "error unmarshalling body", http.StatusBadRequest, nil, err)
 			return
 		}
