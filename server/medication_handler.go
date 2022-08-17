@@ -96,7 +96,7 @@ func (s *Server) handleUpdateMedication() gin.HandlerFunc {
 		}
 		medicationID, errr := strconv.ParseUint(c.Param("medicationID"), 10, 32)
 		if errr != nil {
-			response.JSON(c, "error parsing id", http.StatusBadRequest, nil, errr)
+			response.JSON(c, "invalid ID", http.StatusBadRequest, nil, errr)
 			return
 		}
 		var updateMedicationRequest models.UpdateMedicationRequest
