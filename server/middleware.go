@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	ratelimit "github.com/JGLTechnologies/gin-rate-limit"
 	"github.com/decagonhq/meddle-api/services/jwt"
 	"log"
 	"net/http"
@@ -58,6 +59,19 @@ func (s *Server) Authorize() gin.HandlerFunc {
 
 		c.Next()
 	}
+}
+
+func limitRateForPasswordReset(store ratelimit.Store) gin.HandlerFunc {
+	store = ratelimit.InMemoryStore(&ratelimit.InMemoryOptions{
+		Rate:  time.Hour * 24,
+		Limit: 3,
+	})
+	mw := ratelimit.RateLimiter(store, &ratelimit.Options{
+		ErrorHandler: errs.ErrorHandler,
+		KeyFunc:      errs.KeyFunc,
+		//BeforeResponse: nil,
+	})
+	return mw
 }
 
 // respondAndAbort calls response.JSON and aborts the Context
