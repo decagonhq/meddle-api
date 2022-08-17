@@ -61,7 +61,7 @@ func TestSignup(t *testing.T) {
 			Name:            "Test Signup with correct details",
 			Request:         newReq,
 			ExpectedCode:    http.StatusCreated,
-			ExpectedMessage: "user created successfully",
+			ExpectedMessage: "Signup successful, check your email for verification",
 			ExpectedError:   "",
 			mockDB: func(ctrl *mocks.MockAuthRepository, service *mocks.MockAuthService) {
 				service.EXPECT().SignupUser(newReq)
