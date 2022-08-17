@@ -415,4 +415,3 @@ components:
       name: Authorization
       in: bearer # e.g. Authorization: Bearer <token>
       description: Bearer token
-      bearerFormat: JWT
