@@ -79,6 +79,24 @@ paths:
         default:
           description: successful operation
           content: {}
+  /users:
+    delete:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - user
+      summary: a user deletes himself from the system
+      operationId: deleteUser
+      responses:
+        200:
+          description: delete user successful
+          content: {}
+        403:
+          description: Forbidden user
+          content: {}
+        500:
+          description: Internal server error
+          content: {}
   /verifyEmail/{token}:
     get:
       tags:
