@@ -28,14 +28,14 @@ func (s *Server) HandleSignup() gin.HandlerFunc {
 			err.Respond(c)
 			return
 		}
-		response.JSON(c, "user created successfully", http.StatusCreated, userResponse, nil)
+		response.JSON(c, "Signup successful, check your email for verification", http.StatusCreated, userResponse, nil)
 	}
 }
 
 func (s *Server) handleLogin() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var loginRequest models.LoginRequest
-		if err := c.ShouldBindJSON(&loginRequest); err != nil {
+		if err := decode(c, &loginRequest); err != nil {
 			response.JSON(c, "", errors.ErrBadRequest.Status, nil, err)
 			return
 		}

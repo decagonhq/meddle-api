@@ -89,7 +89,7 @@ func (a *authService) SignupUser(user *models.User) (*models.User, *apiError.Err
 }
 
 func (a *authService) sendVerifyEmail(token, email string) *apiError.Error {
-	link := fmt.Sprintf("%s/verifyEmail/%s", a.Config.BaseURL, token) //Todo change to baseUrl
+	link := fmt.Sprintf("%s/verifyEmail/%s", a.Config.BaseUrl, token)
 	value := map[string]interface{}{}
 	value["link"] = link
 	subject := "Verify your email"
@@ -98,7 +98,7 @@ func (a *authService) sendVerifyEmail(token, email string) *apiError.Error {
 	err := a.mail.SendMail(email, subject, body, templateName, value)
 	if err != nil {
 		log.Printf("Error: %v", err.Error())
-		return apiError.New("Please verify your email", http.StatusServiceUnavailable)
+		return apiError.New("Internal server error", http.StatusInternalServerError)
 	}
 	return nil
 }
