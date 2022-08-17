@@ -100,7 +100,7 @@ func (s *Server) handleUpdateMedication() gin.HandlerFunc {
 			return
 		}
 		var updateMedicationRequest models.UpdateMedicationRequest
-		if err := c.ShouldBindJSON(&updateMedicationRequest); err != nil {
+		if err := decode(c, &updateMedicationRequest); err != nil {
 			response.JSON(c, "", http.StatusBadRequest, nil, err)
 			return
 		}

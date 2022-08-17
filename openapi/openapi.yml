@@ -242,6 +242,39 @@ paths:
         500:
           description: Internal server error
           content: {}
+  /user/medications/{medicationID}:
+    put:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - medication
+      summary: update medication by medicationID
+      description: This updates medication related to a logged in user using the medicationID.
+      operationId: updateMedication
+      parameters:
+        - name: medicationID
+          in: path
+          description: 'The medicationID of the medication that needs to be updated.'
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: update the medication of a logged in user.
+        content:
+          '*/*':
+            schema:
+              $ref: '#/components/schemas/Medication'
+        required: true
+      responses:
+        200:
+          description: update medication successful
+          content: { }
+        403:
+          description: Forbidden user
+          content: { }
+        500:
+          description: Internal server error
+          content: { }
 components:
   schemas:
     UserRequest:
@@ -402,6 +435,7 @@ components:
           type: string
           description: day for starting medication
           format: date-time
+          example: "2022-08-09T06:35:43.511Z"
         duration:
           type: integer
           description: number of days to take the medication
@@ -414,15 +448,18 @@ components:
           type: string
           description: expected date to finish medication
           format: date-time
+          example: "2022-08-09T06:35:43.511Z"
         medication_start_time:
           type: string
           description: expected day to start medication
           format: date-time
+          example: "2022-08-09T06:35:43.511Z"
         purpose_of_medication:
           type: string
           example: malaria treatment
-      xml:
-        name: Medication
+        medication_icon:
+          type: string
+          example: "Heart Icon"
     MedicationResponse:
       type: object
       properties:
@@ -493,8 +530,6 @@ components:
         updated_at:
           type: string
           format: date-time
-      xml:
-        name: MedicationResponse
   securitySchemes:
     bearerAuth:            # arbitrary name for the security scheme
       type: http
