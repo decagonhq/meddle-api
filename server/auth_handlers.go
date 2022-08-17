@@ -183,7 +183,7 @@ func (s *Server) fbCallbackHandler() gin.HandlerFunc {
 	}
 }
 
-func (s *Server) handleDeleteUser() gin.HandlerFunc {
+func (s *Server) handleDeleteUserByEmail() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		_, user, err := GetValuesFromContext(c)
 		if err != nil {
