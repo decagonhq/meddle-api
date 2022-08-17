@@ -22,6 +22,7 @@ type AuthRepository interface {
 	VerifyEmail(email string, token string) error
 	IsTokenInBlacklist(token string) error
 	UpdatePassword(password string, email string) error
+	IsUserActive(email string) (*models.User, error)
 }
 
 type authRepo struct {
@@ -125,4 +126,13 @@ func (a *authRepo) UpdatePassword(password string, email string) error {
 		return err
 	}
 	return nil
+}
+
+func (a *authRepo) IsUserActive(email string) (*models.User, error) {
+	var user models.User
+	err := a.DB.Where("email = ? AND is_email_active = ? ", email, true).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
