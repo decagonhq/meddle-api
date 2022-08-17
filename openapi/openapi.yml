@@ -231,7 +231,7 @@ components:
         phone_number:
           type: string
           format: phone
-          example: "090834343"
+          example: "+234904355689"
     SignupResponse:
       type: object
       properties:
@@ -282,7 +282,7 @@ components:
           example: Ken
         phone_number:
           type: string
-          example: "09043556"
+          example: "+234904355689"
         email:
           type: string
           example: ken@gmail.com
@@ -309,6 +309,7 @@ components:
           type: string
           description: day for starting medication
           format: date-time
+          example: 2020-08-09T06:35:43.511Z
         duration:
           type: integer
           description: number of days to take the medication
@@ -321,13 +322,18 @@ components:
           type: string
           description: expected date to finish medication
           format: date-time
+          example: 2020-08-09T06:35:43.511Z
         medication_start_time:
           type: string
           description: expected day to start medication
           format: date-time
+          example: 2020-08-09T06:35:43.511Z
         purpose_of_medication:
           type: string
           example: malaria treatment
+        medication_icon:
+          type: string
+          example: "heart icon"
     MedicationResponse:
       type: object
       properties:
