@@ -81,8 +81,6 @@ paths:
           content: {}
   /verifyEmail/{token}:
     get:
-      security:
-        - bearerAuth: []
       tags:
         - user
       summary: Verify users email
@@ -151,7 +149,8 @@ paths:
       parameters:
         - name: id
           in: path
-          description: 'The name that needs to be fetched. Use user1 for testing. '
+          description: 'get single medication by id'
+          example: 1
           required: true
           schema:
             type: string
@@ -201,8 +200,6 @@ components:
         password:
           type: string
           format: password
-      xml:
-        name: UserRequest
     UserResponse:
       type: object
       properties:
@@ -235,8 +232,6 @@ components:
           type: string
           format: phone
           example: "090834343"
-      xml:
-        name: UserResponse
     SignupResponse:
       type: object
       properties:
@@ -276,8 +271,6 @@ components:
           type: string
         password:
           type: string
-      xml:
-        name: User
     loginResponseData:
       type: object
       properties:
@@ -335,8 +328,6 @@ components:
         purpose_of_medication:
           type: string
           example: malaria treatment
-      xml:
-        name: Medication
     MedicationResponse:
       type: object
       properties:
@@ -407,8 +398,6 @@ components:
         updated_at:
           type: string
           format: date-time
-      xml:
-        name: MedicationResponse
   securitySchemes:
     bearerAuth:            # arbitrary name for the security scheme
       type: http
