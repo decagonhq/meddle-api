@@ -68,9 +68,9 @@ paths:
           content: {}
       x-codegen-request-body-name: user
   /logout:
-    get:
+    post:
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       tags:
         - user
       summary: Logs out current logged in user session
@@ -81,12 +81,10 @@ paths:
           content: {}
   /verifyEmail/{token}:
     get:
-      security:
-        - bearerAuth: []
       tags:
         - user
       summary: Verify users email
-      operationId: verifyEmail
+      operationId: veryfyEmail
       parameters:
         - name: token
           in: path
@@ -104,8 +102,62 @@ paths:
         400:
           description: Invalid token supplied
           content: {}
-        404:
-          description: Token is not valid
+  /password/forgot:
+    post:
+      tags:
+        - user
+      summary: Sends the user email when forgot password is hit
+      operationId: ForgotPassword
+      requestBody:
+        description: Sends the user email when forgot password is hit
+        content:
+          '*/*':
+            schema:
+              $ref: '#/components/schemas/ForgotPasswordRequest'
+        required: true
+      responses:
+        200:
+          description: link to reset password successfully sent
+          headers:
+            X-Rate-Limit:
+              schema:
+                type: string
+                format: string
+            X-Expires-After:
+              description: date in UTC when token expires
+              schema:
+                type: string
+                format: date-time
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForgotPasswordResponse'
+        400:
+          description: email was not sent
+          content: {}
+      x-codegen-request-body-name: ForgortPassword
+  /password/reset/{token}:
+    post:
+      tags:
+        - user
+      summary: update a user's password
+      operationId: resetPassword
+      parameters:
+        - name: token
+          in: path
+          description: 'Gets the token sent to the user'
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: password reset successfully, Login to continue
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResetPasswordRequest'
+        400:
+          description: error unmarshalling body
           content: {}
   /user/medications:
     post:
@@ -146,7 +198,7 @@ paths:
         - bearerAuth: []
       tags:
         - medication
-      summary: Get user medication by id and userid
+      summary: Get user medication by id
       operationId: getUserById
       parameters:
         - name: id
@@ -212,13 +264,13 @@ components:
           example: 1
         created_at:
           type: string
-          format: date-time # e.g 2022-08-09T06:35:43.511Z
+          format: date-time
         updated_at:
           type: string
-          format: date-time # e.g 2022-08-09T06:35:43.511Z
+          format: date-time
         deleted_at:
           type: string
-          format: date-time #e.g 2022-08-09T06:35:43.511Z
+          format: date-time
         name:
           type: string
           format: string
@@ -237,6 +289,40 @@ components:
           example: "090834343"
       xml:
         name: UserResponse
+    ForgotPasswordRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+      xml:
+        name: ForgotPasswordRequest
+    ForgotPasswordResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          format: object
+      xml:
+        name: ForgotPasswordResponse
+    ResetPasswordRequest:
+      type: object
+      properties:
+        password:
+          type: string
+          format: password
+        confirmPassword:
+          type: object
+      xml:
+        name: ForgotPasswordRequest
+    ResetPasswordResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          format: object
+      xml:
+        name: ResetPasswordResponse
     SignupResponse:
       type: object
       properties:
@@ -347,7 +433,7 @@ components:
           example: ""
         message:
           type: string
-          example: user created successfully
+          example: Signup successful, check your email for verification
         status:
           type: string
           example: Created

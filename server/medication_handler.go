@@ -40,12 +40,12 @@ func (s *Server) handleGetMedDetail() gin.HandlerFunc {
 			return
 		}
 		id := c.Param("id")
-		idUint, errr := strconv.ParseUint(id, 10, 32)
+		userId, errr := strconv.ParseUint(id, 10, 32)
 		if errr != nil {
 			response.JSON(c, "error parsing id", http.StatusBadRequest, nil, errr)
 			return
 		}
-		medication, err := s.MedicationService.GetMedicationDetail(uint(idUint), user.ID)
+		medication, err := s.MedicationService.GetMedicationDetail(uint(userId), user.ID)
 		if err != nil {
 			response.JSON(c, "", http.StatusInternalServerError, nil, errors.New("internal server error", http.StatusInternalServerError))
 			return
