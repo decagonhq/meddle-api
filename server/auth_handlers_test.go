@@ -207,7 +207,7 @@ func TestLoginHandler(t *testing.T) {
 			},
 		},
 		{
-			name: "not found case",
+			name: "invalid email case",
 			reqBody: gin.H{
 				"email":    "user@email.com",
 				"password": password,
@@ -226,11 +226,11 @@ func TestLoginHandler(t *testing.T) {
 				AccessToken: "",
 			},
 			buildStubs: func(service *mocks.MockAuthService, request *models.LoginRequest, response *models.LoginResponse) {
-				service.EXPECT().LoginUser(request).Times(1).Return(nil, errors.ErrNotFound)
+				service.EXPECT().LoginUser(request).Times(1).Return(nil, errors.New("invalid email", http.StatusUnauthorized))
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusNotFound, recorder.Code)
-				require.Contains(t, recorder.Body.String(), "not found")
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+				require.Contains(t, recorder.Body.String(), "invalid email")
 			},
 		},
 		{
