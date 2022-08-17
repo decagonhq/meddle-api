@@ -413,4 +413,6 @@ components:
     bearerAuth:
       type: apiKey
       name: Authorization
-      in: header
+      in: bearer # e.g. Authorization: Bearer <token>
+      description: Bearer token
+      bearerFormat: JWT
