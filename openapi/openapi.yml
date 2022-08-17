@@ -496,7 +496,7 @@ components:
       xml:
         name: MedicationResponse
   securitySchemes:
-    bearerAuth:
-      type: apiKey
-      name: Authorization
-      in: header
+    bearerAuth:            # arbitrary name for the security scheme
+      type: http
+      scheme: bearer
+      bearerFormat: JWT    # optional, arbitrary value for documentation purposes
