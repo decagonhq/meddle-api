@@ -112,7 +112,7 @@ func (a *authService) LoginUser(loginRequest *models.LoginRequest) (*models.Logi
 	foundUser, err := a.authRepo.FindUserByEmail(loginRequest.Email)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, apiError.New("invalid email", http.StatusUnauthorized)
+			return nil, apiError.New("invalid email", http.StatusUnprocessableEntity)
 		} else {
 			log.Printf("error from database: %v", err)
 			return nil, apiError.ErrInternalServerError
