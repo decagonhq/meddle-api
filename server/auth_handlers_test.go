@@ -226,10 +226,10 @@ func TestLoginHandler(t *testing.T) {
 				AccessToken: "",
 			},
 			buildStubs: func(service *mocks.MockAuthService, request *models.LoginRequest, response *models.LoginResponse) {
-				service.EXPECT().LoginUser(request).Times(1).Return(nil, errors.New("invalid email", http.StatusUnauthorized))
+				service.EXPECT().LoginUser(request).Times(1).Return(nil, errors.New("invalid email", http.StatusUnprocessableEntity))
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+				require.Equal(t, http.StatusUnprocessableEntity, recorder.Code)
 				require.Contains(t, recorder.Body.String(), "invalid email")
 			},
 		},

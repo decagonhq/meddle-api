@@ -91,7 +91,7 @@ func Test_AuthLoginService(t *testing.T) {
 			dbOutput:      nil,
 			dbError:       gorm.ErrRecordNotFound,
 			loginResponse: nil,
-			loginError:    errors.New("invalid email", http.StatusUnauthorized),
+			loginError:    errors.New("invalid email", http.StatusUnprocessableEntity),
 		},
 		{
 			name: "invalid password case",
