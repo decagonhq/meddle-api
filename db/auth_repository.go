@@ -129,7 +129,7 @@ func (a *authRepo) UpdatePassword(password string, email string) error {
 }
 
 func (a *authRepo) DeleteUserByEmail(email string) error {
-	err := a.DB.Model(&models.User{}).Where("email = ?", email).Delete(&models.User{}).Error
+	err := a.DB.Delete(&models.User{}, "email = ?", email).Error
 	if err != nil {
 		return fmt.Errorf("could not delete user: %v", err)
 	}
