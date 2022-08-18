@@ -203,7 +203,8 @@ paths:
       parameters:
         - name: id
           in: path
-          description: 'The name that needs to be fetched. Use user1 for testing. '
+          description: 'get single medication by id'
+          example: 1
           required: true
           schema:
             type: string
@@ -286,8 +287,6 @@ components:
         password:
           type: string
           format: password
-      xml:
-        name: UserRequest
     UserResponse:
       type: object
       properties:
@@ -319,25 +318,22 @@ components:
         phone_number:
           type: string
           format: phone
-          example: "090834343"
-      xml:
-        name: UserResponse
+          example: "+234904355689"
+   
     ForgotPasswordRequest:
       type: object
       properties:
         email:
           type: string
           format: email
-      xml:
-        name: ForgotPasswordRequest
+   
     ForgotPasswordResponse:
       type: object
       properties:
         message:
           type: string
           format: object
-      xml:
-        name: ForgotPasswordResponse
+     
     ResetPasswordRequest:
       type: object
       properties:
@@ -346,16 +342,14 @@ components:
           format: password
         confirmPassword:
           type: object
-      xml:
-        name: ForgotPasswordRequest
+   
     ResetPasswordResponse:
       type: object
       properties:
         message:
           type: string
           format: object
-      xml:
-        name: ResetPasswordResponse
+ 
     SignupResponse:
       type: object
       properties:
@@ -395,8 +389,6 @@ components:
           type: string
         password:
           type: string
-      xml:
-        name: User
     loginResponseData:
       type: object
       properties:
@@ -408,7 +400,7 @@ components:
           example: Ken
         phone_number:
           type: string
-          example: "09043556"
+          example: "+234904355689"
         email:
           type: string
           example: ken@gmail.com
