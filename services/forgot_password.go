@@ -24,7 +24,7 @@ func (a *authService) SendEmailForPasswordReset(user *models.ForgotPassword) *ap
 	title := "Password Reset Link"
 	value := map[string]interface{}{}
 	value["link"] = link
-	err = a.mail.SendMail(user.Email, title, body, "forgotpassword", value)
+	err = a.mail.SendMail(user.Email, title, body, "", value)
 	if err != nil {
 		log.Printf("Error: %v", err.Error())
 		return apiError.New("mail couldn't be sent", http.StatusServiceUnavailable)
