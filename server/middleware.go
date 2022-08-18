@@ -52,15 +52,10 @@ func (s *Server) Authorize() gin.HandlerFunc {
 			}
 		}
 
-		//_,err = s.AuthRepository.IsUserActive(email)
-		if user.IsEmailActive == false {
+		if !user.IsEmailActive {
 			respondAndAbort(c, "user needs to be verified", http.StatusUnauthorized, nil, errs.New(err.Error(), http.StatusUnauthorized))
 			return
 		}
-		//if err != nil{
-		//	respondAndAbort(c, "user needs to be verified", http.StatusUnauthorized, nil, errs.New(err.Error(), http.StatusUnauthorized))
-		//	return
-		//}
 
 		c.Set("access_token", accessToken)
 		c.Set("user", user)

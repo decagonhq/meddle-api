@@ -90,6 +90,7 @@ func (a *authService) SignupUser(user *models.User) (*models.User, *apiError.Err
 
 func (a *authService) sendVerifyEmail(token, email string) *apiError.Error {
 	link := fmt.Sprintf("%s/verifyEmail/%s", a.Config.BaseUrl, token)
+	log.Printf(link)
 	value := map[string]interface{}{}
 	value["link"] = link
 	subject := "Verify your email"
