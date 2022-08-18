@@ -90,7 +90,24 @@ paths:
       responses:
         200:
           description: delete user successful
-          content: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    nullable: true
+                  status:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: "user successfully deleted"
+                  err:
+                    type: object
+                    nullable: true
+                    description: The user name.
         403:
           description: Forbidden user
           content: {}
