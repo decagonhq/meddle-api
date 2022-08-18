@@ -64,10 +64,6 @@ func GetValidationError(err ValidationError) *Error {
 	}
 }
 
-func KeyFunc(c *gin.Context) string {
-	return c.ClientIP()
-}
-
 func ErrorHandler(c *gin.Context, info ratelimit.Info) {
 	c.String(429, "Too many requests. Try again in "+time.Until(info.ResetTime).String())
 }

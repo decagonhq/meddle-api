@@ -67,11 +67,16 @@ func limitRateForPasswordReset(store ratelimit.Store) gin.HandlerFunc {
 		Limit: 3,
 	})
 	mw := ratelimit.RateLimiter(store, &ratelimit.Options{
-		ErrorHandler: errs.ErrorHandler,
-		KeyFunc:      errs.KeyFunc,
-		//BeforeResponse: nil,
+		ErrorHandler:   errs.ErrorHandler,
+		KeyFunc:        keyFunc,
+		BeforeResponse: nil,
 	})
 	return mw
+}
+
+func keyFunc(c *gin.Context) string {
+	var foundUser models.ForgotPassword
+	return foundUser.Email
 }
 
 // respondAndAbort calls response.JSON and aborts the Context
