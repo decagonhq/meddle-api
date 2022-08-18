@@ -203,7 +203,8 @@ paths:
       parameters:
         - name: id
           in: path
-          description: 'The name that needs to be fetched. Use user1 for testing. '
+          description: 'get single medication by id'
+          example: 1
           required: true
           schema:
             type: string
@@ -253,8 +254,6 @@ components:
         password:
           type: string
           format: password
-      xml:
-        name: UserRequest
     UserResponse:
       type: object
       properties:
@@ -286,25 +285,22 @@ components:
         phone_number:
           type: string
           format: phone
-          example: "090834343"
-      xml:
-        name: UserResponse
+          example: "+234904355689"
+   
     ForgotPasswordRequest:
       type: object
       properties:
         email:
           type: string
           format: email
-      xml:
-        name: ForgotPasswordRequest
+   
     ForgotPasswordResponse:
       type: object
       properties:
         message:
           type: string
           format: object
-      xml:
-        name: ForgotPasswordResponse
+     
     ResetPasswordRequest:
       type: object
       properties:
@@ -313,16 +309,14 @@ components:
           format: password
         confirmPassword:
           type: object
-      xml:
-        name: ForgotPasswordRequest
+   
     ResetPasswordResponse:
       type: object
       properties:
         message:
           type: string
           format: object
-      xml:
-        name: ResetPasswordResponse
+ 
     SignupResponse:
       type: object
       properties:
@@ -362,8 +356,6 @@ components:
           type: string
         password:
           type: string
-      xml:
-        name: User
     loginResponseData:
       type: object
       properties:
@@ -375,7 +367,7 @@ components:
           example: Ken
         phone_number:
           type: string
-          example: "09043556"
+          example: "+234904355689"
         email:
           type: string
           example: ken@gmail.com
@@ -402,6 +394,7 @@ components:
           type: string
           description: day for starting medication
           format: date-time
+          example: 2020-08-09T06:35:43.511Z
         duration:
           type: integer
           description: number of days to take the medication
@@ -414,15 +407,18 @@ components:
           type: string
           description: expected date to finish medication
           format: date-time
+          example: 2020-08-09T06:35:43.511Z
         medication_start_time:
           type: string
           description: expected day to start medication
           format: date-time
+          example: 2020-08-09T06:35:43.511Z
         purpose_of_medication:
           type: string
           example: malaria treatment
-      xml:
-        name: Medication
+        medication_icon:
+          type: string
+          example: "heart icon"
     MedicationResponse:
       type: object
       properties:
@@ -493,8 +489,6 @@ components:
         updated_at:
           type: string
           format: date-time
-      xml:
-        name: MedicationResponse
   securitySchemes:
     bearerAuth:            # arbitrary name for the security scheme
       type: http
