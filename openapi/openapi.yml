@@ -64,8 +64,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
         400:
-          description: Invalid username/password supplied
+          description: invalid email/password type supplied
           content: {}
+        401:
+          description: inactive user or wrong password
+          content: { }
+        422:
+          description: email does not exist, system does not recognise email
+          content: { }
+        500:
+          description: internal server error
+          content: { }
       x-codegen-request-body-name: user
   /logout:
     post:
@@ -349,8 +358,8 @@ components:
           type: string
           example: user created successfully
         status:
-          type: string
-          example: Created
+          type: integer
+          example: 200
     User:
       type: object
       properties:
@@ -375,7 +384,7 @@ components:
           example: Ken
         phone_number:
           type: string
-          example: "09043556"
+          example: "+2349043556XXX"
         email:
           type: string
           example: ken@gmail.com
