@@ -269,6 +269,25 @@ paths:
       responses:
         200:
           description: update medication successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    nullable: true
+                  status:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: "medication updated successfully"
+                  err:
+                    type: object
+                    nullable: true
+        400:
+          description: Invalid medicationID value in url path supplied or Bad request from user
           content: { }
         403:
           description: Forbidden user
