@@ -449,7 +449,7 @@ func Test_Logout(t *testing.T) {
 }
 
 func Test_DeleteUserByEmail(t *testing.T) {
-	accToken, user := AuthorizeRoutes(t)
+	accToken, user := AuthorizeTestUser(t)
 
 	testCases := []struct {
 		name               string
