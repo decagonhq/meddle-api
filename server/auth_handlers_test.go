@@ -448,6 +448,67 @@ func Test_Logout(t *testing.T) {
 	assert.Equal(t, 200, resp.Code)
 }
 
+func Test_DeleteUserByEmail(t *testing.T) {
+	accToken, user := AuthorizeRoutes(t)
+
+	testCases := []struct {
+		name               string
+		userEmail          string
+		deleteUserResponse *errors.Error
+		buildStubs         func(service *mocks.MockAuthService, email string, response *errors.Error)
+		checkResponse      func(t *testing.T, recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name:               "delete user successfully",
+			userEmail:          user.Email,
+			deleteUserResponse: nil,
+			buildStubs: func(service *mocks.MockAuthService, email string, response *errors.Error) {
+				service.EXPECT().DeleteUserByEmail(email).Return(response)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+			},
+		},
+		{
+			name:               "delete user failed due to db error",
+			userEmail:          user.Email,
+			deleteUserResponse: errors.ErrInternalServerError,
+			buildStubs: func(service *mocks.MockAuthService, email string, response *errors.Error) {
+				service.EXPECT().DeleteUserByEmail(email).Return(response)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			},
+		},
+	}
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockAuthService := mocks.NewMockAuthService(ctrl)
+	mockAuthRepository := mocks.NewMockAuthRepository(ctrl)
+	testServer.handler.AuthService = mockAuthService
+	testServer.handler.AuthRepository = mockAuthRepository
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockAuthRepository.EXPECT().FindUserByEmail(user.Email).Return(&user, nil)
+			mockAuthRepository.EXPECT().TokenInBlacklist(accToken).Return(false)
+
+			tc.buildStubs(mockAuthService, tc.userEmail, tc.deleteUserResponse)
+
+			recorder := httptest.NewRecorder()
+
+			req, err := http.NewRequest(http.MethodDelete, "/api/v1/users", nil)
+			require.NoError(t, err)
+
+			req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", accToken))
+
+			testServer.router.ServeHTTP(recorder, req)
+			tc.checkResponse(t, recorder)
+		})
+	}
+}
+
 func init() {
 	rand.Seed(time.Now().UnixNano())
 }
