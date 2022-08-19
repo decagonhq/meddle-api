@@ -13,19 +13,19 @@ import (
 )
 
 var mockRepository *mocks.MockAuthRepository
-var testLoginService AuthService
+var testAuthService AuthService
 
 func setup(t *testing.T) func() {
 	ctrl := gomock.NewController(t)
 	ctrl.Finish()
 	mockRepository = mocks.NewMockAuthRepository(ctrl)
 	mailService := mocks.NewMockMailer(ctrl)
-	testLoginService = NewAuthService(mockRepository, testConfig, mailService)
+	testAuthService = NewAuthService(mockRepository, testConfig, mailService)
 
 	mockMedicationRepository = mocks.NewMockMedicationRepository(ctrl)
 	testMedicationService = NewMedicationService(mockMedicationRepository, testConfig)
 	return func() {
-		testLoginService = nil
+		testAuthService = nil
 		testMedicationService = nil
 		defer ctrl.Finish()
 	}
@@ -117,15 +117,52 @@ func Test_AuthLoginService(t *testing.T) {
 
 			mockRepository.EXPECT().FindUserByEmail(tc.input.Email).Times(1).Return(tc.dbOutput, tc.dbError)
 
-			loginResponse, err := testLoginService.LoginUser(&tc.input)
+			loginResponse, err := testAuthService.LoginUser(&tc.input)
 			if tc.name != "login successful case" {
 				require.Equal(t, tc.loginResponse, loginResponse)
 				require.Equal(t, tc.loginError, err)
-			} else {
-				//require.NotZero(t, loginResponse.AccessToken)
-				//require.Equal(t, tc.loginError, err)
 			}
+		})
+	}
+}
 
+func Test_DeleteUserByEmail(t *testing.T) {
+	// arrange
+	testCases := []struct {
+		name                  string
+		email                 string
+		dbErrorOutput         error
+		deleteUserErrorOutput *errors.Error
+		buildStubs            func(repository *mocks.MockAuthRepository, email string, dbError error)
+	}{
+		{
+			name:                  "delete user successful case",
+			email:                 "sample@email.com",
+			dbErrorOutput:         nil,
+			deleteUserErrorOutput: nil,
+			buildStubs: func(repository *mocks.MockAuthRepository, email string, dbError error) {
+				repository.EXPECT().DeleteUserByEmail(email).Times(1).Return(dbError)
+			},
+		},
+		{
+			name:                  "delete user successful case",
+			email:                 "sample@email.com",
+			dbErrorOutput:         gorm.ErrInvalidDB,
+			deleteUserErrorOutput: errors.ErrInternalServerError,
+			buildStubs: func(repository *mocks.MockAuthRepository, email string, dbError error) {
+				repository.EXPECT().DeleteUserByEmail(email).Times(1).Return(dbError)
+			},
+		},
+	}
+
+	teardown := setup(t)
+	defer teardown()
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.buildStubs(mockRepository, tc.email, tc.dbErrorOutput)
+			err := testAuthService.DeleteUserByEmail(tc.email)
+
+			require.Equal(t, tc.deleteUserErrorOutput, err)
 		})
 	}
 }
