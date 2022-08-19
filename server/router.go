@@ -2,7 +2,7 @@ package server
 
 import (
 	"fmt"
-	ratelimit "github.com/JGLTechnologies/gin-rate-limit"
+	rateLimit "github.com/JGLTechnologies/gin-rate-limit"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -14,7 +14,7 @@ import (
 )
 
 func (s *Server) defineRoutes(router *gin.Engine) {
-	store := ratelimit.InMemoryStore(&ratelimit.InMemoryOptions{})
+	store := rateLimit.InMemoryStore(&rateLimit.InMemoryOptions{})
 	limitRate := limitRateForPasswordReset(store)
 
 	apirouter := router.Group("/api/v1")

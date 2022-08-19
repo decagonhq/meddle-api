@@ -1,9 +1,11 @@
 package server
 
 import (
+	"bytes"
 	"errors"
 	ratelimit "github.com/JGLTechnologies/gin-rate-limit"
 	"github.com/decagonhq/meddle-api/services/jwt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
@@ -75,7 +77,24 @@ func limitRateForPasswordReset(store ratelimit.Store) gin.HandlerFunc {
 }
 
 func keyFunc(c *gin.Context) string {
+	//TODO Handle when email isn't sent successfully in any of the three tries
+	//b1, err := c.Request.GetBody()
+	buf, err := ioutil.ReadAll(c.Request.Body)
+	if err != nil {
+		response.JSON(c, "", http.StatusBadRequest, nil, err)
+		return ""
+	}
+
+	c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(buf))
+
 	var foundUser models.ForgotPassword
+	err = decode(c, &foundUser)
+	if err != nil {
+		response.JSON(c, "", http.StatusBadRequest, nil, err)
+		return ""
+	}
+
+	c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(buf))
 	return foundUser.Email
 }
 
