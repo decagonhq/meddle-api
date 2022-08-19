@@ -18,7 +18,7 @@ import (
 
 func TestCreateMedicationHandler(t *testing.T) {
 	// generate a random user
-	accToken, user := AuthorizeRoutes(t)
+	accToken, user := AuthorizeTestUser(t)
 
 	startDate, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
 	stopDate, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
@@ -229,7 +229,7 @@ func TestCreateMedicationHandler(t *testing.T) {
 func TestGetAllMedicationHandler(t *testing.T) {
 
 	// generate a random user
-	accToken, user := AuthorizeRoutes(t)
+	accToken, user := AuthorizeTestUser(t)
 
 	startDate, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
 	stopDate, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
@@ -340,7 +340,7 @@ func TestGetAllMedicationHandler(t *testing.T) {
 func TestGetNextMedicationHandler(t *testing.T) {
 
 	// generate a random user
-	accToken, user := AuthorizeRoutes(t)
+	accToken, user := AuthorizeTestUser(t)
 
 	startDate, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
 	stopDate, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
@@ -435,7 +435,7 @@ func TestGetNextMedicationHandler(t *testing.T) {
 func Test_UpdateMedicationHandler(t *testing.T) {
 
 	// generate a random user
-	accToken, user := AuthorizeRoutes(t)
+	accToken, user := AuthorizeTestUser(t)
 
 	medication := models.UpdateMedicationRequest{
 		Name:                   "paracetamol",
