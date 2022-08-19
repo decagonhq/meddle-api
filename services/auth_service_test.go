@@ -142,3 +142,44 @@ func Test_AuthLoginService(t *testing.T) {
 		})
 	}
 }
+
+func Test_DeleteUserByEmail(t *testing.T) {
+	// arrange
+	testCases := []struct {
+		name                  string
+		email                 string
+		dbErrorOutput         error
+		deleteUserErrorOutput *errors.Error
+		buildStubs            func(repository *mocks.MockAuthRepository, email string, dbError error)
+	}{
+		{
+			name:                  "delete user successful case",
+			email:                 "sample@email.com",
+			dbErrorOutput:         nil,
+			deleteUserErrorOutput: nil,
+			buildStubs: func(repository *mocks.MockAuthRepository, email string, dbError error) {
+				repository.EXPECT().DeleteUserByEmail(email).Times(1).Return(dbError)
+			},
+		},
+		{
+			name:                  "delete user successful case",
+			email:                 "sample@email.com",
+			dbErrorOutput:         gorm.ErrInvalidDB,
+			deleteUserErrorOutput: errors.ErrInternalServerError,
+			buildStubs: func(repository *mocks.MockAuthRepository, email string, dbError error) {
+				repository.EXPECT().DeleteUserByEmail(email).Times(1).Return(dbError)
+			},
+		},
+	}
+
+	teardown := setup(t)
+	defer teardown()
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.buildStubs(mockRepository, tc.email, tc.dbErrorOutput)
+			err := testAuthService.DeleteUserByEmail(tc.email)
+
+			require.Equal(t, tc.deleteUserErrorOutput, err)
+		})
+	}
+}
