@@ -175,6 +175,7 @@ func (s *Server) fbCallbackHandler() gin.HandlerFunc {
 
 		authToken, errr := s.AuthService.FacebookSignInUser(token.AccessToken)
 		if errr != nil {
+			log.Println(errr)
 			respondAndAbort(c, "", http.StatusUnauthorized, nil, errors.New("invalid authToken", http.StatusUnauthorized))
 			return
 		}
