@@ -31,6 +31,7 @@ type AuthService interface {
 	SendEmailForPasswordReset(user *models.ForgotPassword) *apiError.Error
 	ResetPassword(user *models.ResetPassword, token string) *apiError.Error
 	GoogleSignInUser(token string) (*string, *apiError.Error)
+	DeleteUserByEmail(userEmail string) *apiError.Error
 }
 
 // authService struct
@@ -301,6 +302,14 @@ func (a *authService) GetSignInToken(facebookUserDetails *models.FacebookUser) (
 	}
 
 	return tokenString, nil
+}
+
+func (a *authService) DeleteUserByEmail(userEmail string) *apiError.Error {
+	err := a.authRepo.DeleteUserByEmail(userEmail)
+	if err != nil {
+		return apiError.ErrInternalServerError
+	}
+	return nil
 }
 
 func GenerateRandomString() (string, error) {
