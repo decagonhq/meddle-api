@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+
 	"github.com/decagonhq/meddle-api/config"
 	"github.com/decagonhq/meddle-api/services/jwt"
 	"golang.org/x/oauth2"
@@ -175,6 +176,7 @@ func (s *Server) fbCallbackHandler() gin.HandlerFunc {
 
 		authToken, errr := s.AuthService.FacebookSignInUser(token.AccessToken)
 		if errr != nil {
+			log.Printf("error signing in facebook user: %v", errr)
 			respondAndAbort(c, "", http.StatusUnauthorized, nil, errors.New("invalid authToken", http.StatusUnauthorized))
 			return
 		}
