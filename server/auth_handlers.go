@@ -184,6 +184,23 @@ func (s *Server) fbCallbackHandler() gin.HandlerFunc {
 	}
 }
 
+func (s *Server) handleDeleteUserByEmail() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		_, user, err := GetValuesFromContext(c)
+		if err != nil {
+			err.Respond(c)
+			return
+		}
+
+		if err := s.AuthService.DeleteUserByEmail(user.Email); err != nil {
+			err.Respond(c)
+			return
+		}
+
+		response.JSON(c, "user successfully deleted", http.StatusOK, nil, nil)
+	}
+}
+
 func (s *Server) handleGetUsers() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
