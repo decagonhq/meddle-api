@@ -41,7 +41,7 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func AuthorizeTestUser(t *testing.T) (string, models.User) {
+func AuthorizeRoutes(t *testing.T) (string, models.User) {
 	user, _ := randomUser(t)
 
 	accToken, err := jwt.GenerateToken(user.Email, testServer.handler.Config.JWTSecret)
