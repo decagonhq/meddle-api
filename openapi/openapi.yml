@@ -64,7 +64,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
         400:
-          description: invalid email/password type supplied
+          description: invalid email/password supplied
           content: {}
         401:
           description: inactive user or wrong password
