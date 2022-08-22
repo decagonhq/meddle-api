@@ -16,11 +16,16 @@ func (s *Server) SendEmailForPasswordReset() gin.HandlerFunc {
 		}
 		err := s.AuthService.SendEmailForPasswordReset(&foundUser)
 		if err != nil {
+			IsEmailFailed(c)
 			response.JSON(c, "email was not sent", http.StatusBadRequest, nil, err)
 			return
 		}
 		response.JSON(c, "link to reset password successfully sent", http.StatusOK, nil, nil)
 	}
+}
+
+func IsEmailFailed(context *gin.Context) bool {
+	return true
 }
 
 func (s *Server) ResetPassword() gin.HandlerFunc {
