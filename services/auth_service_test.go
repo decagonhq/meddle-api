@@ -1,6 +1,7 @@
 package services
 
 import (
+	"net/http"
 	"testing"
 
 	"github.com/decagonhq/meddle-api/errors"
@@ -34,7 +35,7 @@ func setup(t *testing.T) func() {
 func Test_AuthLoginService(t *testing.T) {
 	// arrange
 
-	user := &models.User{
+	user := models.User{
 		Model: models.Model{
 			ID:        1,
 			CreatedAt: 0,
@@ -46,10 +47,15 @@ func Test_AuthLoginService(t *testing.T) {
 		Email:          "email@gmail.com",
 		Password:       "password",
 		HashedPassword: "",
+		IsEmailActive:  true,
 	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	require.NoError(t, err)
 	user.HashedPassword = string(hashedPassword)
+
+	inactiveUser := user
+	inactiveUser.IsEmailActive = false
+
 	testCases := []struct {
 		name          string
 		input         models.LoginRequest
@@ -64,7 +70,7 @@ func Test_AuthLoginService(t *testing.T) {
 				Email:    user.Email,
 				Password: user.Password,
 			},
-			dbOutput: user,
+			dbOutput: &user,
 			dbError:  nil,
 			loginResponse: &models.LoginResponse{
 				UserResponse: models.UserResponse{
@@ -77,7 +83,7 @@ func Test_AuthLoginService(t *testing.T) {
 			loginError: nil,
 		},
 		{
-			name: "not found",
+			name: "invalid email case",
 			input: models.LoginRequest{
 				Email:    "",
 				Password: "password",
@@ -85,18 +91,29 @@ func Test_AuthLoginService(t *testing.T) {
 			dbOutput:      nil,
 			dbError:       gorm.ErrRecordNotFound,
 			loginResponse: nil,
-			loginError:    errors.ErrNotFound,
+			loginError:    errors.New("invalid email", http.StatusUnprocessableEntity),
 		},
 		{
-			name: "invalid password",
+			name: "invalid password case",
 			input: models.LoginRequest{
 				Email:    user.Email,
 				Password: "wrongpassword",
 			},
-			dbOutput:      user,
+			dbOutput:      &user,
 			dbError:       nil,
 			loginResponse: nil,
 			loginError:    errors.ErrInvalidPassword,
+		},
+		{
+			name: "inactive user",
+			input: models.LoginRequest{
+				Email:    inactiveUser.Email,
+				Password: "password",
+			},
+			dbOutput:      &inactiveUser,
+			dbError:       nil,
+			loginResponse: nil,
+			loginError:    errors.New("email not verified", http.StatusUnauthorized),
 		},
 		{
 			name: "internal server error case",

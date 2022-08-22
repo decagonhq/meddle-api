@@ -52,8 +52,12 @@ func (s *Server) Authorize() gin.HandlerFunc {
 			default:
 				respondAndAbort(c, "", http.StatusInternalServerError, nil, errs.New("internal server error", http.StatusInternalServerError))
 				return
-
 			}
+		}
+
+		if !user.IsEmailActive {
+			respondAndAbort(c, "user needs to be verified", http.StatusUnauthorized, nil, errs.New(err.Error(), http.StatusUnauthorized))
+			return
 		}
 
 		c.Set("access_token", accessToken)
