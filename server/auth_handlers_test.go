@@ -424,6 +424,7 @@ func Test_Logout(t *testing.T) {
 		PhoneNumber: "+2348163608141",
 		Email:       "toluwase@gmail.com",
 		Password:    "12345678",
+		IsEmailActive: true,
 	}
 	conf.JWTSecret = "testSecret"
 	token, err := jwt.GenerateToken(user.Email, conf.JWTSecret)
