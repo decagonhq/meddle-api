@@ -113,11 +113,15 @@ func (a *authService) LoginUser(loginRequest *models.LoginRequest) (*models.Logi
 	foundUser, err := a.authRepo.FindUserByEmail(loginRequest.Email)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, apiError.ErrNotFound
+			return nil, apiError.New("invalid email", http.StatusUnprocessableEntity)
 		} else {
 			log.Printf("error from database: %v", err)
 			return nil, apiError.ErrInternalServerError
 		}
+	}
+
+	if foundUser.IsEmailActive == false {
+		return nil, apiError.New("email not verified", http.StatusUnauthorized)
 	}
 
 	if err := foundUser.VerifyPassword(loginRequest.Password); err != nil {
