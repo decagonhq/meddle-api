@@ -32,19 +32,6 @@ func (a *authService) SendEmailForPasswordReset(user *models.ForgotPassword) *ap
 	return nil
 }
 
-func IsEmailSentSuccessful(flag bool) (int, bool) {
-	tokenBucket := 3
-	//for i := 1; i <= tokenBucket; i++ {
-	if flag == true {
-		tokenBucket--
-	} else {
-		tokenBucket = 3
-	}
-	//}
-	log.Println("token in function", tokenBucket)
-	return tokenBucket, true
-}
-
 func (a *authService) ResetPassword(reset *models.ResetPassword, token string) *apiError.Error {
 	err := models.ValidatePassword(reset.Password)
 	if err != nil {
