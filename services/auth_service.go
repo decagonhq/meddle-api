@@ -113,11 +113,15 @@ func (a *authService) LoginUser(loginRequest *models.LoginRequest) (*models.Logi
 	foundUser, err := a.authRepo.FindUserByEmail(loginRequest.Email)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, apiError.ErrNotFound
+			return nil, apiError.New("invalid email", http.StatusUnprocessableEntity)
 		} else {
 			log.Printf("error from database: %v", err)
 			return nil, apiError.ErrInternalServerError
 		}
+	}
+
+	if foundUser.IsEmailActive == false {
+		return nil, apiError.New("email not verified", http.StatusUnauthorized)
 	}
 
 	if err := foundUser.VerifyPassword(loginRequest.Password); err != nil {
@@ -289,6 +293,7 @@ func (a *authService) GetSignInToken(facebookUserDetails *models.FacebookUser) (
 	if result == nil {
 		result.Email = facebookUserDetails.Email
 		result.Name = facebookUserDetails.Name
+		result.IsEmailActive = true
 		_, err = a.authRepo.CreateUser(result)
 		if err != nil {
 			return "", fmt.Errorf("error occurred creating user: %+v", err)

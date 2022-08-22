@@ -22,6 +22,19 @@ type Medication struct {
 	UserID                 uint      `gorm:"column:user_id"`
 }
 
+type UpdateMedicationRequest struct {
+	Name                   string `json:"name"`
+	Dosage                 int    `json:"dosage"`
+	TimeInterval           int    `json:"time_interval"` // min hour daily
+	MedicationStartDate    string `json:"medication_start_date"`
+	Duration               int    `json:"duration"`
+	MedicationPrescribedBy string `json:"medication_prescribed_by"`
+	MedicationStopDate     string `json:"medication_stop_date"`
+	MedicationStartTime    string `json:"medication_start_time"`
+	PurposeOfMedication    string `json:"purpose_of_medication"`
+	MedicationIcon         string `json:"medication_icon"`
+}
+
 type MedicationRequest struct {
 	Name                   string `json:"name" binding:"required"`
 	Dosage                 int    `json:"dosage" binding:"required"`
