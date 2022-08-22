@@ -67,7 +67,6 @@ func limitRateForPasswordReset(store ratelimit.Store) gin.HandlerFunc {
 	store = ratelimit.InMemoryStore(&ratelimit.InMemoryOptions{
 		Rate:  time.Hour * 24,
 		Limit: 3,
-		Skip:  nil,
 	})
 	mw := ratelimit.RateLimiter(store, &ratelimit.Options{
 		ErrorHandler:   errs.ErrorHandler,
