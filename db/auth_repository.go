@@ -22,6 +22,7 @@ type AuthRepository interface {
 	VerifyEmail(email string, token string) error
 	IsTokenInBlacklist(token string) error
 	UpdatePassword(password string, email string) error
+	DeleteUserByEmail(email string) error
 }
 
 type authRepo struct {
@@ -123,6 +124,14 @@ func (a *authRepo) UpdatePassword(password string, email string) error {
 	err := a.DB.Model(&models.User{}).Where("email = ?", email).Updates(models.User{HashedPassword: password}).Error
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func (a *authRepo) DeleteUserByEmail(email string) error {
+	err := a.DB.Delete(&models.User{}, "email = ?", email).Error
+	if err != nil {
+		return fmt.Errorf("could not delete user: %v", err)
 	}
 	return nil
 }

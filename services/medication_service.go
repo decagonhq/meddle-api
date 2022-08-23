@@ -20,6 +20,7 @@ type MedicationService interface {
 	GetMedicationDetail(id uint, userId uint) (*models.Medication, *errors.Error)
 	GetAllMedications(userID uint) ([]models.MedicationResponse, *errors.Error)
 	CronUpdateMedicationForNextTime() error
+	UpdateMedication(request *models.UpdateMedicationRequest, medicationID uint, userID uint) *errors.Error
 }
 
 // medicationService struct
@@ -70,7 +71,6 @@ func (m *medicationService) CreateMedication(request *models.MedicationRequest) 
 func (m *medicationService) GetMedicationDetail(id uint, userId uint) (*models.Medication, *errors.Error) {
 	medic, err := m.medicationRepo.GetMedicationDetail(id, userId)
 	if err != nil {
-		log.Println(err)
 		return nil, errors.ErrInternalServerError
 	}
 	return medic, nil
@@ -88,6 +88,44 @@ func (m *medicationService) GetAllMedications(userID uint) ([]models.MedicationR
 		medicationResponses = append(medicationResponses, *medication.MedicationToResponse())
 	}
 	return medicationResponses, nil
+}
+
+func (m *medicationService) UpdateMedication(request *models.UpdateMedicationRequest, medicationID uint, userID uint) *errors.Error {
+	startDate, err := time.Parse(time.RFC3339, request.MedicationStartDate)
+	if err != nil {
+		return errors.New("wrong date format", http.StatusBadRequest)
+	}
+	stopDate, err := time.Parse(time.RFC3339, request.MedicationStopDate)
+	if err != nil {
+		return errors.New("wrong date format", http.StatusBadRequest)
+	}
+	startTime, err := time.Parse(time.RFC3339, request.MedicationStartTime)
+	if err != nil {
+		return errors.New("wrong time format", http.StatusBadRequest)
+	}
+	medication := models.Medication{
+		Name:                   request.Name,
+		Dosage:                 request.Dosage,
+		TimeInterval:           request.TimeInterval,
+		Duration:               request.Duration,
+		MedicationPrescribedBy: request.MedicationPrescribedBy,
+		PurposeOfMedication:    request.PurposeOfMedication,
+		MedicationIcon:         request.MedicationIcon,
+		MedicationStartDate:    startDate,
+		MedicationStopDate:     stopDate,
+		MedicationStartTime:    startTime,
+	}
+
+	nextTime := medication.MedicationStartTime.Add(time.Hour * time.Duration(medication.TimeInterval))
+
+	medication.NextDosageTime = GetNextDosageTime(nextTime, medication.MedicationStartTime)
+
+	//get medication where user and medication id is defined above then send it for updating
+	err = m.medicationRepo.UpdateMedication(&medication, medicationID, userID)
+	if err != nil {
+		return errors.ErrInternalServerError
+	}
+	return nil
 }
 
 func (m *medicationService) GetNextMedications(userID uint) ([]models.MedicationResponse, *errors.Error) {

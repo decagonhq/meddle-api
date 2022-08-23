@@ -31,6 +31,7 @@ func Test_MedicationDetail(t *testing.T) {
 		PhoneNumber: "+2348163608141",
 		Email:       "toluwase@gmail.com",
 		Password:    "12345678",
+		IsEmailActive: true,
 	}
 	medication := &models.Medication{
 		Duration:               3,

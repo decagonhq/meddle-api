@@ -207,7 +207,7 @@ func TestLoginHandler(t *testing.T) {
 			},
 		},
 		{
-			name: "not found case",
+			name: "invalid email case",
 			reqBody: gin.H{
 				"email":    "user@email.com",
 				"password": password,
@@ -226,11 +226,11 @@ func TestLoginHandler(t *testing.T) {
 				AccessToken: "",
 			},
 			buildStubs: func(service *mocks.MockAuthService, request *models.LoginRequest, response *models.LoginResponse) {
-				service.EXPECT().LoginUser(request).Times(1).Return(nil, errors.ErrNotFound)
+				service.EXPECT().LoginUser(request).Times(1).Return(nil, errors.New("invalid email", http.StatusUnprocessableEntity))
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusNotFound, recorder.Code)
-				require.Contains(t, recorder.Body.String(), "not found")
+				require.Equal(t, http.StatusUnprocessableEntity, recorder.Code)
+				require.Contains(t, recorder.Body.String(), "invalid email")
 			},
 		},
 		{
@@ -424,6 +424,7 @@ func Test_Logout(t *testing.T) {
 		PhoneNumber: "+2348163608141",
 		Email:       "toluwase@gmail.com",
 		Password:    "12345678",
+		IsEmailActive: true,
 	}
 	conf.JWTSecret = "testSecret"
 	token, err := jwt.GenerateToken(user.Email, conf.JWTSecret)
@@ -446,6 +447,67 @@ func Test_Logout(t *testing.T) {
 	r.ServeHTTP(resp, req)
 	fmt.Println(resp.Body.String())
 	assert.Equal(t, 200, resp.Code)
+}
+
+func Test_DeleteUserByEmail(t *testing.T) {
+	accToken, user := AuthorizeTestUser(t)
+
+	testCases := []struct {
+		name               string
+		userEmail          string
+		deleteUserResponse *errors.Error
+		buildStubs         func(service *mocks.MockAuthService, email string, response *errors.Error)
+		checkResponse      func(t *testing.T, recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name:               "delete user successfully",
+			userEmail:          user.Email,
+			deleteUserResponse: nil,
+			buildStubs: func(service *mocks.MockAuthService, email string, response *errors.Error) {
+				service.EXPECT().DeleteUserByEmail(email).Return(response)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+			},
+		},
+		{
+			name:               "delete user failed due to db error",
+			userEmail:          user.Email,
+			deleteUserResponse: errors.ErrInternalServerError,
+			buildStubs: func(service *mocks.MockAuthService, email string, response *errors.Error) {
+				service.EXPECT().DeleteUserByEmail(email).Return(response)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			},
+		},
+	}
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockAuthService := mocks.NewMockAuthService(ctrl)
+	mockAuthRepository := mocks.NewMockAuthRepository(ctrl)
+	testServer.handler.AuthService = mockAuthService
+	testServer.handler.AuthRepository = mockAuthRepository
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockAuthRepository.EXPECT().FindUserByEmail(user.Email).Return(&user, nil)
+			mockAuthRepository.EXPECT().TokenInBlacklist(accToken).Return(false)
+
+			tc.buildStubs(mockAuthService, tc.userEmail, tc.deleteUserResponse)
+
+			recorder := httptest.NewRecorder()
+
+			req, err := http.NewRequest(http.MethodDelete, "/api/v1/users", nil)
+			require.NoError(t, err)
+
+			req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", accToken))
+
+			testServer.router.ServeHTTP(recorder, req)
+			tc.checkResponse(t, recorder)
+		})
+	}
 }
 
 func init() {

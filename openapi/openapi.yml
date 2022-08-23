@@ -64,8 +64,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
         400:
-          description: Invalid username/password supplied
+          description: invalid email/password supplied
           content: {}
+        401:
+          description: inactive user or wrong password
+          content: { }
+        422:
+          description: email does not exist, system does not recognise email
+          content: { }
+        500:
+          description: internal server error
+          content: { }
       x-codegen-request-body-name: user
   /logout:
     post:
@@ -78,6 +87,41 @@ paths:
       responses:
         default:
           description: successful operation
+          content: {}
+  /users:
+    delete:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - user
+      summary: a user deletes himself from the system
+      operationId: deleteUser
+      responses:
+        200:
+          description: delete user successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    nullable: true
+                  status:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: "user successfully deleted"
+                  err:
+                    type: object
+                    nullable: true
+                    description: The user name.
+        403:
+          description: Forbidden user
+          content: {}
+        500:
+          description: Internal server error
           content: {}
   /verifyEmail/{token}:
     get:
@@ -243,6 +287,58 @@ paths:
         500:
           description: Internal server error
           content: {}
+  /user/medications/{medicationID}:
+    put:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - medication
+      summary: update medication by medicationID
+      description: This updates medication related to a logged in user using the medicationID.
+      operationId: updateMedication
+      parameters:
+        - name: medicationID
+          in: path
+          description: 'The medicationID of the medication that needs to be updated.'
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: update the medication of a logged in user.
+        content:
+          '*/*':
+            schema:
+              $ref: '#/components/schemas/Medication'
+        required: true
+      responses:
+        200:
+          description: update medication successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    nullable: true
+                  status:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: "medication updated successfully"
+                  err:
+                    type: object
+                    nullable: true
+        400:
+          description: Invalid medicationID value in url path supplied or Bad request from user
+          content: { }
+        403:
+          description: Forbidden user
+          content: { }
+        500:
+          description: Internal server error
+          content: { }
 components:
   schemas:
     UserRequest:
@@ -343,8 +439,8 @@ components:
           type: string
           example: user created successfully
         status:
-          type: string
-          example: Created
+          type: integer
+          example: 200
     User:
       type: object
       properties:
@@ -367,7 +463,7 @@ components:
           example: Ken
         phone_number:
           type: string
-          example: "+234904355689"
+          example: "+2349043556XXX"
         email:
           type: string
           example: ken@gmail.com
@@ -394,7 +490,7 @@ components:
           type: string
           description: day for starting medication
           format: date-time
-          example: 2020-08-09T06:35:43.511Z
+          example: "2022-08-09T06:35:43.511Z"
         duration:
           type: integer
           description: number of days to take the medication
@@ -407,18 +503,18 @@ components:
           type: string
           description: expected date to finish medication
           format: date-time
-          example: 2020-08-09T06:35:43.511Z
+          example: "2022-08-09T06:35:43.511Z"
         medication_start_time:
           type: string
           description: expected day to start medication
           format: date-time
-          example: 2020-08-09T06:35:43.511Z
+          example: "2022-08-09T06:35:43.511Z"
         purpose_of_medication:
           type: string
           example: malaria treatment
         medication_icon:
           type: string
-          example: "heart icon"
+          example: "Heart Icon"
     MedicationResponse:
       type: object
       properties:

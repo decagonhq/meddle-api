@@ -31,6 +31,7 @@ type AuthService interface {
 	SendEmailForPasswordReset(user *models.ForgotPassword) *apiError.Error
 	ResetPassword(user *models.ResetPassword, token string) *apiError.Error
 	GoogleSignInUser(token string) (*string, *apiError.Error)
+	DeleteUserByEmail(userEmail string) *apiError.Error
 }
 
 // authService struct
@@ -112,11 +113,15 @@ func (a *authService) LoginUser(loginRequest *models.LoginRequest) (*models.Logi
 	foundUser, err := a.authRepo.FindUserByEmail(loginRequest.Email)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, apiError.ErrNotFound
+			return nil, apiError.New("invalid email", http.StatusUnprocessableEntity)
 		} else {
 			log.Printf("error from database: %v", err)
 			return nil, apiError.ErrInternalServerError
 		}
+	}
+
+	if foundUser.IsEmailActive == false {
+		return nil, apiError.New("email not verified", http.StatusUnauthorized)
 	}
 
 	if err := foundUser.VerifyPassword(loginRequest.Password); err != nil {
@@ -281,17 +286,19 @@ func (a *authService) GetSignInToken(facebookUserDetails *models.FacebookUser) (
 	}
 
 	result, err := a.authRepo.FindUserByEmail(facebookUserDetails.Email)
-	if err != nil {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return "", fmt.Errorf("error finding user: %+v", err)
 	}
 
 	if result == nil {
-		result.Email = facebookUserDetails.Email
-		result.Name = facebookUserDetails.Name
-		_, err = a.authRepo.CreateUser(result)
-		if err != nil {
-			return "", fmt.Errorf("error occurred creating user: %+v", err)
-		}
+		result = &models.User{}
+	}
+	result.Email = facebookUserDetails.Email
+	result.Name = facebookUserDetails.Name
+	result.IsEmailActive = true
+	_, err = a.authRepo.CreateUser(result)
+	if err != nil {
+		return "", fmt.Errorf("error occurred creating user: %+v", err)
 	}
 
 	tokenString, err := jwt.GenerateToken(facebookUserDetails.Email, a.Config.JWTSecret)
@@ -301,6 +308,14 @@ func (a *authService) GetSignInToken(facebookUserDetails *models.FacebookUser) (
 	}
 
 	return tokenString, nil
+}
+
+func (a *authService) DeleteUserByEmail(userEmail string) *apiError.Error {
+	err := a.authRepo.DeleteUserByEmail(userEmail)
+	if err != nil {
+		return apiError.ErrInternalServerError
+	}
+	return nil
 }
 
 func GenerateRandomString() (string, error) {

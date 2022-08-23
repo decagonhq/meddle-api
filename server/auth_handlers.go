@@ -176,12 +176,29 @@ func (s *Server) fbCallbackHandler() gin.HandlerFunc {
 
 		authToken, errr := s.AuthService.FacebookSignInUser(token.AccessToken)
 		if errr != nil {
-			log.Printf("error signing in facebook user: %v", errr)
+			log.Printf("Facebook Signin failed due to: %v", errr)
 			respondAndAbort(c, "", http.StatusUnauthorized, nil, errors.New("invalid authToken", http.StatusUnauthorized))
 			return
 		}
 
 		response.JSON(c, "facebook sign in successful", http.StatusOK, authToken, nil)
+	}
+}
+
+func (s *Server) handleDeleteUserByEmail() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		_, user, err := GetValuesFromContext(c)
+		if err != nil {
+			err.Respond(c)
+			return
+		}
+
+		if err := s.AuthService.DeleteUserByEmail(user.Email); err != nil {
+			err.Respond(c)
+			return
+		}
+
+		response.JSON(c, "user successfully deleted", http.StatusOK, nil, nil)
 	}
 }
 
