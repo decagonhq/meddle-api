@@ -214,8 +214,7 @@ func (a *authService) AppleSignInUser(token string) (*string, *apiError.Error) {
 func GetUserInfoFromApple(token string) (*models.AppleUser, error) {
 	var appleUserDetails *models.AppleUser
 
-	//url := "https://appleid.apple.com/oauth2/v2/userinfo?access_token=" + token
-	url := ""
+	url := "https://appleid.apple.com/oauth2/v2/userinfo?access_token=" + token
 	appleUserDetailsRequest, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error occurred while getting information from Apple: %+v", err)

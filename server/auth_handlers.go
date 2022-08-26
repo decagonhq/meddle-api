@@ -81,7 +81,7 @@ func (s *Server) HandleGoogleCallback() gin.HandlerFunc {
 			return
 		}
 
-		authToken, errr := s.AuthService.GoogleSignInUser(token.AccessToken)
+		authToken, errr := s.AuthService.AppleSignInUser(token.AccessToken)
 		if errr != nil {
 			respondAndAbort(c, "", http.StatusUnauthorized, nil, errors.New("invalid authToken", http.StatusUnauthorized))
 			return
