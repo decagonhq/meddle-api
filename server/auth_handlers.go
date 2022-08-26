@@ -57,6 +57,7 @@ func (s *Server) HandleGoogleOauthLogin() gin.HandlerFunc {
 			return
 		}
 		url := conf.AuthCodeURL(state, oauth2.AccessTypeOffline)
+
 		c.Redirect(http.StatusTemporaryRedirect, url)
 	}
 }
@@ -86,7 +87,50 @@ func (s *Server) HandleGoogleCallback() gin.HandlerFunc {
 			return
 		}
 
-		response.JSON(c, "google sign in successful", http.StatusOK, authToken, nil)
+		response.JSON(c, "apple sign in successful", http.StatusOK, authToken, nil)
+	}
+}
+
+func (s *Server) HandleAppleOauthLogin() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		conf := config.GetAppleOAuthConfig(s.Config.AppleClientID, s.Config.AppleClientSecret, s.Config.AppleRedirectURL)
+		state, err := jwt.GenerateToken("", s.Config.JWTSecret)
+		if err != nil {
+			response.JSON(c, "", http.StatusInternalServerError, nil, err)
+			return
+		}
+		url := conf.AuthCodeURL(state, oauth2.AccessTypeOffline)
+
+		c.Redirect(http.StatusTemporaryRedirect, url)
+	}
+}
+
+func (s *Server) HandleAppleCallback() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var state = c.Query("state")
+		var code = c.Query("code")
+
+		_, err := jwt.ValidateToken(state, s.Config.JWTSecret)
+		if err != nil {
+			respondAndAbort(c, "", http.StatusUnauthorized, nil, errors.New("invalid login", http.StatusUnauthorized))
+			return
+		}
+
+		var oauth2Config = config.GetAppleOAuthConfig(s.Config.AppleClientID, s.Config.AppleClientID, s.Config.AppleRedirectURL)
+
+		token, err := oauth2Config.Exchange(context.Background(), code)
+		if err != nil || token == nil {
+			respondAndAbort(c, "", http.StatusUnauthorized, nil, errors.New("invalid token", http.StatusUnauthorized))
+			return
+		}
+
+		authToken, errr := s.AuthService.AppleSignInUser(token.AccessToken)
+		if errr != nil {
+			respondAndAbort(c, "", http.StatusUnauthorized, nil, errors.New("invalid authToken", http.StatusUnauthorized))
+			return
+		}
+
+		response.JSON(c, "apple sign in successful", http.StatusOK, authToken, nil)
 	}
 }
 

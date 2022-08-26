@@ -11,3 +11,9 @@ type GoogleUser struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
 }
+
+type AppleUser struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}
