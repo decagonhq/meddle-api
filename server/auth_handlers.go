@@ -106,9 +106,7 @@ func (s *Server) HandleAppleOauthLogin() gin.HandlerFunc {
 		}
 
 		url := appConf.CreateCallbackURL(state)
-		//c.Redirect(http.StatusTemporaryRedirect, url)
 		c.Redirect(http.StatusTemporaryRedirect, "https://appleid.apple.com/auth/authorize?&response_mode=form_post&client_id=com.herokuapp.meddle&redirect_uri=https%3A%2F%2Fmeddle-app.herokuapp.com%2Fapi%2Fv1%2Fapple%2Fauth&response_type=code&scope=name+email&state="+url)
-		//https://appleid.apple.com/auth/authorize?&response_mode=form_post&client_id=com.herokuapp.meddle&redirect_uri=https%3A%2F%2Fmeddle-app.herokuapp.com%2Fapi%2Fv1%2Fapple%2Fauth&response_type=code&scope=name+email&state=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6IiIsImV4cCI6MTY2MTg3OTEzNX0.A9HwfJ1nNRqUniSMESG6BpWrU3InTzTDBOqXAUj6JnE	//&response_mode=form_post
 	}
 }
 
