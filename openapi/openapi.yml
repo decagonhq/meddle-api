@@ -78,7 +78,7 @@ paths:
           content: { }
       x-codegen-request-body-name: user
   /logout:
-    post:
+    get:
       security:
         - bearerAuth: [ ]
       tags:
