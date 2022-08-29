@@ -1,10 +1,12 @@
 package services
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Timothylock/go-signin-with-apple/apple"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -193,50 +195,43 @@ func GetUserInfoFromGoogle(token string) (*models.GoogleUser, error) {
 	return googleUserDetails, nil
 }
 
-
 func (a *authService) AppleSignInUser(token string) (*string, *apiError.Error) {
 
-	appleUserDetails, appleUserDetailsError := GetUserInfoFromApple(token)
-
-	if appleUserDetailsError != nil {
-		return nil, apiError.New(fmt.Sprintf("unable to get user details from google: %v", appleUserDetailsError), http.StatusUnauthorized)
+	client := apple.New()
+	req := apple.AppValidationTokenRequest{
+		ClientID:     a.Config.AppleClientID,
+		ClientSecret: a.Config.AppleP8Cert,
+		Code:         token,
 	}
 
-	authToken, authTokenError := a.GetAppleSignInToken(appleUserDetails)
+	var resp apple.ValidationResponse
 
-	if authTokenError != nil {
-		return nil, apiError.New(fmt.Sprintf("unable sign in user: %v", authTokenError), http.StatusUnauthorized)
-	}
-	return &authToken, nil
-}
-
-// GetUserInfoFromApple will return information of user which is fetched from Google
-func GetUserInfoFromApple(token string) (*models.AppleUser, error) {
-	var appleUserDetails *models.AppleUser
-
-	url := "https://appleid.apple.com/oauth2/v2/userinfo?access_token=" + token
-	appleUserDetailsRequest, err := http.NewRequest("GET", url, nil)
+	// Do the verification
+	err := client.VerifyAppToken(context.Background(), req, &resp)
 	if err != nil {
-		return nil, fmt.Errorf("error occurred while getting information from Apple: %+v", err)
+		return nil, apiError.New(fmt.Sprintf("unable to verify token: %v", err), http.StatusUnauthorized)
 	}
 
-	appleUserDetailsResponse, appleDetailsResponseError := http.DefaultClient.Do(appleUserDetailsRequest)
-	if appleDetailsResponseError != nil {
-		return nil, fmt.Errorf("error occurred while getting information from Apple: %+v", appleDetailsResponseError)
+	if resp.Error != "" {
+		fmt.Printf("apple returned an error: %s - %s\n", resp.Error, resp.ErrorDescription)
+		if err != nil {
+			return nil, apiError.New(fmt.Sprintf("unable to get user details from apple: %v", err), http.StatusUnauthorized)
+		}
 	}
-
-	body, err := ioutil.ReadAll(appleUserDetailsResponse.Body)
+	// Get the unique user ID
+	_, err = apple.GetUniqueID(resp.IDToken)
 	if err != nil {
-		return nil, fmt.Errorf("error occurred while getting information from Apple: %+v", err)
+		return nil, apiError.New("unable to get user id", http.StatusUnauthorized)
 	}
-	defer appleUserDetailsResponse.Body.Close()
 
-	err = json.Unmarshal(body, &appleUserDetails)
+	// Get the email
+	claim, err := apple.GetClaims(resp.IDToken)
 	if err != nil {
-		return nil, fmt.Errorf("error occurred while getting information from Apple: %+v", err)
+		return nil, apiError.New("unable to get user email", http.StatusUnauthorized)
 	}
 
-	return appleUserDetails, nil
+	email := (*claim)["email"].(string)
+	return &email, nil
 }
 
 func (a *authService) FacebookSignInUser(token string) (*string, *apiError.Error) {

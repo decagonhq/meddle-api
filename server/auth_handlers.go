@@ -2,6 +2,8 @@ package server
 
 import (
 	"context"
+	"github.com/Timothylock/go-signin-with-apple/apple"
+	_ "github.com/Timothylock/go-signin-with-apple/apple"
 
 	"github.com/decagonhq/meddle-api/config"
 	"github.com/decagonhq/meddle-api/services/jwt"
@@ -69,6 +71,7 @@ func (s *Server) HandleGoogleCallback() gin.HandlerFunc {
 		var code = c.Query("code")
 
 		_, err := jwt.ValidateToken(state, s.Config.JWTSecret)
+
 		if err != nil {
 			respondAndAbort(c, "", http.StatusUnauthorized, nil, errors.New("invalid login", http.StatusUnauthorized))
 			return
@@ -82,7 +85,7 @@ func (s *Server) HandleGoogleCallback() gin.HandlerFunc {
 			return
 		}
 
-		authToken, errr := s.AuthService.AppleSignInUser(token.AccessToken)
+		authToken, errr := s.AuthService.GoogleSignInUser(token.AccessToken)
 		if errr != nil {
 			respondAndAbort(c, "", http.StatusUnauthorized, nil, errors.New("invalid authToken", http.StatusUnauthorized))
 			return
@@ -94,44 +97,32 @@ func (s *Server) HandleGoogleCallback() gin.HandlerFunc {
 
 func (s *Server) HandleAppleOauthLogin() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		conf := config.GetAppleOAuthConfig(s.Config.AppleClientID, s.Config.AppleClientSecret, s.Config.AppleRedirectURL)
+		appConf := config.GetAppleAuthConfig(s.Config.AppleTeamID, s.Config.AppleClientID, s.Config.AppleRedirectURL, s.Config.AppleP8Cert)
+
 		state, err := jwt.GenerateToken("", s.Config.JWTSecret)
 		if err != nil {
 			response.JSON(c, "", http.StatusInternalServerError, nil, err)
 			return
 		}
-		url := conf.AuthCodeURL(state, oauth2.AccessTypeOffline)
 
-		c.Redirect(http.StatusTemporaryRedirect, url)
+		url := appConf.CreateCallbackURL(state)
+		//c.Redirect(http.StatusTemporaryRedirect, url)
+		c.Redirect(http.StatusTemporaryRedirect, "https://appleid.apple.com/auth/authorize?&response_mode=form_post&client_id=com.herokuapp.meddle&redirect_uri=https%3A%2F%2Fmeddle-app.herokuapp.com%2Fapi%2Fv1%2Fapple%2Fauth&response_type=code&scope=name+email&state="+url)
+		//https://appleid.apple.com/auth/authorize?&response_mode=form_post&client_id=com.herokuapp.meddle&redirect_uri=https%3A%2F%2Fmeddle-app.herokuapp.com%2Fapi%2Fv1%2Fapple%2Fauth&response_type=code&scope=name+email&state=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6IiIsImV4cCI6MTY2MTg3OTEzNX0.A9HwfJ1nNRqUniSMESG6BpWrU3InTzTDBOqXAUj6JnE	//&response_mode=form_post
 	}
 }
 
 func (s *Server) HandleAppleCallback() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var state = c.Query("state")
-		var code = c.Query("code")
-
-		_, err := jwt.ValidateToken(state, s.Config.JWTSecret)
+		secret, err := apple.GenerateClientSecret(s.Config.AppleP8Cert, s.Config.AppleTeamID, s.Config.AppleClientID, s.Config.AppleKeyID)
 		if err != nil {
-			respondAndAbort(c, "", http.StatusUnauthorized, nil, errors.New("invalid login", http.StatusUnauthorized))
-			return
+			errors.New("invalid login", http.StatusUnauthorized)
 		}
-
-		var oauth2Config = config.GetAppleOAuthConfig(s.Config.AppleClientID, s.Config.AppleClientID, s.Config.AppleRedirectURL)
-
-		token, err := oauth2Config.Exchange(context.Background(), code)
-		if err != nil || token == nil {
-			respondAndAbort(c, "", http.StatusUnauthorized, nil, errors.New("invalid token", http.StatusUnauthorized))
-			return
+		_, err = s.AuthService.AppleSignInUser(secret)
+		if err != nil {
+			errors.New("invalid login", http.StatusInternalServerError)
 		}
-
-		authToken, errr := s.AuthService.AppleSignInUser(token.AccessToken)
-		if errr != nil {
-			respondAndAbort(c, "", http.StatusUnauthorized, nil, errors.New("invalid authToken", http.StatusUnauthorized))
-			return
-		}
-
-		response.JSON(c, "apple sign in successful", http.StatusOK, authToken, nil)
+		response.JSON(c, "apple sign in successful", http.StatusOK, nil, nil)
 	}
 }
 
