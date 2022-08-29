@@ -7,7 +7,8 @@ info:
     email: info@decagonhq.com
   version: 3.0.0
 servers:
-  - url: https://meddle-api.herokuapp.com/api/v1
+  - url: http://ec2-3-143-47-141.us-east-2.compute.amazonaws.com/api/v1
+  - url: https://ec2-3-143-47-141.us-east-2.compute.amazonaws.com/api/v1
   - url: http://localhost:8081/api/v1
 paths:
   /auth/signup:
@@ -235,6 +236,27 @@ paths:
         500:
           description: Internal server error
           content: {}
+    get:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - medication
+      summary: Get all medications for user
+      description: This gets all medications related to a logged in user.
+      operationId: getAllMedication
+      responses:
+        200:
+          description: medications retrieved successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MedicationResponse'
+        403:
+          description: Forbidden user
+          content: { }
+        500:
+          description: Internal server error
+          content: { }
       x-codegen-request-body-name: medication
   /user/medications/{id}:
     get:
