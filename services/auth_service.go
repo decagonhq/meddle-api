@@ -200,7 +200,7 @@ func (a *authService) FacebookSignInUser(token string) (*string, *apiError.Error
 		return nil, apiError.New(fmt.Sprintf("unable to get user details from facebook: %v", fbUserDetailsError), http.StatusUnauthorized)
 	}
 
-	authToken, authTokenError := a.GetSignInToken(fbUserDetails)
+	authToken, authTokenError := a.GetFacebookSignInToken(fbUserDetails)
 	if authTokenError != nil {
 		return nil, apiError.New(fmt.Sprintf("unable sign in user: %v", authTokenError), http.StatusUnauthorized)
 	}
@@ -269,8 +269,8 @@ func (a *authService) GetGoogleSignInToken(googleUserDetails *models.GoogleUser)
 	return tokenString, nil
 }
 
-// GetSignInToken Used for Signing In the Users
-func (a *authService) GetSignInToken(facebookUserDetails *models.FacebookUser) (string, error) {
+// GetFacebookSignInToken Used for Signing In the Users
+func (a *authService) GetFacebookSignInToken(facebookUserDetails *models.FacebookUser) (string, error) {
 	var result *models.User
 
 	if facebookUserDetails == nil {
@@ -292,16 +292,16 @@ func (a *authService) GetSignInToken(facebookUserDetails *models.FacebookUser) (
 
 	if result == nil {
 		result = &models.User{}
-	}
-	result.Email = facebookUserDetails.Email
-	result.Name = facebookUserDetails.Name
-	result.IsEmailActive = true
-	_, err = a.authRepo.CreateUser(result)
-	if err != nil {
-		return "", fmt.Errorf("error occurred creating user: %+v", err)
+		result.Email = facebookUserDetails.Email
+		result.Name = facebookUserDetails.Name
+		result.IsEmailActive = true
+		_, err = a.authRepo.CreateUser(result)
+		if err != nil {
+			return "", fmt.Errorf("error occurred creating user: %+v", err)
+		}
 	}
 
-	tokenString, err := jwt.GenerateToken(facebookUserDetails.Email, a.Config.JWTSecret)
+	tokenString, err := jwt.GenerateToken(result.Email, a.Config.JWTSecret)
 
 	if tokenString == "" {
 		return "", fmt.Errorf("unable to generate Auth token: %+v", err)
