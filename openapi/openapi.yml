@@ -238,7 +238,7 @@ paths:
           content: {}
     get:
       security:
-        - bearerAuth: [ ]
+        - bearerAuth: []
       tags:
         - medication
       summary: Get all medications for user
