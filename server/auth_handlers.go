@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+
 	"github.com/decagonhq/meddle-api/config"
 	"github.com/decagonhq/meddle-api/services/jwt"
 	"golang.org/x/oauth2"
