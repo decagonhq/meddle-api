@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/BillSJC/appleLogin"
 	"log"
 	"os"
 
@@ -33,8 +34,11 @@ type Config struct {
 	GoogleClientSecret   string `envconfig:"google_client_secret"`
 	GoogleRedirectURL    string `envconfig:"google_redirect_url"`
 	AppleClientID       string `envconfig:"apple_client_id"`
-	AppleClientSecret   string `envconfig:"apple_client_secret"`
+	AppleP8Cert   string `envconfig:"apple_p8_cert"`
 	AppleRedirectURL    string `envconfig:"apple_redirect_url"`
+	AppleKeyID   string `envconfig:"apple_key_id"`
+	AppleTeamID   string `envconfig:"team_id"`
+	AndroidClientID	   string `envconfig:"android_client_id"`
 }
 
 func Load() (*Config, error) {
@@ -73,11 +77,11 @@ func GetGoogleOAuthConfig(clientID, clientSecret, redirectURL string) *oauth2.Co
 	}
 }
 
-func GetAppleOAuthConfig(clientID, clientSecret, redirectURL string) *oauth2.Config {
-	return &oauth2.Config{
-		ClientID:     clientID,
-		ClientSecret: clientSecret,
-		RedirectURL:  redirectURL,
-		Scopes:       []string{"email"},
+func GetAppleAuthConfig(appleTeamID, appleClientID, appleRedirectURL, appleKeyID string) *appleLogin.AppleConfig {
+	return &appleLogin.AppleConfig{
+		TeamID: appleTeamID,
+		ClientID: appleClientID,
+		RedirectURI: appleRedirectURL,
+		KeyID: appleKeyID,
 	}
 }
