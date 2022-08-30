@@ -5,7 +5,7 @@ import (
 	"github.com/decagonhq/meddle-api/config"
 	"github.com/decagonhq/meddle-api/mocks"
 	"github.com/decagonhq/meddle-api/models"
-	"github.com/decagonhq/meddle-api/services"
+	"github.com/decagonhq/meddle-api/services/jwt"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -16,12 +16,11 @@ import (
 
 //var mockRepository *mocks.MockAuthRepository
 
-func Test_MedicationDetail(t *testing.T){
+func Test_MedicationDetail(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	auth := mocks.NewMockAuthService(ctrl)
 	repo := mocks.NewMockAuthRepository(ctrl)
 	med := mocks.NewMockMedicationService(ctrl)
-
 
 	conf, err := config.Load()
 	if err != nil {
@@ -32,6 +31,7 @@ func Test_MedicationDetail(t *testing.T){
 		PhoneNumber: "+2348163608141",
 		Email:       "toluwase@gmail.com",
 		Password:    "12345678",
+		IsEmailActive: true,
 	}
 	medication := &models.Medication{
 		Duration:               3,
@@ -39,12 +39,12 @@ func Test_MedicationDetail(t *testing.T){
 		UserID:                 1,
 	}
 	conf.JWTSecret = "testSecret"
-	token, err := services.GenerateToken(user.Email, conf.JWTSecret)
+	token, err := jwt.GenerateToken(user.Email, conf.JWTSecret)
 
 	s := &Server{
-		Config:         conf,
-		AuthRepository: repo,
-		AuthService:    auth,
+		Config:            conf,
+		AuthRepository:    repo,
+		AuthService:       auth,
 		MedicationService: med,
 	}
 
@@ -52,7 +52,6 @@ func Test_MedicationDetail(t *testing.T){
 	repo.EXPECT().TokenInBlacklist(token).Return(false)
 	med.EXPECT().GetMedicationDetail(uint(1), user.ID).Return(medication, nil)
 	repo.EXPECT().FindUserByEmail(user.Email).Return(user, nil)
-
 
 	r := s.setupRouter()
 	resp := httptest.NewRecorder()

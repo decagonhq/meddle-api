@@ -2,15 +2,17 @@ package main
 
 import (
 	"log"
+	"net/http"
+	"time"
 
 	"github.com/decagonhq/meddle-api/config"
 	"github.com/decagonhq/meddle-api/db"
-	"github.com/decagonhq/meddle-api/mailservice"
 	"github.com/decagonhq/meddle-api/server"
 	"github.com/decagonhq/meddle-api/services"
 )
 
 func main() {
+	http.DefaultClient.Timeout = time.Second * 10
 	conf, err := config.Load()
 	if err != nil {
 		log.Fatal(err)
@@ -18,18 +20,18 @@ func main() {
 
 	gormDB := db.GetDB(conf)
 	authRepo := db.NewAuthRepo(gormDB)
-	authService := services.NewAuthService(authRepo, conf)
+	mail := services.NewMailService(conf)
+	authService := services.NewAuthService(authRepo, conf, mail)
 
 	medicationRepo := db.NewMedicationRepo(gormDB)
 	medicationService := services.NewMedicationService(medicationRepo, conf)
-	mailService := mailservice.NewMailService(conf)
 
 	s := &server.Server{
 		Config:            conf,
 		AuthRepository:    authRepo,
 		AuthService:       authService,
 		MedicationService: medicationService,
-		Mail:              mailService,
 	}
+	go services.UpdateMedicationCronJob(medicationService)
 	s.Start()
 }

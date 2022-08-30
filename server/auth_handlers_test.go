@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/decagonhq/meddle-api/config"
+	"github.com/decagonhq/meddle-api/services/jwt"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
@@ -14,7 +16,6 @@ import (
 	"github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/mocks"
 	"github.com/decagonhq/meddle-api/models"
-	"github.com/decagonhq/meddle-api/services"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -29,6 +30,15 @@ func TestSignup(t *testing.T) {
 		Email:       "toluwase@gmail.com",
 		Password:    "12345678",
 	}
+	noEmail := &models.User{
+		PhoneNumber: "+2348163608141",
+		Password:    "12345678",
+	}
+	noPhone := &models.User{
+		Name:  "Tolu",
+		Email: "toluwase@gmail.com",
+	}
+
 	user := &models.User{
 		Name:        newReq.Name,
 		PhoneNumber: newReq.PhoneNumber,
@@ -44,36 +54,40 @@ func TestSignup(t *testing.T) {
 		ExpectedCode    int
 		ExpectedMessage string
 		ExpectedError   string
-		mockDB          func(ctrl *mocks.MockAuthRepository)
+		mockDB          func(ctrl *mocks.MockAuthRepository, service *mocks.MockAuthService)
 		checkResponse   func(recorder *httptest.ResponseRecorder)
 	}{
 		{
 			Name:            "Test Signup with correct details",
 			Request:         newReq,
 			ExpectedCode:    http.StatusCreated,
-			ExpectedMessage: "user created successfully",
+			ExpectedMessage: "Signup successful, check your email for verification",
 			ExpectedError:   "",
-			mockDB: func(ctrl *mocks.MockAuthRepository) {
-				ctrl.EXPECT().IsEmailExist(newReq.Email).Return(nil)
-				ctrl.EXPECT().IsPhoneExist(newReq.PhoneNumber).Return(nil)
-				ctrl.EXPECT().CreateUser(gomock.Any()).Return(user, nil)
+			mockDB: func(ctrl *mocks.MockAuthRepository, service *mocks.MockAuthService) {
+				service.EXPECT().SignupUser(newReq)
 			},
 		},
 		{
 			Name:            "Test Signup with no email",
-			Request:         &models.User{Name: "Tolu", PhoneNumber: "08141636082"},
+			Request:         noEmail,
 			ExpectedCode:    http.StatusBadRequest,
 			ExpectedMessage: "",
 			ExpectedError:   "Email is invalid: toluwase.tt.com",
-			mockDB:          func(ctrl *mocks.MockAuthRepository) {},
+			mockDB: func(ctrl *mocks.MockAuthRepository, service *mocks.MockAuthService) {
+				service.EXPECT().SignupUser(noEmail).
+					Return(&models.User{}, nil).AnyTimes()
+			},
 		},
 		{
 			Name:            "Test Signup with invalid fields",
-			Request:         &models.User{Name: "Tolu", PhoneNumber: "08141", Email: "tolut.a"},
+			Request:         noPhone,
 			ExpectedCode:    http.StatusBadRequest,
 			ExpectedMessage: "",
 			ExpectedError:   "Email is invalid: toluwase.tt.com",
-			mockDB:          func(ctrl *mocks.MockAuthRepository) {},
+			mockDB: func(ctrl *mocks.MockAuthRepository, service *mocks.MockAuthService) {
+				service.EXPECT().SignupUser(noPhone).
+					Return(&models.User{}, nil).AnyTimes()
+			},
 		},
 		{
 			Name:            "Test Signup with duplicate email address",
@@ -81,20 +95,23 @@ func TestSignup(t *testing.T) {
 			ExpectedCode:    http.StatusBadRequest,
 			ExpectedMessage: "",
 			ExpectedError:   "user already exists",
-			mockDB:          func(ctrl *mocks.MockAuthRepository) {},
+			mockDB: func(ctrl *mocks.MockAuthRepository, service *mocks.MockAuthService) {
+				service.EXPECT().SignupUser(newReq).
+					Return(&models.User{}, nil).AnyTimes()
+			},
 		},
 	}
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockAuthRepo := mocks.NewMockAuthRepository(ctrl)
-	authService := services.NewAuthService(mockAuthRepo, testServer.handler.Config)
+	authService := mocks.NewMockAuthService(ctrl)
 	testServer.handler.AuthService = authService
-
+	testServer.handler.AuthRepository = mockAuthRepo
 	for _, c := range cases {
 		t.Run(c.Name, func(t *testing.T) {
 			// FIXME: refactor this test
-			c.mockDB(mockAuthRepo)
+			c.mockDB(mockAuthRepo, authService)
 			data, err := json.Marshal(c.Request)
 			require.NoError(t, err)
 			req, _ := http.NewRequest(http.MethodPost, "/api/v1/auth/signup", bytes.NewReader(data))
@@ -190,7 +207,7 @@ func TestLoginHandler(t *testing.T) {
 			},
 		},
 		{
-			name: "not found case",
+			name: "invalid email case",
 			reqBody: gin.H{
 				"email":    "user@email.com",
 				"password": password,
@@ -209,11 +226,11 @@ func TestLoginHandler(t *testing.T) {
 				AccessToken: "",
 			},
 			buildStubs: func(service *mocks.MockAuthService, request *models.LoginRequest, response *models.LoginResponse) {
-				service.EXPECT().LoginUser(request).Times(1).Return(nil, errors.ErrNotFound)
+				service.EXPECT().LoginUser(request).Times(1).Return(nil, errors.New("invalid email", http.StatusUnprocessableEntity))
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusNotFound, recorder.Code)
-				require.Contains(t, recorder.Body.String(), "not found")
+				require.Equal(t, http.StatusUnprocessableEntity, recorder.Code)
+				require.Contains(t, recorder.Body.String(), "invalid email")
 			},
 		},
 		{
@@ -263,6 +280,116 @@ func TestLoginHandler(t *testing.T) {
 	}
 }
 
+func Test_FacebookCallBackHandler(t *testing.T) {
+	testOauthState, err := jwt.GenerateToken("", testServer.handler.Config.JWTSecret)
+	require.NoError(t, err)
+
+	// test cases
+	testCases := []struct {
+		name                  string
+		state                 string
+		code                  string
+		inputToken            string
+		facebookLoginResponse *string
+		buildStubs            func(service *mocks.MockAuthService, request string, response *string)
+		checkResponse         func(t *testing.T, recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name:  "invalid state case",
+			state: "invalidState",
+			code:  "code",
+			buildStubs: func(service *mocks.MockAuthService, token string, response *string) {
+				service.EXPECT().FacebookSignInUser(token).Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+		{
+			name:  "invalid token",
+			state: testOauthState,
+			code:  "",
+			buildStubs: func(service *mocks.MockAuthService, token string, response *string) {
+				service.EXPECT().FacebookSignInUser(token).Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+	}
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockService := mocks.NewMockAuthService(ctrl)
+	testServer.handler.AuthService = mockService
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.buildStubs(mockService, tc.inputToken, tc.facebookLoginResponse)
+
+			recorder := httptest.NewRecorder()
+			url := fmt.Sprintf("/api/v1/fb/callback?state=%s&code=%s", tc.state, tc.code)
+			req, err := http.NewRequest(http.MethodGet, url, nil)
+			require.NoError(t, err)
+			testServer.router.ServeHTTP(recorder, req)
+			tc.checkResponse(t, recorder)
+		})
+	}
+}
+
+func Test_GoogleCallBackHandler(t *testing.T) {
+	testOauthState, err := jwt.GenerateToken("", testServer.handler.Config.JWTSecret)
+	require.NoError(t, err)
+
+	// test cases
+	testCases := []struct {
+		name                string
+		state               string
+		code                string
+		inputToken          string
+		googleLoginResponse *string
+		buildStubs          func(service *mocks.MockAuthService, request string, response *string)
+		checkResponse       func(t *testing.T, recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name:  "invalid state case",
+			state: "invalidState",
+			code:  "code",
+			buildStubs: func(service *mocks.MockAuthService, token string, response *string) {
+				service.EXPECT().GoogleSignInUser(token).Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+		{
+			name:  "invalid token",
+			state: testOauthState,
+			code:  "",
+			buildStubs: func(service *mocks.MockAuthService, token string, response *string) {
+				service.EXPECT().GoogleSignInUser(token).Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+	}
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockService := mocks.NewMockAuthService(ctrl)
+	testServer.handler.AuthService = mockService
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.buildStubs(mockService, tc.inputToken, tc.googleLoginResponse)
+
+			recorder := httptest.NewRecorder()
+			url := fmt.Sprintf("/api/v1/google/callback?state=%s&code=%s", tc.state, tc.code)
+			req, err := http.NewRequest(http.MethodGet, url, nil)
+			require.NoError(t, err)
+			testServer.router.ServeHTTP(recorder, req)
+			tc.checkResponse(t, recorder)
+		})
+	}
+}
+
 func randomUser(t *testing.T) (user models.User, password string) {
 	password = RandomString(6)
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -281,6 +408,106 @@ func randomUser(t *testing.T) (user models.User, password string) {
 		Email:          RandomEmail(),
 	}
 	return
+}
+
+func Test_Logout(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	auth := mocks.NewMockAuthService(ctrl)
+	repo := mocks.NewMockAuthRepository(ctrl)
+
+	conf, err := config.Load()
+	if err != nil {
+		t.Error(err)
+	}
+	user := &models.User{
+		Name:        "Tolu",
+		PhoneNumber: "+2348163608141",
+		Email:       "toluwase@gmail.com",
+		Password:    "12345678",
+		IsEmailActive: true,
+	}
+	conf.JWTSecret = "testSecret"
+	token, err := jwt.GenerateToken(user.Email, conf.JWTSecret)
+
+	s := &Server{
+		Config:         conf,
+		AuthRepository: repo,
+		AuthService:    auth,
+	}
+
+	repo.EXPECT().AddToBlackList(&models.BlackList{Email: user.Email, Token: token}).Return(nil)
+	repo.EXPECT().TokenInBlacklist(token).Return(false)
+	repo.EXPECT().FindUserByEmail(user.Email).Return(user, nil)
+
+	r := s.setupRouter()
+	resp := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1/logout", strings.NewReader(string(user.Email)))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+
+	r.ServeHTTP(resp, req)
+	fmt.Println(resp.Body.String())
+	assert.Equal(t, 200, resp.Code)
+}
+
+func Test_DeleteUserByEmail(t *testing.T) {
+	accToken, user := AuthorizeTestUser(t)
+
+	testCases := []struct {
+		name               string
+		userEmail          string
+		deleteUserResponse *errors.Error
+		buildStubs         func(service *mocks.MockAuthService, email string, response *errors.Error)
+		checkResponse      func(t *testing.T, recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name:               "delete user successfully",
+			userEmail:          user.Email,
+			deleteUserResponse: nil,
+			buildStubs: func(service *mocks.MockAuthService, email string, response *errors.Error) {
+				service.EXPECT().DeleteUserByEmail(email).Return(response)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+			},
+		},
+		{
+			name:               "delete user failed due to db error",
+			userEmail:          user.Email,
+			deleteUserResponse: errors.ErrInternalServerError,
+			buildStubs: func(service *mocks.MockAuthService, email string, response *errors.Error) {
+				service.EXPECT().DeleteUserByEmail(email).Return(response)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			},
+		},
+	}
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockAuthService := mocks.NewMockAuthService(ctrl)
+	mockAuthRepository := mocks.NewMockAuthRepository(ctrl)
+	testServer.handler.AuthService = mockAuthService
+	testServer.handler.AuthRepository = mockAuthRepository
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockAuthRepository.EXPECT().FindUserByEmail(user.Email).Return(&user, nil)
+			mockAuthRepository.EXPECT().TokenInBlacklist(accToken).Return(false)
+
+			tc.buildStubs(mockAuthService, tc.userEmail, tc.deleteUserResponse)
+
+			recorder := httptest.NewRecorder()
+
+			req, err := http.NewRequest(http.MethodDelete, "/api/v1/users", nil)
+			require.NoError(t, err)
+
+			req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", accToken))
+
+			testServer.router.ServeHTTP(recorder, req)
+			tc.checkResponse(t, recorder)
+		})
+	}
 }
 
 func init() {

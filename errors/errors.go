@@ -3,8 +3,10 @@ package errors
 import (
 	"errors"
 	"fmt"
+	ratelimit "github.com/JGLTechnologies/gin-rate-limit"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,6 +27,7 @@ func (e *Error) Respond(c *gin.Context) {
 		"errors":  e.Error(),
 		"status":  e.Status,
 	}
+
 	c.JSON(e.Status, responsedata)
 }
 
@@ -59,4 +62,8 @@ func GetValidationError(err ValidationError) *Error {
 		Message: err.Error(),
 		Status:  http.StatusBadRequest,
 	}
+}
+
+func ErrorHandler(c *gin.Context, info ratelimit.Info) {
+	c.String(429, "Too many requests. Try again in "+time.Until(info.ResetTime).String())
 }

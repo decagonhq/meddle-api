@@ -1,8 +1,10 @@
 package models
 
 import (
+	"errors"
 	"fmt"
 
+	goval "github.com/go-passwd/validator"
 	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
@@ -19,6 +21,8 @@ type User struct {
 	Password       string `json:"password,omitempty" gorm:"-" binding:"required,min=8,max=15"`
 	HashedPassword string `json:"-" gorm:"password"`
 	IsEmailActive  bool   `json:"-"`
+	Social         string `json:"-"`
+	AccessToken    string `json:"-"`
 }
 
 func ValidateStruct(req interface{}) []error {
@@ -33,7 +37,12 @@ func ValidateStruct(req interface{}) []error {
 	errs = translateError(err, trans)
 	return errs
 }
-
+func ValidatePassword(password string) error {
+	passwordValidator := goval.New(goval.MinLength(6, errors.New("password cant be less than 6 characters")),
+		goval.MaxLength(15, errors.New("password cant be more than 15 characters")))
+	err := passwordValidator.Validate(password)
+	return err
+}
 func validateWhiteSpaces(data interface{}) error {
 	return conform.Strings(data)
 }
@@ -61,6 +70,23 @@ type UserResponse struct {
 type LoginRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
+}
+type ForgotPassword struct {
+	Email string `json:"email" binding:"required,email"`
+}
+type ResetPassword struct {
+	Password        string `json:"password" binding:"required"`
+	ConfirmPassword string `json:"confirm_password" binding:"required"`
+}
+type GoogleAuthResponse struct {
+	ID            string `json:"id"`
+	Email         string `json:"email"`
+	VerifiedEmail bool   `json:"verified_email"`
+	Name          string `json:"name"`
+	GivenName     string `json:"given_name"`
+	FamilyName    string `json:"family_name"`
+	Picture       string `json:"picture"`
+	Locale        string `json:"locale"`
 }
 
 type LoginResponse struct {

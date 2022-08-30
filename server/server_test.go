@@ -3,7 +3,7 @@ package server
 import (
 	"fmt"
 	"github.com/decagonhq/meddle-api/models"
-	"github.com/decagonhq/meddle-api/services"
+	"github.com/decagonhq/meddle-api/services/jwt"
 	"github.com/stretchr/testify/require"
 	"log"
 	"os"
@@ -41,10 +41,10 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func AuthorizeRoutes(t *testing.T) (string, models.User) {
+func AuthorizeTestUser(t *testing.T) (string, models.User) {
 	user, _ := randomUser(t)
-
-	accToken, err := services.GenerateToken(user.Email, testServer.handler.Config.JWTSecret)
+	user.IsEmailActive = true
+	accToken, err := jwt.GenerateToken(user.Email, testServer.handler.Config.JWTSecret)
 
 	require.NoError(t, err)
 	return accToken, user

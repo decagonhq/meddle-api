@@ -18,7 +18,7 @@ func (s *Server) handleCreateMedication() gin.HandlerFunc {
 			return
 		}
 		userId := user.ID
-		if err := c.ShouldBindJSON(&medicationRequest); err != nil {
+		if err := decode(c, &medicationRequest); err != nil {
 			response.JSON(c, "", http.StatusBadRequest, nil, err)
 			return
 		}
@@ -40,12 +40,12 @@ func (s *Server) handleGetMedDetail() gin.HandlerFunc {
 			return
 		}
 		id := c.Param("id")
-		idUint, errr := strconv.ParseUint(id, 10, 32)
+		userId, errr := strconv.ParseUint(id, 10, 32)
 		if errr != nil {
 			response.JSON(c, "error parsing id", http.StatusBadRequest, nil, errr)
 			return
 		}
-		medication, err := s.MedicationService.GetMedicationDetail(uint(idUint), user.ID)
+		medication, err := s.MedicationService.GetMedicationDetail(uint(userId), user.ID)
 		if err != nil {
 			response.JSON(c, "", http.StatusInternalServerError, nil, errors.New("internal server error", http.StatusInternalServerError))
 			return
@@ -70,3 +70,45 @@ func (s *Server) handleGetAllMedications() gin.HandlerFunc {
 	}
 }
 
+func (s *Server) handleGetNextMedication() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		_, user, err := GetValuesFromContext(c)
+		if err != nil {
+			err.Respond(c)
+			return
+		}
+
+		medication, err := s.MedicationService.GetNextMedications(user.ID)
+		if err != nil {
+			err.Respond(c)
+			return
+		}
+		response.JSON(c, "medication retrieved successfully", http.StatusOK, medication, nil)
+	}
+}
+
+func (s *Server) handleUpdateMedication() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		_, user, err := GetValuesFromContext(c)
+		if err != nil {
+			err.Respond(c)
+			return
+		}
+		medicationID, errr := strconv.ParseUint(c.Param("medicationID"), 10, 32)
+		if errr != nil {
+			response.JSON(c, "invalid ID", http.StatusBadRequest, nil, errr)
+			return
+		}
+		var updateMedicationRequest models.UpdateMedicationRequest
+		if err := decode(c, &updateMedicationRequest); err != nil {
+			response.JSON(c, "", http.StatusBadRequest, nil, err)
+			return
+		}
+		err = s.MedicationService.UpdateMedication(&updateMedicationRequest, uint(medicationID), user.ID)
+		if err != nil {
+			err.Respond(c)
+			return
+		}
+		response.JSON(c, "medication updated successfully", http.StatusOK, nil, nil)
+	}
+}
