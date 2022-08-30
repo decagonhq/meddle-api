@@ -196,7 +196,7 @@ paths:
           schema:
             type: string
       requestBody:
-        description: medication to add the system
+        description: password and confirm_password must be equal
         content:
           '*/*':
             schema:
