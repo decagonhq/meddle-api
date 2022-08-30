@@ -437,6 +437,7 @@ components:
           type: string
           format: password
         confirmPassword:
+          format: password
           type: string
    
     ResetPasswordResponse:
