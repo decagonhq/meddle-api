@@ -10,6 +10,8 @@ import (
 	"log"
 )
 
+//1. how to plug the device
+//2. how to plug the notification from our cronjob
 type PushNotification interface {
 	SendPushNotificationToSingleDevice(fcmClient *messaging.Client) (string, error)
 	SendPushNotificationToMultipleDevice(fcmClient *messaging.Client) (*messaging.BatchResponse, error)
@@ -31,6 +33,7 @@ func NewFirebaseCloudMessaging(conf *config.Config) PushNotification {
 func (fcm *FirebaseCloudMessaging) GetDecodedFireBaseKey() ([]byte, error) {
 	decodedKey, err := base64.StdEncoding.DecodeString(fcm.Conf.FirebaseAuthKey)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 
@@ -40,6 +43,7 @@ func (fcm *FirebaseCloudMessaging) GetDecodedFireBaseKey() ([]byte, error) {
 func (fcm *FirebaseCloudMessaging) FirebaseInit() error {
 	decodedKey, err := fcm.GetDecodedFireBaseKey()
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 
@@ -59,6 +63,7 @@ func (fcm *FirebaseCloudMessaging) FirebaseInit() error {
 
 	_, err = fcm.SendPushNotificationToSingleDevice(fcmClient)
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 	return nil
@@ -74,6 +79,7 @@ func (fcm *FirebaseCloudMessaging) SendPushNotificationToSingleDevice(fcmClient 
 	})
 
 	if err != nil {
+		log.Println(err)
 		return "", err
 	}
 	return response, nil
@@ -89,6 +95,7 @@ func (fcm *FirebaseCloudMessaging) SendPushNotificationToMultipleDevice(fcmClien
 	})
 
 	if err != nil {
+		log.Println(err)
 		return &messaging.BatchResponse{}, err
 	}
 	log.Println("Response success count : ", response.SuccessCount)
