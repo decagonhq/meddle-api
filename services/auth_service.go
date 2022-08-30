@@ -36,17 +36,19 @@ type AuthService interface {
 
 // authService struct
 type authService struct {
-	Config   *config.Config
-	authRepo db.AuthRepository
-	mail     Mailer
+	Config           *config.Config
+	authRepo         db.AuthRepository
+	mail             Mailer
+	pushNotification PushNotification
 }
 
 // NewAuthService instantiate an authService
-func NewAuthService(authRepo db.AuthRepository, conf *config.Config, mailer Mailer) AuthService {
+func NewAuthService(authRepo db.AuthRepository, conf *config.Config, mailer Mailer, pushNotification PushNotification) AuthService {
 	return &authService{
-		Config:   conf,
-		authRepo: authRepo,
-		mail:     mailer,
+		Config:           conf,
+		authRepo:         authRepo,
+		mail:             mailer,
+		pushNotification: pushNotification,
 	}
 }
 
