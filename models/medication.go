@@ -7,19 +7,19 @@ import (
 type Medication struct {
 	//base model goes here
 	Model
-	Name                   string    `gorm:"column:name"`
-	Dosage                 int       `gorm:"column:dosage"`
-	TimeInterval           int       `gorm:"column:time_interval"` // min hour daily
-	MedicationStartDate    time.Time `gorm:"column:medication_start_date"`
-	Duration               int       `gorm:"column:duration"`
-	MedicationPrescribedBy string    `gorm:"column:medication_prescribed_by"`
-	MedicationStopDate     time.Time `gorm:"column:medication_stop_date"`
-	MedicationStartTime    time.Time `gorm:"column:medication_start_time"`
-	NextDosageTime         time.Time `gorm:"column:next_dosage_time"`
-	PurposeOfMedication    string    `gorm:"column:purpose_of_medication"`
-	IsMedicationDone       bool      `gorm:"column:is_medication_done"`
-	MedicationIcon         string    `gorm:"column:medication_icon"`
-	UserID                 uint      `gorm:"column:user_id"`
+	Name                   string    `json:"column:name"`
+	Dosage                 int       `json:"column:dosage"`
+	TimeInterval           int       `json:"column:time_interval"` // min hour daily
+	MedicationStartDate    time.Time `json:"column:medication_start_date"`
+	Duration               int       `json:"column:duration"`
+	MedicationPrescribedBy string    `json:"column:medication_prescribed_by"`
+	MedicationStopDate     time.Time `json:"column:medication_stop_date"`
+	MedicationStartTime    time.Time `json:"column:medication_start_time"`
+	NextDosageTime         time.Time `json:"column:next_dosage_time"`
+	PurposeOfMedication    string    `json:"column:purpose_of_medication"`
+	IsMedicationDone       bool      `json:"column:is_medication_done"`
+	MedicationIcon         string    `json:"column:medication_icon"`
+	UserID                 uint      `json:"column:user_id"`
 }
 
 type UpdateMedicationRequest struct {
