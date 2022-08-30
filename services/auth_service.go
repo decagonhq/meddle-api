@@ -39,11 +39,11 @@ type authService struct {
 	Config           *config.Config
 	authRepo         db.AuthRepository
 	mail             Mailer
-	pushNotification PushNotification
+	pushNotification PushNotifier
 }
 
 // NewAuthService instantiate an authService
-func NewAuthService(authRepo db.AuthRepository, conf *config.Config, mailer Mailer, pushNotification PushNotification) AuthService {
+func NewAuthService(authRepo db.AuthRepository, conf *config.Config, mailer Mailer, pushNotification PushNotifier) AuthService {
 	return &authService{
 		Config:           conf,
 		authRepo:         authRepo,

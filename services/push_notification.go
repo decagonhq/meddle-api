@@ -10,9 +10,9 @@ import (
 	"log"
 )
 
-//1. how to plug the device
-//2. how to plug the notification from our cronjob
-type PushNotification interface {
+//go:generate mockgen -destination=../mocks/auth_mock.go -package=mocks github.com/decagonhq/meddle-api/services PushNotification
+
+type PushNotifier interface {
 	SendPushNotificationToSingleDevice(fcmClient *messaging.Client) (string, error)
 	SendPushNotificationToMultipleDevice(fcmClient *messaging.Client) (*messaging.BatchResponse, error)
 	FirebaseInit() error
@@ -24,7 +24,7 @@ type FirebaseCloudMessaging struct {
 }
 
 // NewFirebaseCloudMessaging instantiates an FCM service
-func NewFirebaseCloudMessaging(conf *config.Config) PushNotification {
+func NewFirebaseCloudMessaging(conf *config.Config) PushNotifier {
 	return &FirebaseCloudMessaging{
 		Conf: conf,
 	}

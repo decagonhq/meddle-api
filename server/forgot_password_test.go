@@ -69,7 +69,8 @@ func TestResetPassword(t *testing.T) {
 	defer ctrl.Finish()
 	mockAuthRepo := mocks.NewMockAuthRepository(ctrl)
 	mail := services.NewMailService(testServer.handler.Config)
-	authService := services.NewAuthService(mockAuthRepo, testServer.handler.Config, mail)
+	pushNotification := services.NewFirebaseCloudMessaging(testServer.handler.Config)
+	authService := services.NewAuthService(mockAuthRepo, testServer.handler.Config, mail, pushNotification)
 	testServer.handler.AuthService = authService
 	testServer.handler.AuthRepository = mockAuthRepo
 
