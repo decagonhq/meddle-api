@@ -413,21 +413,21 @@ components:
           type: string
           format: phone
           example: "+234904355689"
-   
+
     ForgotPasswordRequest:
       type: object
       properties:
         email:
           type: string
           format: email
-   
+
     ForgotPasswordResponse:
       type: object
       properties:
         message:
           type: string
           format: object
-     
+
     ResetPasswordRequest:
       type: object
       properties:
@@ -437,14 +437,14 @@ components:
         confirmPassword:
           type: string
           format: password
-   
+
     ResetPasswordResponse:
       type: object
       properties:
         message:
           type: string
           format: object
- 
+
     SignupResponse:
       type: object
       properties:
