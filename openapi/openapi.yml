@@ -7,9 +7,7 @@ info:
     email: info@decagonhq.com
   version: 3.0.0
 servers:
-  - url: http://ec2-3-143-47-141.us-east-2.compute.amazonaws.com/api/v1
-  - url: https://ec2-3-143-47-141.us-east-2.compute.amazonaws.com/api/v1
-  - url: http://localhost:8081/api/v1
+  - url: https://api.meddle-go.net/api/v1
 paths:
   /auth/signup:
     post:
@@ -249,7 +247,7 @@ paths:
           content: {}
     get:
       security:
-        - bearerAuth: [ ]
+        - bearerAuth: []
       tags:
         - medication
       summary: Get all medications for user
