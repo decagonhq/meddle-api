@@ -67,6 +67,25 @@ type MedicationResponse struct {
 	UserID                 uint   `json:"user_id"`
 }
 
+
+type MedicationDetailResponse struct {
+	ID                     uint   `json:"id"`
+	CreatedAt              string `json:"created_at"`
+	UpdatedAt              string `json:"updated_at"`
+	Name                   string `json:"name"`
+	Dosage                 int    `json:"dosage"`
+	TimeInterval           int    `json:"time_interval"` // min hour daily
+	MedicationStartDate    string `json:"medication_start_date"`
+	Duration               int    `json:"duration"`
+	MedicationPrescribedBy string `json:"medication_prescribed_by"`
+	MedicationStopDate     string `json:"medication_stop_date"`
+	MedicationStartTime    string `json:"medication_start_time"`
+	NextDosageTime         string `json:"next_dosage_time"`
+	PurposeOfMedication    string `json:"purpose_of_medication"`
+	MedicationIcon         string `json:"medication_icon"`
+	UserID                 uint   `json:"user_id"`
+}
+
 func (m *MedicationRequest) ReqToMedicationModel() *Medication {
 	return &Medication{
 		Name:                   m.Name,
