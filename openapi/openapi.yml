@@ -7,9 +7,7 @@ info:
     email: info@decagonhq.com
   version: 3.0.0
 servers:
-  - url: http://ec2-3-143-47-141.us-east-2.compute.amazonaws.com/api/v1
-  - url: https://ec2-3-143-47-141.us-east-2.compute.amazonaws.com/api/v1
-  - url: http://localhost:8081/api/v1
+  - url: https://api.meddle-go.net/api/v1
 paths:
   /auth/signup:
     post:
@@ -186,6 +184,7 @@ paths:
       tags:
         - user
       summary: update a user's password
+      description: Supply new password for the user
       operationId: resetPassword
       parameters:
         - name: token
@@ -194,16 +193,26 @@ paths:
           required: true
           schema:
             type: string
+      requestBody:
+        description: password and confirm_password must be equal
+        content:
+          '*/*':
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+        required: true
       responses:
         200:
           description: password reset successfully, Login to continue
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResetPasswordRequest'
+                $ref: '#/components/schemas/ResetPasswordResponse'
         400:
-          description: error unmarshalling body
+          description: Bad request from user
           content: {}
+        500:
+          description: Internal server error
+          content: { }
   /user/medications:
     post:
       security:
@@ -238,7 +247,7 @@ paths:
           content: {}
     get:
       security:
-        - bearerAuth: [ ]
+        - bearerAuth: []
       tags:
         - medication
       summary: Get all medications for user
@@ -426,7 +435,8 @@ components:
           type: string
           format: password
         confirmPassword:
-          type: object
+          type: string
+          format: password
    
     ResetPasswordResponse:
       type: object
