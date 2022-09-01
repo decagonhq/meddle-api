@@ -17,7 +17,7 @@ type User struct {
 	Model
 	Name           string `json:"name" binding:"required,min=2"`
 	Email          string `json:"email" gorm:"unique;not null" binding:"required,email"`
-	PhoneNumber    string `json:"phone_number" gorm:"unique" binding:"required,e164"`
+	PhoneNumber    string `json:"phone_number" gorm:"unique;default:null" binding:"required,e164"`
 	Password       string `json:"password,omitempty" gorm:"-" binding:"required,min=8,max=15"`
 	HashedPassword string `json:"-" gorm:"password"`
 	IsEmailActive  bool   `json:"-"`
