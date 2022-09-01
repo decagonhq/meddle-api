@@ -25,6 +25,13 @@ type User struct {
 	AccessToken    string `json:"-"`
 }
 
+type MultiDevice struct {
+	Model
+	UserID   uint   `gorm:"column:user_id"`
+	Token    string `gorm:"column:token"`
+	isViewed bool   `gorm:"column:is_viewed"`
+}
+
 func ValidateStruct(req interface{}) []error {
 	validate := validator.New()
 	english := en.New()
