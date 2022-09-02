@@ -114,7 +114,7 @@ func (s *Server) handleUpdateMedication() gin.HandlerFunc {
 	}
 }
 
-func (s *Server) MedicationSearch() gin.HandlerFunc {
+func (s *Server) handleFindMedication() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		medicationName := c.Param("name")
