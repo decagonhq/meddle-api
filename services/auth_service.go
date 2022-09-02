@@ -216,7 +216,7 @@ func GetUserInfoFromFacebook(token string) (*models.FacebookUser, error) {
 	if facebookUserDetailsResponseError != nil {
 		return nil, fmt.Errorf("error occurred while getting information from Facebook: %+v", facebookUserDetailsResponseError)
 	}
-	body, err := ioutil.ReadAll(facebookUserDetailsResponse.Body)
+	body, err := ioutil.ReadAll(facebookUserDetailsResponse.Body) //decode response body
 	if err != nil {
 		return nil, fmt.Errorf("error occurred while getting information from Facebook: %+v", err)
 	}
@@ -227,7 +227,7 @@ func GetUserInfoFromFacebook(token string) (*models.FacebookUser, error) {
 		return nil, fmt.Errorf("error occurred while getting information from Facebook: %+v", err)
 	}
 
-	return fbUserDetails, nil
+	return fbUserDetails, nil // print this address
 }
 
 // GetGoogleSignInToken Used for Signing In the Users

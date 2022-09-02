@@ -5,6 +5,7 @@ import (
 	"github.com/decagonhq/meddle-api/models"
 	"github.com/decagonhq/meddle-api/server/response"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -110,5 +111,24 @@ func (s *Server) handleUpdateMedication() gin.HandlerFunc {
 			return
 		}
 		response.JSON(c, "medication updated successfully", http.StatusOK, nil, nil)
+	}
+}
+
+func (s *Server) MedicationSearch() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		medicationName := c.Param("name")
+		medicationDosage := c.Param("dosage")
+		medicationDuration := c.Param("duration")
+		medicationPrescribedBy := c.Param("medication_prescribed_by")
+		medicationPurpose := c.Param("purpose_of_medication")
+
+		medications, err := s.MedicationService.FindMedication(medicationName, medicationDosage, medicationDuration, medicationPrescribedBy, medicationPurpose)
+		if err != nil {
+			log.Printf("Error: %v", err.Error())
+			response.JSON(c, "", http.StatusInternalServerError, nil, errors.New("internal server error", http.StatusInternalServerError))
+			return
+		}
+		response.JSON(c, "medications retrieved successfully", http.StatusOK, medications, nil)
 	}
 }
