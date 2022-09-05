@@ -14,6 +14,7 @@ type MedicationRepository interface {
 	GetNextMedications(userID uint) ([]models.Medication, error)
 	UpdateMedicationDone(medication *models.Medication) error
 	GetAllNextMedicationsToUpdate() ([]models.Medication, error)
+	GetAllNextMedicationsToSendNotifications() ([]models.Medication, error)
 	GetMedicationDetail(id uint, userId uint) (*models.Medication, error)
 	GetAllMedications(userID uint) ([]models.Medication, error)
 	UpdateNextMedicationTime(medication *models.Medication, nextDosageTime time.Time) error
@@ -97,4 +98,14 @@ func (m *medicationRepo) UpdateMedication(medication *models.Medication, medicat
 		return fmt.Errorf("could not update medication: %v", err)
 	}
 	return nil
+}
+
+func (m *medicationRepo) GetAllNextMedicationsToSendNotifications() ([]models.Medication, error) {
+	var medications []models.Medication
+
+	err := m.DB.Where("date_trunc('hour', next_dosage_time) = date_trunc('hour', now())").Where("is_medication_done = false").Find(&medications).Error
+	if err != nil {
+		return nil, fmt.Errorf("could not get next medication: %v", err)
+	}
+	return medications, nil
 }

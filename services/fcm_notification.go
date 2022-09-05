@@ -6,6 +6,9 @@ import (
 	firebase "firebase.google.com/go"
 	"firebase.google.com/go/messaging"
 	"github.com/decagonhq/meddle-api/config"
+	"github.com/decagonhq/meddle-api/db"
+	"github.com/decagonhq/meddle-api/errors"
+	"github.com/decagonhq/meddle-api/models"
 	"google.golang.org/api/option"
 	"log"
 )
@@ -17,20 +20,23 @@ type PushNotifier interface {
 	SendPushNotificationToMultipleDevice(fcmClient *messaging.Client) (*messaging.BatchResponse, error)
 	FirebaseInit() error
 	GetDecodedFireBaseKey() ([]byte, error)
+	AuthorizeNotification(request *models.AddNotificationTokenArgs) (*models.FCMNotificationToken, *errors.Error)
 }
 
-type FirebaseCloudMessaging struct {
-	Conf *config.Config
+type notificationService struct {
+	Conf             *config.Config
+	notificationRepo db.NotificationRepository
 }
 
 // NewFirebaseCloudMessaging instantiates an FCM service
-func NewFirebaseCloudMessaging(conf *config.Config) PushNotifier {
-	return &FirebaseCloudMessaging{
-		Conf: conf,
+func NewFirebaseCloudMessaging(notificationRepo db.NotificationRepository, conf *config.Config) PushNotifier {
+	return &notificationService{
+		notificationRepo: notificationRepo,
+		Conf:             conf,
 	}
 }
 
-func (fcm *FirebaseCloudMessaging) GetDecodedFireBaseKey() ([]byte, error) {
+func (fcm *notificationService) GetDecodedFireBaseKey() ([]byte, error) {
 	decodedKey, err := base64.StdEncoding.DecodeString(fcm.Conf.FirebaseAuthKey)
 	if err != nil {
 		log.Println(err)
@@ -40,7 +46,7 @@ func (fcm *FirebaseCloudMessaging) GetDecodedFireBaseKey() ([]byte, error) {
 	return decodedKey, nil
 }
 
-func (fcm *FirebaseCloudMessaging) FirebaseInit() error {
+func (fcm *notificationService) FirebaseInit() error {
 	decodedKey, err := fcm.GetDecodedFireBaseKey()
 	if err != nil {
 		log.Println(err)
@@ -69,7 +75,7 @@ func (fcm *FirebaseCloudMessaging) FirebaseInit() error {
 	return nil
 }
 
-func (fcm *FirebaseCloudMessaging) SendPushNotificationToSingleDevice(fcmClient *messaging.Client) (string, error) {
+func (fcm *notificationService) SendPushNotificationToSingleDevice(fcmClient *messaging.Client) (string, error) {
 	response, err := fcmClient.Send(context.Background(), &messaging.Message{
 		Notification: &messaging.Notification{
 			Title: "Medication Alert!!!",
@@ -85,7 +91,7 @@ func (fcm *FirebaseCloudMessaging) SendPushNotificationToSingleDevice(fcmClient 
 	return response, nil
 }
 
-func (fcm *FirebaseCloudMessaging) SendPushNotificationToMultipleDevice(fcmClient *messaging.Client) (*messaging.BatchResponse, error) {
+func (fcm *notificationService) SendPushNotificationToMultipleDevice(fcmClient *messaging.Client) (*messaging.BatchResponse, error) {
 	response, err := fcmClient.SendMulticast(context.Background(), &messaging.MulticastMessage{
 		Notification: &messaging.Notification{
 			Title: "Medication Alert!!!",
@@ -101,4 +107,12 @@ func (fcm *FirebaseCloudMessaging) SendPushNotificationToMultipleDevice(fcmClien
 	log.Println("Response success count : ", response.SuccessCount)
 	log.Println("Response failure count : ", response.FailureCount)
 	return response, nil
+}
+
+func (m *notificationService) AuthorizeNotification(request *models.AddNotificationTokenArgs) (*models.FCMNotificationToken, *errors.Error) {
+	token, err := m.notificationRepo.AddNotificationToken(request)
+	if err != nil {
+		return nil, errors.ErrInternalServerError
+	}
+	return token, nil
 }

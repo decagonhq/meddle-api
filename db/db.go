@@ -54,7 +54,7 @@ func getPostgresDB(c *config.Config) *gorm.DB {
 }
 
 func migrate(db *gorm.DB) error {
-	err := db.AutoMigrate(&models.User{}, &models.BlackList{}, &models.Medication{})
+	err := db.AutoMigrate(&models.User{}, &models.BlackList{}, &models.Medication{}, &models.FCMNotificationToken{})
 	if err != nil {
 		return fmt.Errorf("migrations error: %v", err)
 	}

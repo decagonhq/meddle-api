@@ -187,3 +187,28 @@ func GetNextDosageTime(t1, t2 time.Time) time.Time {
 	}
 	return time.Date(t2.Year(), t2.Month(), t2.Day()+1, 9, 0, 0, 0, time.UTC)
 }
+
+// CheckIfThereIsNextMedication cron job
+//check all currently due medication in db
+func CheckIfThereIsNextMedication(medicationService medicationService) {
+	medications, err := medicationService.medicationRepo.GetAllNextMedicationsToSendNotifications()
+	if err != nil {
+		log.Println("could not get medications from db", err)
+		return
+	}
+	//check db for all the time of notifications
+	for _, singleMedication := range medications {
+		//send notification 10 minutes before time
+		if singleMedication.NextDosageTime == time.Now().Add(-time.Second*10) {
+			//send notification based on the user
+		}
+		//send notification at exact time
+		if singleMedication.NextDosageTime == time.Now() {
+			//send notification based on the user NOW
+		}
+	}
+}
+
+func SendNotifications() {
+
+}
