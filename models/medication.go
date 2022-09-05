@@ -7,19 +7,19 @@ import (
 type Medication struct {
 	//base model goes here
 	Model
-	Name                   string    `gorm:"column:name"`
-	Dosage                 int       `gorm:"column:dosage"`
-	TimeInterval           int       `gorm:"column:time_interval"` // min hour daily
-	MedicationStartDate    time.Time `gorm:"column:medication_start_date"`
-	Duration               int       `gorm:"column:duration"`
-	MedicationPrescribedBy string    `gorm:"column:medication_prescribed_by"`
-	MedicationStopDate     time.Time `gorm:"column:medication_stop_date"`
-	MedicationStartTime    time.Time `gorm:"column:medication_start_time"`
-	NextDosageTime         time.Time `gorm:"column:next_dosage_time"`
-	PurposeOfMedication    string    `gorm:"column:purpose_of_medication"`
-	IsMedicationDone       bool      `gorm:"column:is_medication_done"`
-	MedicationIcon         string    `gorm:"column:medication_icon"`
-	UserID                 uint      `gorm:"column:user_id"`
+	Name                   string    `json:"name"`
+	Dosage                 int       `json:"dosage"`
+	TimeInterval           int       `json:"time_interval"` // min hour daily
+	MedicationStartDate    time.Time `json:"medication_start_date"`
+	Duration               int       `json:"duration"`
+	MedicationPrescribedBy string    `json:"medication_prescribed_by"`
+	MedicationStopDate     time.Time `json:"medication_stop_date"`
+	MedicationStartTime    time.Time `json:"medication_start_time"`
+	NextDosageTime         time.Time `json:"next_dosage_time"`
+	PurposeOfMedication    string    `json:"purpose_of_medication"`
+	IsMedicationDone       bool      `json:"is_medication_done"`
+	MedicationIcon         string    `json:"medication_icon"`
+	UserID                 uint      `json:"user_id"`
 }
 
 type UpdateMedicationRequest struct {
@@ -50,6 +50,25 @@ type MedicationRequest struct {
 }
 
 type MedicationResponse struct {
+	ID                     uint   `json:"id"`
+	CreatedAt              string `json:"created_at"`
+	UpdatedAt              string `json:"updated_at"`
+	Name                   string `json:"name"`
+	Dosage                 int    `json:"dosage"`
+	TimeInterval           int    `json:"time_interval"` // min hour daily
+	MedicationStartDate    string `json:"medication_start_date"`
+	Duration               int    `json:"duration"`
+	MedicationPrescribedBy string `json:"medication_prescribed_by"`
+	MedicationStopDate     string `json:"medication_stop_date"`
+	MedicationStartTime    string `json:"medication_start_time"`
+	NextDosageTime         string `json:"next_dosage_time"`
+	PurposeOfMedication    string `json:"purpose_of_medication"`
+	MedicationIcon         string `json:"medication_icon"`
+	UserID                 uint   `json:"user_id"`
+}
+
+
+type MedicationDetailResponse struct {
 	ID                     uint   `json:"id"`
 	CreatedAt              string `json:"created_at"`
 	UpdatedAt              string `json:"updated_at"`
