@@ -36,6 +36,6 @@ func main() {
 		PushNotification:  pushNotification,
 	}
 	go services.UpdateMedicationCronJob(medicationService)
-	//go services.CheckIfThereIsNextMedication(medicationService)
+	go pushNotification.NotificationsCronJob()
 	s.Start()
 }
