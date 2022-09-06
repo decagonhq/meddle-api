@@ -2,9 +2,14 @@ package server
 
 import (
 	"context"
+	"crypto/ecdsa"
+	"crypto/x509"
+	"encoding/pem"
+	_ "github.com/Timothylock/go-signin-with-apple/apple"
 
 	"github.com/decagonhq/meddle-api/config"
 	"github.com/decagonhq/meddle-api/services/jwt"
+	jw "github.com/golang-jwt/jwt"
 	"golang.org/x/oauth2"
 
 	"log"
@@ -58,6 +63,7 @@ func (s *Server) HandleGoogleOauthLogin() gin.HandlerFunc {
 			return
 		}
 		url := conf.AuthCodeURL(state, oauth2.AccessTypeOffline)
+
 		c.Redirect(http.StatusTemporaryRedirect, url)
 	}
 }
@@ -68,6 +74,7 @@ func (s *Server) HandleGoogleCallback() gin.HandlerFunc {
 		var code = c.Query("code")
 
 		_, err := jwt.ValidateToken(state, s.Config.JWTSecret)
+
 		if err != nil {
 			respondAndAbort(c, "", http.StatusUnauthorized, nil, errors.New("invalid login", http.StatusUnauthorized))
 			return
@@ -87,7 +94,90 @@ func (s *Server) HandleGoogleCallback() gin.HandlerFunc {
 			return
 		}
 
-		response.JSON(c, "google sign in successful", http.StatusOK, authToken, nil)
+		response.JSON(c, "apple sign in successful", http.StatusOK, authToken, nil)
+	}
+}
+
+func (s *Server) HandleAppleOauthLogin() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var (
+			// replace your configs here
+			secret      = s.Config.AppleP8Cert
+			keyId       = s.Config.AppleKeyID
+			teamId      = s.Config.AppleTeamID
+			clientId    = s.Config.AppleClientID
+			redirectUrl = s.Config.AppleRedirectURL
+		)
+
+		appConf := config.GetAppleAuthConfig(teamId, clientId, redirectUrl, keyId, secret)
+
+		token := &jw.Token{
+			Header: map[string]interface{}{
+				"alg": "ES256",
+				"kid": s.Config.AppleKeyID,
+			},
+			Claims: jw.MapClaims{
+				"iss": s.Config.AppleTeamID,
+				"iat": time.Now().Unix(),
+				// constraint: exp - iat <= 180 days
+				"exp": time.Now().Add(24 * time.Hour).Unix(),
+				"aud": "https://appleid.apple.com",
+				"sub": s.Config.AppleClientID,
+			},
+			Method: jw.SigningMethodES256,
+		}
+
+		ecdsaKey, _ := AuthKeyFromBytes([]byte(s.Config.AppleP8Cert))
+		ss, _ := token.SignedString(ecdsaKey)
+		url := appConf.CreateCallbackURL(ss)
+		c.Redirect(http.StatusTemporaryRedirect, url)
+		//c.Redirect(http.StatusTemporaryRedirect, "https://appleid.apple.com/auth/authorize?"+url)
+		//c.Redirect(http.StatusTemporaryRedirect, "https://appleid.apple.com/auth/authorize?&response_mode=form_post&client_id=net.meddle.api&redirect_uri=net.meddle.api&response_type=code&scope=name+email&state="+url)
+	}
+}
+
+
+// create private key for jwt sign
+func AuthKeyFromBytes(key []byte) (*ecdsa.PrivateKey, error) {
+	var err error
+
+	// Parse PEM block
+	var block *pem.Block
+	if block, _ = pem.Decode(key); block == nil {
+		return nil, err
+	}
+
+	// Parse the key
+	var parsedKey interface{}
+	if parsedKey, err = x509.ParsePKCS8PrivateKey(block.Bytes); err != nil {
+		return nil, err
+	}
+
+	var pkey *ecdsa.PrivateKey
+	var ok bool
+	if pkey, ok = parsedKey.(*ecdsa.PrivateKey); !ok {
+		return nil, err
+	}
+
+	return pkey, nil
+}
+
+func (s *Server) HandleAppleCallback() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var state = c.Query("state")
+		var code = c.Query("code")
+
+		_, err := jwt.ValidateToken(state, s.Config.JWTSecret)
+		if err != nil {
+			respondAndAbort(c, "", http.StatusUnauthorized, nil, errors.New("invalid login", http.StatusUnauthorized))
+			return
+		}
+
+		_, err = s.AuthService.AppleSignInUser(code)
+		if err != nil {
+			errors.New("invalid login", http.StatusInternalServerError)
+		}
+		response.JSON(c, "apple sign in successful", http.StatusOK, nil, nil)
 	}
 }
 
