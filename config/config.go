@@ -77,7 +77,7 @@ func GetGoogleOAuthConfig(clientID, clientSecret, redirectURL string) *oauth2.Co
 	}
 }
 
-func GetAppleAuthConfig(appleTeamID, appleClientID, appleRedirectURL, appleKeyID string) *appleLogin.AppleConfig {
+func GetAppleAuthConfig(appleTeamID, appleClientID, appleRedirectURL, appleKeyID, appleSecretKey string) *appleLogin.AppleConfig {
 	return &appleLogin.AppleConfig{
 		TeamID: appleTeamID,
 		ClientID: appleClientID,
