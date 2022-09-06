@@ -33,7 +33,7 @@ func Test_MedicationDetail(t *testing.T) {
 		Password:    "12345678",
 		IsEmailActive: true,
 	}
-	medication := &models.Medication{
+	medication := &models.MedicationResponse{
 		Duration:               3,
 		MedicationPrescribedBy: "ken",
 		UserID:                 1,
