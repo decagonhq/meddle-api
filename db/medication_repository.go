@@ -18,7 +18,7 @@ type MedicationRepository interface {
 	GetAllMedications(userID uint) ([]models.Medication, error)
 	UpdateNextMedicationTime(medication *models.Medication, nextDosageTime time.Time) error
 	UpdateMedication(medication *models.Medication, medicationID uint, userID uint) error
-	FindMedication(medicationName, dosage, duration, by, purpose string) ([]models.Medication, error)
+	FindMedication(medicationName, by, purpose string, duration int, dosage int,) (*[]models.Medication, error)
 }
 
 type medicationRepo struct {
@@ -100,27 +100,11 @@ func (m *medicationRepo) UpdateMedication(medication *models.Medication, medicat
 	return nil
 }
 
-func (m *medicationRepo) FindMedication(medicationName, dosage, duration, by, purpose string) ([]models.Medication, error) {
-	var medications []models.Medication
-	stm := ""
-	if medicationName == "" && dosage == "" {
-		stm = fmt.Sprintf("(duration LIKE '%%%s%%' AND by LIKE '%%%s%%' AND purpose LIKE '%%%s%%')", duration, by, purpose)
-	} else if medicationName != "" {
-		stm = fmt.Sprintf("(dosage LIKE '%%%s%%' AND duration LIKE '%%%s%%' AND by LIKE '%%%s%%' AND purpose LIKE '%%%s%%')", dosage, duration, by, purpose)
-	} else if dosage != "" {
-		stm = fmt.Sprintf("(medicationName LIKE '%%%s%%' AND duration LIKE '%%%s%%' AND by LIKE '%%%s%%' AND purpose LIKE '%%%s%%')", medicationName, duration, by, purpose)
-	} else if duration != "" {
-		stm = fmt.Sprintf("(medicationName LIKE '%%%s%%' AND by LIKE '%%%s%%' AND purpose LIKE '%%%s%%')", medicationName, by, purpose)
-	} else if by != "" {
-		stm = fmt.Sprintf("(by LIKE '%%%s%%')", by)
-	} else if purpose != "" {
-		stm = fmt.Sprintf("(purpose LIKE '%%%s%%')", purpose)
-	} else if medicationName == "0" && dosage == "0" && duration == "" && by == "" && purpose == "" {
-		result := m.DB.Preload("Images").Find(&medications)
-		return medications, result.Error
-	} else {
-		stm = fmt.Sprintf("(dosage LIKE '%%%s%%' AND medicationName LIKE '%%%s%%' AND duration LIKE '%%%s%%' AND by LIKE '%%%s%%' AND purpose LIKE '%%%s%%')", dosage, medicationName, duration, by, purpose)
-	}
-	result := m.DB.Preload("medication_icon").Where(stm).Find(&medications)
-	return medications, result.Error
+func (m *medicationRepo) FindMedication(medicationName, by, purpose string,  duration int, dosage int) (*[]models.Medication, error) {
+	var medications *[]models.Medication
+	 err := m.DB.Where("name = ?", medicationName).Or("dosage = ?", dosage).Or("duration = ?",duration).Or("medication_prescribed_by = ?",by).Or("purpose_of_medication = ?",purpose).Find(&medications).Error
+	 if err != nil{
+		 return nil, err
+	 }
+	 return medications, nil
 }
