@@ -181,9 +181,9 @@ func (s *Server) fbCallbackHandler() gin.HandlerFunc {
 			return
 		}
 		result := struct {
-			accessToken *string
+			AccessToken *string `json:"access_token"`
 		}{
-			accessToken: authToken,
+			AccessToken: authToken,
 		}
 
 		response.JSON(c, "facebook sign in successful", http.StatusOK, result, nil)

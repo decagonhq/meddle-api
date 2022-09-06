@@ -517,7 +517,7 @@ components:
     facebookSignInResponseData:
       type: object
       properties:
-        accessToken:
+        access_token:
           type: string
           example: Rbhfwi2PUXndOWVlUpsy0.sedfghjnytdrexcfgvb.sedrcfvgbnuytre4hj
     User:
