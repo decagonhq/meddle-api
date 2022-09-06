@@ -180,8 +180,13 @@ func (s *Server) fbCallbackHandler() gin.HandlerFunc {
 			respondAndAbort(c, "", http.StatusUnauthorized, nil, errors.New("invalid authToken", http.StatusUnauthorized))
 			return
 		}
+		result := struct {
+			accessToken *string
+		}{
+			accessToken: authToken,
+		}
 
-		response.JSON(c, "facebook sign in successful", http.StatusOK, authToken, nil)
+		response.JSON(c, "facebook sign in successful", http.StatusOK, result, nil)
 	}
 }
 

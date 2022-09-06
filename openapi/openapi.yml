@@ -75,6 +75,33 @@ paths:
           description: internal server error
           content: { }
       x-codegen-request-body-name: user
+  /fb/auth:
+    get:
+      tags:
+        - user
+      summary: signs user into the system using facebook
+      operationId: facebookSignInUser
+      responses:
+        200:
+          description: facebook sign in successful
+          headers:
+            X-Rate-Limit:
+              description: calls per hour allowed by the user
+              schema:
+                type: integer
+                format: int32
+            X-Expires-After:
+              description: date in UTC when token expires
+              schema:
+                type: string
+                format: date-time
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacebookSignInResponse'
+        401:
+          description: unauthorized user
+          content: { }
   /logout:
     get:
       security:
@@ -469,10 +496,30 @@ components:
           example: ""
         message:
           type: string
-          example: user created successfully
+          example: user login successfully
         status:
           type: integer
           example: 200
+    FacebookSignInResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/facebookSignInResponseData'
+        errors:
+          type: string
+          example: ""
+        message:
+          type: string
+          example: facebook sign in successful
+        status:
+          type: integer
+          example: 200
+    facebookSignInResponseData:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          example: Rbhfwi2PUXndOWVlUpsy0.sedfghjnytdrexcfgvb.sedrcfvgbnuytre4hj
     User:
       type: object
       properties:
