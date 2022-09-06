@@ -42,7 +42,6 @@ type MedicationRequest struct {
 	MedicationStartDate    string `json:"medication_start_date" binding:"required"`
 	Duration               int    `json:"duration" binding:"required"`
 	MedicationPrescribedBy string `json:"medication_prescribed_by" binding:"required"`
-	MedicationStopDate     string `json:"medication_stop_date" binding:"required"`
 	MedicationStartTime    string `json:"medication_start_time" binding:"required"`
 	PurposeOfMedication    string `json:"purpose_of_medication" binding:"required"`
 	MedicationIcon         string `json:"medication_icon" binding:"required"`
@@ -66,7 +65,6 @@ type MedicationResponse struct {
 	MedicationIcon         string `json:"medication_icon"`
 	UserID                 uint   `json:"user_id"`
 }
-
 
 type MedicationDetailResponse struct {
 	ID                     uint   `json:"id"`
