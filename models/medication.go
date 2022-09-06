@@ -29,7 +29,6 @@ type UpdateMedicationRequest struct {
 	MedicationStartDate    string `json:"medication_start_date"`
 	Duration               int    `json:"duration"`
 	MedicationPrescribedBy string `json:"medication_prescribed_by"`
-	MedicationStopDate     string `json:"medication_stop_date"`
 	MedicationStartTime    string `json:"medication_start_time"`
 	PurposeOfMedication    string `json:"purpose_of_medication"`
 	MedicationIcon         string `json:"medication_icon"`
