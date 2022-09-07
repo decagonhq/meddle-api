@@ -135,3 +135,6 @@ func (s *Server) handleFindMedication() gin.HandlerFunc {
 		response.JSON(c, "medications retrieved successfully", http.StatusOK, medications, nil)
 	}
 }
+
+
+

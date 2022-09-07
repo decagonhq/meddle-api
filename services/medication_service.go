@@ -200,3 +200,4 @@ func (m *medicationService) FindMedication(medicationName, by, purpose string, d
 	}
 	return medications, nil
 }
+
