@@ -227,7 +227,7 @@ func GetUserInfoFromFacebook(token string) (*models.FacebookUser, error) {
 		return nil, fmt.Errorf("error occurred while getting information from Facebook: %+v", err)
 	}
 
-	return fbUserDetails, nil // print this address
+	return fbUserDetails, nil
 }
 
 // GetGoogleSignInToken Used for Signing In the Users

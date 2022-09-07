@@ -44,7 +44,7 @@ func (s *Server) defineRoutes(router *gin.Engine) {
 	authorized.GET("/user/medications", s.handleGetAllMedications())
 	authorized.PUT("/user/medications/:medicationID", s.handleUpdateMedication())
 	authorized.GET("/user/medications/next", s.handleGetNextMedication())
-	authorized.GET("/user/findMedication", s.handleFindMedication())
+	authorized.GET("/user/search", s.handleFindMedication())
 
 
 }
