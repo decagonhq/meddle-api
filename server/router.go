@@ -38,7 +38,7 @@ func (s *Server) defineRoutes(router *gin.Engine) {
 	authorized.DELETE("/users", s.handleDeleteUserByEmail())
 	authorized.PUT("/me/update", s.handleUpdateUserDetails())
 	authorized.GET("/me", s.handleShowProfile())
-  
+
 	authorized.POST("/user/medications", s.handleCreateMedication())
 	authorized.GET("/user/medications/:id", s.handleGetMedDetail())
 	authorized.GET("/user/medications", s.handleGetAllMedications())
@@ -89,7 +89,7 @@ func (s *Server) setupRouter() *gin.Engine {
 	// setup cors
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
-		AllowMethods:     []string{"POST", "GET", "PUT", "PATCH"},
+		AllowMethods:     []string{"POST", "GET", "PUT", "PATCH", "DELETE"},
 		AllowHeaders:     []string{"*"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,

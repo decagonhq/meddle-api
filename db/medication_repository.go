@@ -108,3 +108,4 @@ func (m *medicationRepo) FindMedication(medicationName, by, purpose string,  dur
 	 }
 	 return medications, nil
 }
+
