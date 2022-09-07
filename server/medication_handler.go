@@ -136,5 +136,3 @@ func (s *Server) handleFindMedication() gin.HandlerFunc {
 	}
 }
 
-
-
