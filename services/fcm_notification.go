@@ -155,20 +155,12 @@ func (fcm *notificationService) CheckIfThereIsNextMedication() {
 				ClickAction: "/user/medication/id?=" + strconv.Itoa(int((medicationNotifications)[i].ID)),
 			})
 			if err != nil {
-				log.Println("error sending notification")
+				log.Println("error sending notification", err)
 				return
 			}
 
 		}(i)
 
-		////send notification 10 minutes before time
-		//if singleMedication.NextDosageTime == time.Now().Add(-time.Second*10) {
-		//	//send notification based on the user
-		//}
-		////send notification at exact time
-		//if singleMedication.NextDosageTime == time.Now() {
-		//	//send notification based on the user NOW
-		//}
 	}
 }
 
@@ -177,7 +169,7 @@ func (fcm *notificationService) SendPushNotification(registrationTokens []string
 		Notification: &messaging.Notification{
 			Title:    payload.Title,
 			Body:     payload.Body,
-			ImageURL: "https://i.imgur.com/mGOXXII.png",
+			ImageURL: "https://imgur.com/a/hmt6Mx2",
 		},
 		Data: payload.Data,
 		Webpush: &messaging.WebpushConfig{
@@ -185,7 +177,7 @@ func (fcm *notificationService) SendPushNotification(registrationTokens []string
 			Notification: &messaging.WebpushNotification{
 				Title:   payload.Title,
 				Body:    payload.Body,
-				Icon:    "https://i.imgur.com/mGOXXII.png",
+				Icon:    "https://imgur.com/a/hmt6Mx2",
 				Vibrate: []int{200, 100, 200},
 			},
 		},

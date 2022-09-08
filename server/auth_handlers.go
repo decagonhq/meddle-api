@@ -74,13 +74,16 @@ func (s *Server) HandleGoogleCallback() gin.HandlerFunc {
 		}
 
 		var oauth2Config = config.GetGoogleOAuthConfig(s.Config.GoogleClientID, s.Config.GoogleClientID, s.Config.GoogleRedirectURL)
-
+		log.Println("oauth2Config: ", oauth2Config)
+		log.Println("code: ", code)
 		token, err := oauth2Config.Exchange(context.Background(), code)
 		if err != nil || token == nil {
+			log.Println("checking my token value error: ", token)
+			log.Println("logging error: ", err)
 			respondAndAbort(c, "", http.StatusUnauthorized, nil, errors.New("invalid token", http.StatusUnauthorized))
 			return
 		}
-
+		log.Println("checking my token value success: ", token)
 		authToken, errr := s.AuthService.GoogleSignInUser(token.AccessToken)
 		if errr != nil {
 			respondAndAbort(c, "", http.StatusUnauthorized, nil, errors.New("invalid authToken", http.StatusUnauthorized))
