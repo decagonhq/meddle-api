@@ -32,6 +32,7 @@ type Config struct {
 	GoogleClientID       string `envconfig:"google_client_id"`
 	GoogleClientSecret   string `envconfig:"google_client_secret"`
 	GoogleRedirectURL    string `envconfig:"google_redirect_url"`
+	FirebaseAuthKey      string `envconfig:"firebase_auth_key"`
 }
 
 func Load() (*Config, error) {

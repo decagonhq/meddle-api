@@ -21,7 +21,9 @@ func main() {
 	gormDB := db.GetDB(conf)
 	authRepo := db.NewAuthRepo(gormDB)
 	mail := services.NewMailService(conf)
-	authService := services.NewAuthService(authRepo, conf, mail)
+	notificationRepo := db.NewNotificationRepo(gormDB)
+	pushNotification := services.NewFirebaseCloudMessaging(notificationRepo, conf)
+	authService := services.NewAuthService(authRepo, conf, mail, pushNotification)
 
 	medicationRepo := db.NewMedicationRepo(gormDB)
 	medicationService := services.NewMedicationService(medicationRepo, conf)
@@ -31,7 +33,9 @@ func main() {
 		AuthRepository:    authRepo,
 		AuthService:       authService,
 		MedicationService: medicationService,
+		PushNotification:  pushNotification,
 	}
 	go services.UpdateMedicationCronJob(medicationService)
+	go pushNotification.NotificationsCronJob()
 	s.Start()
 }
