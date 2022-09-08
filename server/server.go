@@ -20,6 +20,7 @@ type Server struct {
 	AuthRepository    db.AuthRepository
 	AuthService       services.AuthService
 	MedicationService services.MedicationService
+	PushNotification  services.PushNotifier
 }
 
 func (s *Server) Start() {

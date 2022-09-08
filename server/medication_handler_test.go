@@ -21,7 +21,6 @@ func TestCreateMedicationHandler(t *testing.T) {
 	accToken, user := AuthorizeTestUser(t)
 
 	startDate, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
-	stopDate, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
 	startTime, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
 
 	medication := &models.Medication{
@@ -37,7 +36,7 @@ func TestCreateMedicationHandler(t *testing.T) {
 		MedicationStartDate:    startDate,
 		Duration:               7,
 		MedicationPrescribedBy: "Dr Tolu",
-		MedicationStopDate:     stopDate,
+		MedicationStopDate:     startTime.AddDate(0, 0, 7),
 		MedicationStartTime:    startTime,
 		NextDosageTime:         startTime.Add(time.Hour * time.Duration(8)),
 		MedicationIcon:         "Heart Icon",
@@ -61,7 +60,6 @@ func TestCreateMedicationHandler(t *testing.T) {
 				"medication_start_date":    "2012-04-23T18:25:43.511Z",
 				"duration":                 7,
 				"medication_prescribed_by": "Dr Tolu",
-				"medication_stop_date":     "2012-04-23T18:25:43.511Z",
 				"medication_start_time":    "2012-04-23T18:25:43.511Z",
 				"medication_icon":          "Heart Icon",
 				"purpose_of_medication":    "malaria treatment",
@@ -73,7 +71,6 @@ func TestCreateMedicationHandler(t *testing.T) {
 				MedicationStartDate:    "2012-04-23T18:25:43.511Z",
 				Duration:               7,
 				MedicationPrescribedBy: "Dr Tolu",
-				MedicationStopDate:     "2012-04-23T18:25:43.511Z",
 				MedicationStartTime:    "2012-04-23T18:25:43.511Z",
 				PurposeOfMedication:    "malaria treatment",
 				MedicationIcon:         "Heart Icon",
@@ -111,7 +108,6 @@ func TestCreateMedicationHandler(t *testing.T) {
 				"time_interval":            8,
 				"medication_start_date":    "2012-04-23T18:25:43.511Z",
 				"medication_prescribed_by": "Dr Tolu",
-				"medication_stop_date":     "2012-04-23T18:25:43.511Z",
 				"medication_start_time":    "2012-04-23T18:25:43.511Z",
 				"purpose_of_medication":    "malaria treatment",
 				"medication_icon":          "Heart Icon",
@@ -134,7 +130,6 @@ func TestCreateMedicationHandler(t *testing.T) {
 				"medication_start_date":    "2012-04-23T18:25:43.511Z",
 				"duration":                 7,
 				"medication_prescribed_by": "Dr Tolu",
-				"medication_stop_date":     "2012-04-23T18:25:43.511Z",
 				"medication_start_time":    "2013-11-12",
 				"medication_icon":          "Heart Icon",
 				"purpose_of_medication":    "malaria treatment",
@@ -146,7 +141,6 @@ func TestCreateMedicationHandler(t *testing.T) {
 				MedicationStartDate:    "2012-04-23T18:25:43.511Z",
 				Duration:               7,
 				MedicationPrescribedBy: "Dr Tolu",
-				MedicationStopDate:     "2012-04-23T18:25:43.511Z",
 				MedicationStartTime:    "2013-11-12",
 				PurposeOfMedication:    "malaria treatment",
 				MedicationIcon:         "Heart Icon",
@@ -169,7 +163,6 @@ func TestCreateMedicationHandler(t *testing.T) {
 				"medication_start_date":    "2012-04-23T18:25:43.511Z",
 				"duration":                 7,
 				"medication_prescribed_by": "Dr Tolu",
-				"medication_stop_date":     "2012-04-23T18:25:43.511Z",
 				"medication_start_time":    "2012-04-23T18:25:43.511Z",
 				"medication_icon":          "Heart Icon",
 				"purpose_of_medication":    "malaria treatment",
@@ -181,7 +174,6 @@ func TestCreateMedicationHandler(t *testing.T) {
 				MedicationStartDate:    "2012-04-23T18:25:43.511Z",
 				Duration:               7,
 				MedicationPrescribedBy: "Dr Tolu",
-				MedicationStopDate:     "2012-04-23T18:25:43.511Z",
 				MedicationStartTime:    "2012-04-23T18:25:43.511Z",
 				PurposeOfMedication:    "malaria treatment",
 				MedicationIcon:         "Heart Icon",
@@ -232,7 +224,6 @@ func TestGetAllMedicationHandler(t *testing.T) {
 	accToken, user := AuthorizeTestUser(t)
 
 	startDate, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
-	stopDate, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
 	startTime, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
 
 	medication := models.Medication{
@@ -242,7 +233,7 @@ func TestGetAllMedicationHandler(t *testing.T) {
 		MedicationStartDate:    startDate,
 		Duration:               7,
 		MedicationPrescribedBy: "Dr Tolu",
-		MedicationStopDate:     stopDate,
+		MedicationStopDate:     startTime.AddDate(0, 0, 7),
 		MedicationStartTime:    startTime,
 		NextDosageTime:         startTime.Add(time.Hour * time.Duration(8)),
 		PurposeOfMedication:    "malaria treatment",
@@ -343,7 +334,6 @@ func TestGetNextMedicationHandler(t *testing.T) {
 	accToken, user := AuthorizeTestUser(t)
 
 	startDate, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
-	stopDate, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
 	startTime, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
 
 	medication := models.Medication{
@@ -353,7 +343,7 @@ func TestGetNextMedicationHandler(t *testing.T) {
 		MedicationStartDate:    startDate,
 		Duration:               7,
 		MedicationPrescribedBy: "Dr Tolu",
-		MedicationStopDate:     stopDate,
+		MedicationStopDate:     startTime.AddDate(0, 0, 7),
 		MedicationStartTime:    startTime,
 		NextDosageTime:         startTime.Add(time.Hour * time.Duration(8)),
 		PurposeOfMedication:    "malaria treatment",
@@ -444,7 +434,6 @@ func Test_UpdateMedicationHandler(t *testing.T) {
 		MedicationStartDate:    "2013-10-21T13:28:06.419Z",
 		Duration:               7,
 		MedicationPrescribedBy: "Dr Tolu",
-		MedicationStopDate:     "2013-10-21T13:28:06.419Z",
 		MedicationStartTime:    "2013-10-21T13:28:06.419Z",
 		PurposeOfMedication:    "malaria treatment",
 		MedicationIcon:         "Heart Icon",
@@ -470,7 +459,6 @@ func Test_UpdateMedicationHandler(t *testing.T) {
 				"medication_start_date":    "2013-10-21T13:28:06.419Z",
 				"duration":                 7,
 				"medication_prescribed_by": "Dr Tolu",
-				"medication_stop_date":     "2013-10-21T13:28:06.419Z",
 				"medication_start_time":    "2013-10-21T13:28:06.419Z",
 				"medication_icon":          "Heart Icon",
 				"purpose_of_medication":    "malaria treatment",
@@ -482,7 +470,6 @@ func Test_UpdateMedicationHandler(t *testing.T) {
 				MedicationStartDate:    medication.MedicationStartDate,
 				Duration:               medication.Duration,
 				MedicationPrescribedBy: medication.MedicationPrescribedBy,
-				MedicationStopDate:     medication.MedicationStopDate,
 				MedicationStartTime:    medication.MedicationStartTime,
 				PurposeOfMedication:    medication.PurposeOfMedication,
 				MedicationIcon:         medication.MedicationIcon,
@@ -505,7 +492,6 @@ func Test_UpdateMedicationHandler(t *testing.T) {
 				"medication_start_date":    "2013-10-21T13:28:06.419Z",
 				"duration":                 7,
 				"medication_prescribed_by": "Dr Tolu",
-				"medication_stop_date":     "2013-10-21T13:28:06.419Z",
 				"medication_start_time":    "2013-10-21T13:28:06.419Z",
 				"medication_icon":          "Heart Icon",
 				"purpose_of_medication":    "malaria treatment",
@@ -517,7 +503,6 @@ func Test_UpdateMedicationHandler(t *testing.T) {
 				MedicationStartDate:    medication.MedicationStartDate,
 				Duration:               medication.Duration,
 				MedicationPrescribedBy: medication.MedicationPrescribedBy,
-				MedicationStopDate:     medication.MedicationStopDate,
 				MedicationStartTime:    medication.MedicationStartTime,
 				PurposeOfMedication:    medication.PurposeOfMedication,
 				MedicationIcon:         medication.MedicationIcon,
