@@ -102,7 +102,7 @@ func (m *medicationRepo) UpdateMedication(medication *models.Medication, medicat
 
 func (m *medicationRepo) FindMedication(medicationName, by, purpose string,  duration int, dosage int) (*[]models.Medication, error) {
 	var medications *[]models.Medication
-	 err := m.DB.Where("name = ?", medicationName).Or("dosage = ?", dosage).Or("duration = ?", duration).Or("medication_prescribed_by = ?",by).Or("purpose_of_medication = ?",purpose).Find(&medications).Error
+	 err := m.DB.Where("name LIKE ?", "%"+medicationName+"%").Or("dosage = ?", dosage).Or("duration = ?", duration).Or("medication_prescribed_by LIKE ?","%"+by+"%").Or("purpose_of_medication LIKE ?", "%"+purpose+"%").Find(&medications).Error
 	 if err != nil{
 		 return nil, err
 	 }
