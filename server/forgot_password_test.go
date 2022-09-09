@@ -68,8 +68,9 @@ func TestResetPassword(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockAuthRepo := mocks.NewMockAuthRepository(ctrl)
-	mail := services.NewMailService(testServer.handler.Config)
-	authService := services.NewAuthService(mockAuthRepo, testServer.handler.Config, mail)
+	mail := mocks.NewMockMailer(ctrl)
+	pushNotifier := mocks.NewMockPushNotifier(ctrl)
+	authService := services.NewAuthService(mockAuthRepo, testServer.handler.Config, mail, pushNotifier)
 	testServer.handler.AuthService = authService
 	testServer.handler.AuthRepository = mockAuthRepo
 
