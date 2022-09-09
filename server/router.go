@@ -47,7 +47,7 @@ func (s *Server) defineRoutes(router *gin.Engine) {
 	authorized.GET("/user/search", s.handleFindMedication())
 
 
-	authorized.POST("/add/notification/token", s.authorizeNotificationsForDevice())
+	authorized.POST("/notifications/add-token", s.authorizeNotificationsForDevice())
 
 }
 
