@@ -218,7 +218,7 @@ func GetUserInfoFromFacebook(token string) (*models.FacebookUser, error) {
 	if facebookUserDetailsResponseError != nil {
 		return nil, fmt.Errorf("error occurred while getting information from Facebook: %+v", facebookUserDetailsResponseError)
 	}
-	body, err := ioutil.ReadAll(facebookUserDetailsResponse.Body) //decode response body
+	body, err := ioutil.ReadAll(facebookUserDetailsResponse.Body)
 	if err != nil {
 		return nil, fmt.Errorf("error occurred while getting information from Facebook: %+v", err)
 	}
