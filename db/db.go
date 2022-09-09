@@ -7,10 +7,9 @@ import (
 	"os"
 	"time"
 
-	"gorm.io/driver/mysql"
-
 	"github.com/decagonhq/meddle-api/config"
 	"github.com/decagonhq/meddle-api/models"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -47,7 +46,7 @@ func getPostgresDB(c *config.Config) *gorm.DB {
 			Colorful:                  false,       // Disable color
 		},
 	)
-	postgresDB, err := gorm.Open(mysql.Open(postgresDSN), &gorm.Config{
+	postgresDB, err := gorm.Open(postgres.Open(postgresDSN), &gorm.Config{
 		Logger: newLogger,
 	})
 	if err != nil {
