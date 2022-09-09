@@ -14,6 +14,7 @@ import (
 )
 
 var mockMedicationRepository *mocks.MockMedicationRepository
+var mockMedicationHistoryRepository *mocks.MockMedicationHistoryRepository
 var testMedicationService MedicationService
 
 func Test_CreateMedicationService(t *testing.T) {
