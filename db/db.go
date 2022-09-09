@@ -2,10 +2,12 @@ package db
 
 import (
 	"fmt"
-	"gorm.io/driver/postgres"
+	//"gorm.io/driver/postgres"
 	"log"
 	"os"
 	"time"
+
+	"gorm.io/driver/mysql"
 
 	"github.com/decagonhq/meddle-api/config"
 	"github.com/decagonhq/meddle-api/models"
@@ -35,6 +37,7 @@ func getPostgresDB(c *config.Config) *gorm.DB {
 	log.Printf("Connecting to postgres: %+v", c)
 	postgresDSN := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d TimeZone=Africa/Lagos",
 		c.PostgresHost, c.PostgresUser, c.PostgresPassword, c.PostgresDB, c.PostgresPort)
+	// dsn := "root:toluwase@tcp(127.0.0.1:3306)/meddle?charset=utf8mb4&parseTime=True&loc=Local"
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
 		logger.Config{
@@ -44,7 +47,7 @@ func getPostgresDB(c *config.Config) *gorm.DB {
 			Colorful:                  false,       // Disable color
 		},
 	)
-	postgresDB, err := gorm.Open(postgres.Open(postgresDSN), &gorm.Config{
+	postgresDB, err := gorm.Open(mysql.Open(postgresDSN), &gorm.Config{
 		Logger: newLogger,
 	})
 	if err != nil {
