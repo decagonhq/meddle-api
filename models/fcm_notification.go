@@ -2,9 +2,9 @@ package models
 
 type FCMNotificationToken struct {
 	Model
-	UserID   uint   `gorm:"column:user_id"`
-	Token    string `gorm:"column:token"`
-	isViewed bool   `gorm:"column:is_viewed"`
+	UserID   uint   `json:"user_id"`
+	Token    string `json:"token"`
+	IsViewed bool   `json:"is_viewed"`
 }
 
 type AddNotificationTokenArgs struct {
