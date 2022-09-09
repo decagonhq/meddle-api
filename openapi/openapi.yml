@@ -397,7 +397,7 @@ paths:
         500:
           description: Internal server error
           content: { }
-  /add/notification/token:
+  /notification/add-token:
     post:
       security:
         - bearerAuth: [ ]
