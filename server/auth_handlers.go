@@ -74,13 +74,11 @@ func (s *Server) HandleGoogleCallback() gin.HandlerFunc {
 		}
 
 		var oauth2Config = config.GetGoogleOAuthConfig(s.Config.GoogleClientID, s.Config.GoogleClientID, s.Config.GoogleRedirectURL)
-
 		token, err := oauth2Config.Exchange(context.Background(), code)
 		if err != nil || token == nil {
 			respondAndAbort(c, "", http.StatusUnauthorized, nil, errors.New("invalid token", http.StatusUnauthorized))
 			return
 		}
-
 		authToken, errr := s.AuthService.GoogleSignInUser(token.AccessToken)
 		if errr != nil {
 			respondAndAbort(c, "", http.StatusUnauthorized, nil, errors.New("invalid authToken", http.StatusUnauthorized))
@@ -180,8 +178,13 @@ func (s *Server) fbCallbackHandler() gin.HandlerFunc {
 			respondAndAbort(c, "", http.StatusUnauthorized, nil, errors.New("invalid authToken", http.StatusUnauthorized))
 			return
 		}
+		result := struct {
+			AccessToken *string `json:"access_token"`
+		}{
+			AccessToken: authToken,
+		}
 
-		response.JSON(c, "facebook sign in successful", http.StatusOK, authToken, nil)
+		response.JSON(c, "facebook sign in successful", http.StatusOK, result, nil)
 	}
 }
 

@@ -21,7 +21,8 @@ func setup(t *testing.T) func() {
 	ctrl.Finish()
 	mockRepository = mocks.NewMockAuthRepository(ctrl)
 	mailService := mocks.NewMockMailer(ctrl)
-	testAuthService = NewAuthService(mockRepository, testConfig, mailService)
+	pushNotification := mocks.NewMockPushNotifier(ctrl)
+	testAuthService = NewAuthService(mockRepository, testConfig, mailService, pushNotification)
 
 	mockMedicationRepository = mocks.NewMockMedicationRepository(ctrl)
 	testMedicationService = NewMedicationService(mockMedicationRepository, testConfig)

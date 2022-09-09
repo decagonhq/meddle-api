@@ -43,10 +43,6 @@ func (m *medicationService) CreateMedication(request *models.MedicationRequest) 
 	if err != nil {
 		return nil, errors.New("wrong date format", http.StatusBadRequest)
 	}
-	stopDate, err := time.Parse(time.RFC3339, request.MedicationStopDate)
-	if err != nil {
-		return nil, errors.New("wrong date format", http.StatusBadRequest)
-	}
 	startTime, err := time.Parse(time.RFC3339, request.MedicationStartTime)
 	if err != nil {
 		return nil, errors.New("wrong time format", http.StatusBadRequest)
@@ -56,10 +52,10 @@ func (m *medicationService) CreateMedication(request *models.MedicationRequest) 
 	medication.CreatedAt = time.Now().Unix()
 	medication.UpdatedAt = time.Now().Unix()
 	medication.MedicationStartDate = startDate
-	medication.MedicationStopDate = stopDate
 	medication.MedicationStartTime = startTime
 	nextTime := medication.MedicationStartTime.Add(time.Hour * time.Duration(medication.TimeInterval))
 
+	medication.MedicationStopDate = medication.MedicationStartTime.AddDate(0, 0, medication.Duration)
 	medication.NextDosageTime = GetNextDosageTime(nextTime, medication.MedicationStartTime)
 
 	response, err := m.medicationRepo.CreateMedication(medication)
@@ -72,7 +68,7 @@ func (m *medicationService) CreateMedication(request *models.MedicationRequest) 
 func (m *medicationService) GetMedicationDetail(id uint, userId uint) (*models.MedicationResponse, *errors.Error) {
 	medic, err := m.medicationRepo.GetMedicationDetail(id, userId)
 	if err != nil {
-		return  nil,  errors.ErrInternalServerError
+		return nil, errors.ErrInternalServerError
 	}
 	return medic.MedicationToResponse(), nil
 }
@@ -96,10 +92,6 @@ func (m *medicationService) UpdateMedication(request *models.UpdateMedicationReq
 	if err != nil {
 		return errors.New("wrong date format", http.StatusBadRequest)
 	}
-	stopDate, err := time.Parse(time.RFC3339, request.MedicationStopDate)
-	if err != nil {
-		return errors.New("wrong date format", http.StatusBadRequest)
-	}
 	startTime, err := time.Parse(time.RFC3339, request.MedicationStartTime)
 	if err != nil {
 		return errors.New("wrong time format", http.StatusBadRequest)
@@ -113,11 +105,11 @@ func (m *medicationService) UpdateMedication(request *models.UpdateMedicationReq
 		PurposeOfMedication:    request.PurposeOfMedication,
 		MedicationIcon:         request.MedicationIcon,
 		MedicationStartDate:    startDate,
-		MedicationStopDate:     stopDate,
 		MedicationStartTime:    startTime,
 	}
 
 	nextTime := medication.MedicationStartTime.Add(time.Hour * time.Duration(medication.TimeInterval))
+	medication.MedicationStopDate = medication.MedicationStartTime.AddDate(0, 0, medication.Duration)
 
 	medication.NextDosageTime = GetNextDosageTime(nextTime, medication.MedicationStartTime)
 

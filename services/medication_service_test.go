@@ -19,7 +19,6 @@ var testMedicationService MedicationService
 func Test_CreateMedicationService(t *testing.T) {
 	// arrange
 	startDate, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
-	stopDate, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
 	startTime, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
 
 	medication := &models.Medication{
@@ -35,7 +34,7 @@ func Test_CreateMedicationService(t *testing.T) {
 		MedicationStartDate:    startDate,
 		Duration:               7,
 		MedicationPrescribedBy: "Dr Tolu",
-		MedicationStopDate:     stopDate,
+		MedicationStopDate:     startTime.AddDate(0, 0, 7),
 		MedicationStartTime:    startTime,
 		NextDosageTime:         time.Date(startTime.Add(time.Hour*time.Duration(8)).Year(), startTime.Add(time.Hour*time.Duration(8)).Month(), startTime.Add(time.Hour*time.Duration(8)).Day(), startTime.Add(time.Hour*time.Duration(8)).Hour(), 0, 0, 0, time.UTC),
 		PurposeOfMedication:    "malaria treatment",
@@ -59,7 +58,6 @@ func Test_CreateMedicationService(t *testing.T) {
 				MedicationStartDate:    "2013-10-21T13:28:06.419Z",
 				Duration:               7,
 				MedicationPrescribedBy: "Dr Tolu",
-				MedicationStopDate:     "2013-10-21T13:28:06.419Z",
 				MedicationStartTime:    "2013-10-21T13:28:06.419Z",
 				PurposeOfMedication:    "malaria treatment",
 			},
@@ -106,7 +104,6 @@ func Test_CreateMedicationService(t *testing.T) {
 				MedicationStartDate:    "2013-10-21T13:28:06.419Z",
 				Duration:               7,
 				MedicationPrescribedBy: "Dr Tolu",
-				MedicationStopDate:     "2013-10-21T13:28:06.419Z",
 				MedicationStartTime:    "2013-11-12",
 				PurposeOfMedication:    "malaria treatment",
 			},
@@ -128,7 +125,6 @@ func Test_CreateMedicationService(t *testing.T) {
 				MedicationStartDate:    "2013-10-21T13:28:06.419Z",
 				Duration:               7,
 				MedicationPrescribedBy: "Dr Tolu",
-				MedicationStopDate:     "2013-10-21T13:28:06.419Z",
 				MedicationStartTime:    "2013-10-21T13:28:06.419Z",
 				PurposeOfMedication:    "malaria treatment",
 			},
@@ -171,7 +167,6 @@ func Test_GetAllMedicationsService(t *testing.T) {
 
 	// arrange
 	startDate, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
-	stopDate, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
 	startTime, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
 
 	medication := &models.Medication{
@@ -181,7 +176,7 @@ func Test_GetAllMedicationsService(t *testing.T) {
 		MedicationStartDate:    startDate,
 		Duration:               7,
 		MedicationPrescribedBy: "Dr Tolu",
-		MedicationStopDate:     stopDate,
+		MedicationStopDate:     startTime.AddDate(0, 0, 7),
 		MedicationStartTime:    startTime,
 		NextDosageTime:         startTime.Add(time.Hour * time.Duration(8)),
 		PurposeOfMedication:    "malaria treatment",
@@ -206,7 +201,7 @@ func Test_GetAllMedicationsService(t *testing.T) {
 					MedicationStartDate:    startDate,
 					Duration:               7,
 					MedicationPrescribedBy: "Dr Tolu",
-					MedicationStopDate:     stopDate,
+					MedicationStopDate:     startTime.AddDate(0, 0, 7),
 					MedicationStartTime:    startTime,
 					NextDosageTime:         startTime.Add(time.Hour * time.Duration(8)),
 					PurposeOfMedication:    "malaria treatment",
@@ -222,7 +217,7 @@ func Test_GetAllMedicationsService(t *testing.T) {
 					MedicationStartDate:    startDate,
 					Duration:               2,
 					MedicationPrescribedBy: "Dr Tolu",
-					MedicationStopDate:     stopDate,
+					MedicationStopDate:     startTime.AddDate(0, 0, 2),
 					MedicationStartTime:    startTime,
 					NextDosageTime:         startTime.Add(time.Hour * time.Duration(8)),
 					PurposeOfMedication:    "stomach pain",
@@ -241,7 +236,7 @@ func Test_GetAllMedicationsService(t *testing.T) {
 					MedicationStartDate:    medication.MedicationStartDate.String(),
 					Duration:               7,
 					MedicationPrescribedBy: "Dr Tolu",
-					MedicationStopDate:     medication.MedicationStopDate.String(),
+					MedicationStopDate:     medication.MedicationStartDate.AddDate(0, 0, 7).String(),
 					MedicationStartTime:    medication.MedicationStartTime.String(),
 					NextDosageTime:         medication.NextDosageTime.String(),
 					PurposeOfMedication:    "malaria treatment",
@@ -257,7 +252,7 @@ func Test_GetAllMedicationsService(t *testing.T) {
 					MedicationStartDate:    medication.MedicationStartDate.String(),
 					Duration:               2,
 					MedicationPrescribedBy: "Dr Tolu",
-					MedicationStopDate:     medication.MedicationStopDate.String(),
+					MedicationStopDate:     medication.MedicationStartDate.AddDate(0, 0, 2).String(),
 					MedicationStartTime:    medication.MedicationStartTime.String(),
 					NextDosageTime:         medication.NextDosageTime.String(),
 					PurposeOfMedication:    "stomach pain",
@@ -298,7 +293,6 @@ func Test_GetAllMedicationsService(t *testing.T) {
 func Test_GetNextMedicationService(t *testing.T) {
 	// arrange
 	startDate, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
-	stopDate, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
 	startTime, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
 
 	medication := &models.Medication{
@@ -308,7 +302,7 @@ func Test_GetNextMedicationService(t *testing.T) {
 		MedicationStartDate:    startDate,
 		Duration:               7,
 		MedicationPrescribedBy: "Dr Tolu",
-		MedicationStopDate:     stopDate,
+		MedicationStopDate:     startTime.AddDate(0, 0, 7),
 		MedicationStartTime:    startTime,
 		NextDosageTime:         startTime.Add(time.Hour * time.Duration(8)),
 		PurposeOfMedication:    "malaria treatment",
@@ -333,7 +327,7 @@ func Test_GetNextMedicationService(t *testing.T) {
 					MedicationStartDate:    startDate,
 					Duration:               7,
 					MedicationPrescribedBy: "Dr Tolu",
-					MedicationStopDate:     stopDate,
+					MedicationStopDate:     startTime.AddDate(0, 0, 7),
 					MedicationStartTime:    startTime,
 					NextDosageTime:         startTime.Add(time.Hour * time.Duration(8)),
 					PurposeOfMedication:    "malaria treatment",
@@ -606,7 +600,6 @@ func Test_CronUpdateMedicationForNextTime(t *testing.T) {
 func Test_UpdateMedicationService(t *testing.T) {
 	// arrange
 	startDate, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
-	stopDate, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
 	startTime, _ := time.Parse(time.RFC3339, "2013-10-21T13:28:06.419Z")
 
 	medication := &models.Medication{
@@ -616,7 +609,7 @@ func Test_UpdateMedicationService(t *testing.T) {
 		MedicationStartDate:    startDate,
 		Duration:               7,
 		MedicationPrescribedBy: "Dr Tolu",
-		MedicationStopDate:     stopDate,
+		MedicationStopDate:     startTime.AddDate(0, 0, 7),
 		MedicationStartTime:    startTime,
 		NextDosageTime:         time.Date(startTime.Add(time.Hour*time.Duration(8)).Year(), startTime.Add(time.Hour*time.Duration(8)).Month(), startTime.Add(time.Hour*time.Duration(8)).Day(), startTime.Add(time.Hour*time.Duration(8)).Hour(), 0, 0, 0, time.UTC),
 		PurposeOfMedication:    "malaria treatment",
@@ -640,7 +633,6 @@ func Test_UpdateMedicationService(t *testing.T) {
 				MedicationStartDate:    "2013-10-21T13:28:06.419Z",
 				Duration:               7,
 				MedicationPrescribedBy: "Dr Tolu",
-				MedicationStopDate:     "2013-10-21T13:28:06.419Z",
 				MedicationStartTime:    "2013-10-21T13:28:06.419Z",
 				PurposeOfMedication:    "malaria treatment",
 			},
@@ -651,7 +643,7 @@ func Test_UpdateMedicationService(t *testing.T) {
 				MedicationStartDate:    medication.MedicationStartDate,
 				Duration:               medication.Duration,
 				MedicationPrescribedBy: medication.MedicationPrescribedBy,
-				MedicationStopDate:     medication.MedicationStopDate,
+				MedicationStopDate:     medication.MedicationStartTime.AddDate(0, 0, 7),
 				MedicationStartTime:    medication.MedicationStartTime,
 				PurposeOfMedication:    medication.PurposeOfMedication,
 				NextDosageTime:         medication.NextDosageTime,
@@ -671,7 +663,6 @@ func Test_UpdateMedicationService(t *testing.T) {
 				MedicationStartDate:    "2013-10-21T13:28:06.419Z",
 				Duration:               7,
 				MedicationPrescribedBy: "Dr Tolu",
-				MedicationStopDate:     "2013-10-21T13:28:06.419Z",
 				MedicationStartTime:    "2013-11-12",
 				PurposeOfMedication:    "malaria treatment",
 			},
@@ -691,7 +682,6 @@ func Test_UpdateMedicationService(t *testing.T) {
 				MedicationStartDate:    "2013-10-21T13:28:06.419Z",
 				Duration:               7,
 				MedicationPrescribedBy: "Dr Tolu",
-				MedicationStopDate:     "2013-10-21T13:28:06.419Z",
 				MedicationStartTime:    "2013-10-21T13:28:06.419Z",
 				PurposeOfMedication:    "malaria treatment",
 			},
@@ -702,7 +692,7 @@ func Test_UpdateMedicationService(t *testing.T) {
 				MedicationStartDate:    medication.MedicationStartDate,
 				Duration:               medication.Duration,
 				MedicationPrescribedBy: medication.MedicationPrescribedBy,
-				MedicationStopDate:     medication.MedicationStopDate,
+				MedicationStopDate:     medication.MedicationStartTime.AddDate(0, 0, 7),
 				MedicationStartTime:    medication.MedicationStartTime,
 				PurposeOfMedication:    medication.PurposeOfMedication,
 				NextDosageTime:         medication.NextDosageTime,
