@@ -145,7 +145,7 @@ func (m *medicationService) CronUpdateMedicationForNextTime() error {
 
 	//create medication history for each medication
 	if medications != nil {
-		go m.CreateMedicationHistory(medications)
+		go CreateMedicationHistory(medications, m.medicationHistoryRepo)
 	}
 
 	for _, medication := range medications {
@@ -188,10 +188,10 @@ func GetNextDosageTime(t1, t2 time.Time) time.Time {
 	return time.Date(t2.Year(), t2.Month(), t2.Day()+1, 9, 0, 0, 0, time.UTC)
 }
 
-func (m *medicationService) CreateMedicationHistory(medications []models.Medication) {
+func CreateMedicationHistory(medications []models.Medication, medicationHistoryRepo db.MedicationHistoryRepository) {
 	for _, medication := range medications {
 		medicationHistory := models.NewMedicationHistory(medication)
-		_, err := m.medicationHistoryRepo.CreateMedicationHistory(medicationHistory)
+		_, err := medicationHistoryRepo.CreateMedicationHistory(medicationHistory)
 		if err != nil {
 			log.Printf("error creating medication history for %v for %v : %v", medication.ID, medication.NextDosageTime, err)
 		}
