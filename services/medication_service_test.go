@@ -396,7 +396,7 @@ func Test_CronUpdateMedicationForNextTime(t *testing.T) {
 		dbInput       *models.Medication
 		dbOutput      []models.Medication
 		dbError       error
-		buildStubs    func(repository *mocks.MockMedicationRepository, dbInput *models.Medication, timeInput time.Time, dbOutput []models.Medication, dbError error)
+		buildStubs    func(repository *mocks.MockMedicationRepository, medHistoryRepo *mocks.MockMedicationHistoryRepository, dbInput *models.Medication, timeInput time.Time, dbOutput []models.Medication, dbError error)
 		checkResponse func(t *testing.T, cronJobError error)
 	}{
 		{
@@ -430,8 +430,9 @@ func Test_CronUpdateMedicationForNextTime(t *testing.T) {
 				},
 			},
 			dbError: nil,
-			buildStubs: func(repository *mocks.MockMedicationRepository, dbInput *models.Medication, timeInput time.Time, dbOutput []models.Medication, dbError error) {
+			buildStubs: func(repository *mocks.MockMedicationRepository, medHistoryRepo *mocks.MockMedicationHistoryRepository, dbInput *models.Medication, timeInput time.Time, dbOutput []models.Medication, dbError error) {
 				repository.EXPECT().GetAllNextMedicationsToUpdate().Times(1).Return(dbOutput, dbError)
+				medHistoryRepo.EXPECT().CreateMedicationHistory(models.NewMedicationHistory(dbOutput[0]))
 				repository.EXPECT().UpdateNextMedicationTime(dbInput, timeInput).Times(1).Return(nil)
 			},
 			checkResponse: func(t *testing.T, cronJobError error) {
@@ -469,8 +470,9 @@ func Test_CronUpdateMedicationForNextTime(t *testing.T) {
 				},
 			},
 			dbError: nil,
-			buildStubs: func(repository *mocks.MockMedicationRepository, dbInput *models.Medication, timeInput time.Time, dbOutput []models.Medication, dbError error) {
+			buildStubs: func(repository *mocks.MockMedicationRepository, medHistoryRepo *mocks.MockMedicationHistoryRepository, dbInput *models.Medication, timeInput time.Time, dbOutput []models.Medication, dbError error) {
 				repository.EXPECT().GetAllNextMedicationsToUpdate().Times(1).Return(dbOutput, dbError)
+				medHistoryRepo.EXPECT().CreateMedicationHistory(models.NewMedicationHistory(dbOutput[0]))
 				repository.EXPECT().UpdateMedicationDone(dbInput).Times(1).Return(nil)
 			},
 			checkResponse: func(t *testing.T, cronJobError error) {
@@ -495,7 +497,7 @@ func Test_CronUpdateMedicationForNextTime(t *testing.T) {
 			},
 			dbOutput: nil,
 			dbError:  fmt.Errorf("could not get next medication: %v", gorm.ErrInvalidDB),
-			buildStubs: func(repository *mocks.MockMedicationRepository, dbInput *models.Medication, timeInput time.Time, dbOutput []models.Medication, dbError error) {
+			buildStubs: func(repository *mocks.MockMedicationRepository, medHistoryRepo *mocks.MockMedicationHistoryRepository, dbInput *models.Medication, timeInput time.Time, dbOutput []models.Medication, dbError error) {
 				repository.EXPECT().GetAllNextMedicationsToUpdate().Times(1).Return(dbOutput, dbError)
 			},
 			checkResponse: func(t *testing.T, cronJobError error) {
@@ -534,8 +536,9 @@ func Test_CronUpdateMedicationForNextTime(t *testing.T) {
 				},
 			},
 			dbError: nil,
-			buildStubs: func(repository *mocks.MockMedicationRepository, dbInput *models.Medication, timeInput time.Time, dbOutput []models.Medication, dbError error) {
+			buildStubs: func(repository *mocks.MockMedicationRepository, medHistoryRepo *mocks.MockMedicationHistoryRepository, dbInput *models.Medication, timeInput time.Time, dbOutput []models.Medication, dbError error) {
 				repository.EXPECT().GetAllNextMedicationsToUpdate().Times(1).Return(dbOutput, dbError)
+				medHistoryRepo.EXPECT().CreateMedicationHistory(models.NewMedicationHistory(dbOutput[0]))
 				repository.EXPECT().UpdateNextMedicationTime(dbInput, timeInput).Times(1).Return(fmt.Errorf("could not update medication: %v", gorm.ErrInvalidDB))
 			},
 			checkResponse: func(t *testing.T, cronJobError error) {
@@ -573,8 +576,9 @@ func Test_CronUpdateMedicationForNextTime(t *testing.T) {
 				},
 			},
 			dbError: nil,
-			buildStubs: func(repository *mocks.MockMedicationRepository, dbInput *models.Medication, timeInput time.Time, dbOutput []models.Medication, dbError error) {
+			buildStubs: func(repository *mocks.MockMedicationRepository, medHistoryRepo *mocks.MockMedicationHistoryRepository, dbInput *models.Medication, timeInput time.Time, dbOutput []models.Medication, dbError error) {
 				repository.EXPECT().GetAllNextMedicationsToUpdate().Times(1).Return(dbOutput, dbError)
+				medHistoryRepo.EXPECT().CreateMedicationHistory(models.NewMedicationHistory(dbOutput[0]))
 				repository.EXPECT().UpdateMedicationDone(dbInput).Times(1).Return(fmt.Errorf("could not update medication: %v", gorm.ErrInvalidDB))
 			},
 			checkResponse: func(t *testing.T, cronJobError error) {
@@ -588,7 +592,7 @@ func Test_CronUpdateMedicationForNextTime(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			timeSumation := tc.dbInput.NextDosageTime.Add(time.Hour * time.Duration(tc.dbInput.TimeInterval))
 			nextDosageTime := GetNextDosageTime(timeSumation, tc.dbInput.NextDosageTime)
-			tc.buildStubs(mockMedicationRepository, tc.dbInput, nextDosageTime, tc.dbOutput, tc.dbError)
+			tc.buildStubs(mockMedicationRepository, mockMedicationHistoryRepository, tc.dbInput, nextDosageTime, tc.dbOutput, tc.dbError)
 			err := testMedicationService.CronUpdateMedicationForNextTime()
 
 			tc.checkResponse(t, err)
