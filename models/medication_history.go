@@ -10,6 +10,7 @@ type MedicationHistory struct {
 	MedicationDosage       int       `json:"medication_dosage"`
 	UserID                 uint      `json:"user_id"`
 	HasMedicationBeenTaken bool      `json:"has_medication_been_taken"`
+	WasMedicationMissed    string    `json:"was_medication_missed"`
 }
 
 func NewMedicationHistory(medication Medication) *MedicationHistory {
