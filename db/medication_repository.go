@@ -18,6 +18,7 @@ type MedicationRepository interface {
 	GetAllMedications(userID uint) ([]models.Medication, error)
 	UpdateNextMedicationTime(medication *models.Medication, nextDosageTime time.Time) error
 	UpdateMedication(medication *models.Medication, medicationID uint, userID uint) error
+	FindMedication(medicationName, by, purpose string, duration int, dosage int,) (*[]models.Medication, error)
 }
 
 type medicationRepo struct {
@@ -98,3 +99,13 @@ func (m *medicationRepo) UpdateMedication(medication *models.Medication, medicat
 	}
 	return nil
 }
+
+func (m *medicationRepo) FindMedication(medicationName, by, purpose string,  duration int, dosage int) (*[]models.Medication, error) {
+	var medications *[]models.Medication
+	 err := m.DB.Where("name LIKE ?", "%"+medicationName+"%").Or("dosage = ?", dosage).Or("duration = ?", duration).Or("medication_prescribed_by LIKE ?","%"+by+"%").Or("purpose_of_medication LIKE ?", "%"+purpose+"%").Find(&medications).Error
+	 if err != nil{
+		 return nil, err
+	 }
+	 return medications, nil
+}
+

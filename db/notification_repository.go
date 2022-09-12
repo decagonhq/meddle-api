@@ -27,10 +27,9 @@ func (db *notificationRepo) AddNotificationToken(args *models.AddNotificationTok
 
 	fcmToken.Token = args.Token
 	fcmToken.UserID = args.UserID
-
-	err := db.DB.Create(fcmToken).Error
+	err := db.DB.Create(&fcmToken).Error
 	if err != nil {
-		return nil, fmt.Errorf("could not create medication: %v", err)
+		return nil, fmt.Errorf("could not create notification: %v", err)
 	}
 
 	return &fcmToken, nil
