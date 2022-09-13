@@ -82,13 +82,15 @@ func (fcm *notificationService) CheckIfThereIsNextMedication() {
 	//check db for all the time of notifications
 	for i := 0; i < len(medicationNotifications); i++ {
 		go func(i int) {
-			deviceTokens, err := fcm.notificationRepo.GetSingleUserDeviceTokens(int((medicationNotifications)[i].UserID))
+			userId := medicationNotifications[i].UserID
+			deviceTokens, err := fcm.notificationRepo.GetSingleUserDeviceTokens(int(userId))
 			if err != nil {
 				log.Printf("error retrieving device notification tokens: %v\n", err)
 				return
 			}
 
 			if len(deviceTokens) == 0 {
+				log.Printf("empty token list: %v\n", err)
 				return
 			}
 

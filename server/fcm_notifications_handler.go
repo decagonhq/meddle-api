@@ -30,23 +30,19 @@ func (s *Server) authorizeNotificationsForDevice() gin.HandlerFunc {
 			err.Respond(c)
 			return
 		}
+		go func() {
+			time.Sleep(time.Second * 3)
+			message := fmt.Sprintf("welcome %v ,your device has been enabled", user.Name)
+			pushPayload := &models.PushPayload{
+				Title: "Welcome Message",
+				Body:  message,
+			}
+			_, err = s.PushNotification.SendPushNotification([]string{tokenArgument.Token}, pushPayload)
+			if err != nil {
+				err.Respond(c)
+				return
+			}
+		}()
 		response.JSON(c, "device authorized to receive notification successfully", http.StatusCreated, deviceToken, nil)
-		registrationTokens, err := s.PushNotification.GetSingleUserDeviceTokens(int(tokenArgument.UserID))
-		if err != nil {
-			err.Respond(c)
-			return
-		}
-		message := fmt.Sprintf("welcome %v ,your device has been enbled", user.Name)
-		pushPayload := &models.PushPayload{
-			Title: "Welcome Message",
-			Body:  message,
-		}
-		time.Sleep(time.Second * 3)
-		_, err = s.PushNotification.SendPushNotification(registrationTokens, pushPayload)
-		if err != nil {
-			err.Respond(c)
-			return
-		}
-		response.JSON(c, "Your device is enabled", http.StatusOK, message, nil)
 	}
 }
