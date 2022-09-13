@@ -97,7 +97,7 @@ func (a *authService) sendVerifyEmail(token, email string) *apiError.Error {
 	value["link"] = link
 	subject := "Verify your email"
 	body := "Please Click the link below to verify your email"
-	templateName := "verifyEmail"
+	templateName := "emailverification"
 	err := a.mail.SendMail(email, subject, body, templateName, value)
 	if err != nil {
 		log.Printf("Error: %v", err.Error())

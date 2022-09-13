@@ -2,14 +2,15 @@ package services
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+	"time"
+
 	"github.com/decagonhq/meddle-api/config"
 	"github.com/decagonhq/meddle-api/db"
 	"github.com/decagonhq/meddle-api/errors"
 	"github.com/decagonhq/meddle-api/models"
 	"github.com/go-co-op/gocron"
-	"log"
-	"net/http"
-	"time"
 )
 
 //go:generate mockgen -destination=../mocks/medication_mock.go -package=mocks github.com/decagonhq/meddle-api/services MedicationService
@@ -174,11 +175,13 @@ func (m *medicationService) CronUpdateMedicationForNextTime() error {
 }
 
 func UpdateMedicationCronJob(medicationService MedicationService) {
-	_, presentMinute, presentSecond := time.Now().UTC().Clock()
-	waitTime := time.Duration(60-presentMinute)*time.Minute + time.Duration(60-presentSecond)*time.Second
+	// _, presentMinute, _ := time.Now().UTC().Clock()
+	// if presentMinute%15 != 0 {
+	// 	time.Sleep(time.Duration(presentMinute+(presentMinute%15)) * time.Minute)
+	// }
+	// waitTime := time.Duration(60-presentMinute)*time.Minute + time.Duration(60-presentSecond)*time.Second
 	s := gocron.NewScheduler(time.UTC)
-	time.Sleep(waitTime)
-	s.Every(1).Hour().Do(func() {
+	s.Every(1).Minute().Do(func() {
 		err := medicationService.CronUpdateMedicationForNextTime()
 		if err != nil {
 			log.Printf("cron job error: %v", err)
@@ -189,7 +192,7 @@ func UpdateMedicationCronJob(medicationService MedicationService) {
 
 func GetNextDosageTime(t1, t2 time.Time) time.Time {
 	if t1.Day()-t2.Day() <= 0 {
-		return time.Date(t1.Year(), t1.Month(), t1.Day(), t1.Hour(), 0, 0, 0, time.UTC)
+		return time.Date(t1.Year(), t1.Month(), t1.Day(), t1.Hour(), t1.Minute(), 0, 0, time.UTC)
 	}
 	return time.Date(t2.Year(), t2.Month(), t2.Day()+1, 9, 0, 0, 0, time.UTC)
 }

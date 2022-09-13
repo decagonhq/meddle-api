@@ -2,9 +2,10 @@ package db
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/decagonhq/meddle-api/models"
 	"gorm.io/gorm"
-	"time"
 )
 
 //go:generate mockgen -destination=../mocks/medication_repo_mock.go -package=mocks github.com/decagonhq/meddle-api/db MedicationRepository
@@ -18,7 +19,7 @@ type MedicationRepository interface {
 	GetAllMedications(userID uint) ([]models.Medication, error)
 	UpdateNextMedicationTime(medication *models.Medication, nextDosageTime time.Time) error
 	UpdateMedication(medication *models.Medication, medicationID uint, userID uint) error
-	FindMedication(medicationName, by, purpose string, duration int, dosage int,) (*[]models.Medication, error)
+	FindMedication(medicationName, by, purpose string, duration int, dosage int) (*[]models.Medication, error)
 }
 
 type medicationRepo struct {
@@ -49,7 +50,9 @@ func (m *medicationRepo) GetNextMedications(userID uint) ([]models.Medication, e
 func (m *medicationRepo) GetAllNextMedicationsToUpdate() ([]models.Medication, error) {
 	var medications []models.Medication
 
-	err := m.DB.Where("date_trunc('hour', next_dosage_time) = date_trunc('hour', now())").Where("is_medication_done = false").Find(&medications).Error
+	err := m.DB. //Where("date_trunc('hour', next_dosage_time) = date_trunc('hour', now())").
+			Where("date_trunc('minute', next_dosage_time) = date_trunc('minute', now())").
+			Where("is_medication_done = false").Find(&medications).Error
 	if err != nil {
 		return nil, fmt.Errorf("could not get next medication: %v", err)
 	}
@@ -100,12 +103,11 @@ func (m *medicationRepo) UpdateMedication(medication *models.Medication, medicat
 	return nil
 }
 
-func (m *medicationRepo) FindMedication(medicationName, by, purpose string,  duration int, dosage int) (*[]models.Medication, error) {
+func (m *medicationRepo) FindMedication(medicationName, by, purpose string, duration int, dosage int) (*[]models.Medication, error) {
 	var medications *[]models.Medication
-	 err := m.DB.Where("name LIKE ?", "%"+medicationName+"%").Or("dosage = ?", dosage).Or("duration = ?", duration).Or("medication_prescribed_by LIKE ?","%"+by+"%").Or("purpose_of_medication LIKE ?", "%"+purpose+"%").Find(&medications).Error
-	 if err != nil{
-		 return nil, err
-	 }
-	 return medications, nil
+	err := m.DB.Where("name LIKE ?", "%"+medicationName+"%").Or("dosage = ?", dosage).Or("duration = ?", duration).Or("medication_prescribed_by LIKE ?", "%"+by+"%").Or("purpose_of_medication LIKE ?", "%"+purpose+"%").Find(&medications).Error
+	if err != nil {
+		return nil, err
+	}
+	return medications, nil
 }
-
