@@ -55,7 +55,12 @@ func (m *medicationService) CreateMedication(request *models.MedicationRequest) 
 	medication.UpdatedAt = time.Now().Unix()
 	medication.MedicationStartDate = startDate
 	medication.MedicationStartTime = startTime
-	nextTime := medication.MedicationStartTime.Add(time.Hour * time.Duration(medication.TimeInterval))
+	var nextTime time.Time
+	if medication.MedicationStartTime.Unix() > time.Now().Unix() {
+		nextTime = medication.MedicationStartTime
+	} else {
+		nextTime = medication.MedicationStartTime.Add(time.Hour * time.Duration(medication.TimeInterval))
+	}
 
 	medication.MedicationStopDate = medication.MedicationStartTime.AddDate(0, 0, medication.Duration)
 	medication.NextDosageTime = GetNextDosageTime(nextTime, medication.MedicationStartTime)
@@ -189,7 +194,6 @@ func GetNextDosageTime(t1, t2 time.Time) time.Time {
 	return time.Date(t2.Year(), t2.Month(), t2.Day()+1, 9, 0, 0, 0, time.UTC)
 }
 
-
 func (m *medicationService) CreateMedicationHistory(medications []models.Medication) {
 	for _, medication := range medications {
 		medicationHistory := models.NewMedicationHistory(medication)
@@ -211,4 +215,3 @@ func (m *medicationService) FindMedication(medicationName, by, purpose string, d
 	}
 	return medications, nil
 }
-
