@@ -28,15 +28,18 @@ func main() {
 	}
 	authService := services.NewAuthService(authRepo, conf, mail, pushNotification)
 
+	medicationHistoryRepo := db.NewMedicationHistoryRepo(gormDB)
 	medicationRepo := db.NewMedicationRepo(gormDB)
-	medicationService := services.NewMedicationService(medicationRepo, conf)
+	medicationService := services.NewMedicationService(medicationRepo, medicationHistoryRepo, conf)
+	medicationHistoryService := services.NewMedicationHistoryService(medicationHistoryRepo, conf)
 
 	s := &server.Server{
-		Config:            conf,
-		AuthRepository:    authRepo,
-		AuthService:       authService,
-		MedicationService: medicationService,
-		PushNotification:  pushNotification,
+		Config:                   conf,
+		AuthRepository:           authRepo,
+		AuthService:              authService,
+		MedicationService:        medicationService,
+		MedicationHistoryService: medicationHistoryService,
+		PushNotification:         pushNotification,
 	}
 	go services.UpdateMedicationCronJob(medicationService)
 	go pushNotification.NotificationsCronJob()
