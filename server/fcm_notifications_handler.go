@@ -1,10 +1,12 @@
 package server
 
 import (
+	"fmt"
 	"github.com/decagonhq/meddle-api/models"
 	"github.com/decagonhq/meddle-api/server/response"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"time"
 )
 
 func (s *Server) authorizeNotificationsForDevice() gin.HandlerFunc {
@@ -28,6 +30,19 @@ func (s *Server) authorizeNotificationsForDevice() gin.HandlerFunc {
 			err.Respond(c)
 			return
 		}
+		go func() {
+			time.Sleep(time.Second * 3)
+			message := fmt.Sprintf("welcome %v ,your device has been enabled", user.Name)
+			pushPayload := &models.PushPayload{
+				Title: "Welcome Message",
+				Body:  message,
+			}
+			_, err = s.PushNotification.SendPushNotification([]string{tokenArgument.Token}, pushPayload)
+			if err != nil {
+				err.Respond(c)
+				return
+			}
+		}()
 		response.JSON(c, "device authorized to receive notification successfully", http.StatusCreated, deviceToken, nil)
 	}
 }
