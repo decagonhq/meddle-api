@@ -2,6 +2,7 @@ up:
 	docker compose up --build
 
 generate-mock:
+	 mockgen -destination=mocks/medication_history_mock.go -package=mocks github.com/decagonhq/meddle-api/services MedicationHistoryService
 	 mockgen -destination=mocks/medication_history_repo_mock.go -package=mocks github.com/decagonhq/meddle-api/db MedicationHistoryRepository
 	 mockgen -destination=mocks/mailer_mock.go -package=mocks github.com/decagonhq/meddle-api/services Mailer
 	 mockgen -destination=mocks/auth_mock.go -package=mocks github.com/decagonhq/meddle-api/services AuthService
