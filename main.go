@@ -22,7 +22,10 @@ func main() {
 	authRepo := db.NewAuthRepo(gormDB)
 	mail := services.NewMailService(conf)
 	notificationRepo := db.NewNotificationRepo(gormDB)
-	pushNotification := services.NewFirebaseCloudMessaging(notificationRepo, conf)
+	pushNotification, errr := services.NewFirebaseCloudMessaging(notificationRepo, conf)
+	if err != nil {
+		log.Fatalf("error retrieving client for push notification\n%v", errr)
+	}
 	authService := services.NewAuthService(authRepo, conf, mail, pushNotification)
 
 	medicationRepo := db.NewMedicationRepo(gormDB)
