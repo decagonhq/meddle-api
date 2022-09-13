@@ -21,6 +21,7 @@ type MedicationService interface {
 	GetAllMedications(userID uint) ([]models.MedicationResponse, *errors.Error)
 	CronUpdateMedicationForNextTime() error
 	UpdateMedication(request *models.UpdateMedicationRequest, medicationID uint, userID uint) *errors.Error
+	FindMedication(medicationName string, by string, purpose string, duration int, dosage int) (*[]models.Medication, error)
 }
 
 // medicationService struct
@@ -179,3 +180,16 @@ func GetNextDosageTime(t1, t2 time.Time) time.Time {
 	}
 	return time.Date(t2.Year(), t2.Month(), t2.Day()+1, 9, 0, 0, 0, time.UTC)
 }
+
+func (m *medicationService) FindMedication(medicationName, by, purpose string, duration int, dosage int) (*[]models.Medication, error) {
+	var medicationResponses []models.MedicationResponse
+	medications, err := m.medicationRepo.FindMedication(medicationName, by, purpose, duration, dosage)
+	if err != nil {
+		return nil, errors.ErrInternalServerError
+	}
+	for _, medication := range *medications {
+		medicationResponses = append(medicationResponses, *medication.MedicationToResponse())
+	}
+	return medications, nil
+}
+
