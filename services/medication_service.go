@@ -26,15 +26,17 @@ type MedicationService interface {
 
 // medicationService struct
 type medicationService struct {
-	Config         *config.Config
-	medicationRepo db.MedicationRepository
+	Config                *config.Config
+	medicationRepo        db.MedicationRepository
+	medicationHistoryRepo db.MedicationHistoryRepository
 }
 
 // NewMedicationService instantiate an authService
-func NewMedicationService(medicationRepo db.MedicationRepository, conf *config.Config) MedicationService {
+func NewMedicationService(medicationRepo db.MedicationRepository, medicationHistoryRepo db.MedicationHistoryRepository, conf *config.Config) MedicationService {
 	return &medicationService{
-		Config:         conf,
-		medicationRepo: medicationRepo,
+		Config:                conf,
+		medicationRepo:        medicationRepo,
+		medicationHistoryRepo: medicationHistoryRepo,
 	}
 }
 
@@ -141,6 +143,12 @@ func (m *medicationService) CronUpdateMedicationForNextTime() error {
 	if err != nil {
 		return fmt.Errorf("could not get next medications while running update next dosage cron job")
 	}
+
+	//create medication history for each medication
+	if medications != nil {
+		go m.CreateMedicationHistory(medications)
+	}
+
 	for _, medication := range medications {
 		timeSumation := medication.NextDosageTime.Add(time.Hour * time.Duration(medication.TimeInterval))
 		nextDosageTime := GetNextDosageTime(timeSumation, medication.NextDosageTime)
@@ -179,6 +187,17 @@ func GetNextDosageTime(t1, t2 time.Time) time.Time {
 		return time.Date(t1.Year(), t1.Month(), t1.Day(), t1.Hour(), 0, 0, 0, time.UTC)
 	}
 	return time.Date(t2.Year(), t2.Month(), t2.Day()+1, 9, 0, 0, 0, time.UTC)
+}
+
+
+func (m *medicationService) CreateMedicationHistory(medications []models.Medication) {
+	for _, medication := range medications {
+		medicationHistory := models.NewMedicationHistory(medication)
+		_, err := m.medicationHistoryRepo.CreateMedicationHistory(medicationHistory)
+		if err != nil {
+			log.Printf("error creating medication history for %v for %v : %v", medication.ID, medication.NextDosageTime, err)
+		}
+	}
 }
 
 func (m *medicationService) FindMedication(medicationName, by, purpose string, duration int, dosage int) (*[]models.Medication, error) {
