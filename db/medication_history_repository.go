@@ -8,8 +8,8 @@ import (
 
 type MedicationHistoryRepository interface {
 	CreateMedicationHistory(medicationHistory *models.MedicationHistory) (*models.MedicationHistory, error)
-	UpdateMedicationHistory(medication *models.MedicationHistory, medicationHistoryID uint, userID uint) error
-	GetAllMedicationHistory(userID uint) ([]models.MedicationHistory, error)
+	UpdateMedicationHistory(hasMedicationBeenTaken bool, wasMedicationMissed string, medicationHistoryID uint, userID uint) error
+	GetAllMedicationHistoryByUserID(userID uint) ([]models.MedicationHistory, error)
 }
 
 type medicationHistoryRepo struct {
@@ -27,9 +27,22 @@ func (m *medicationHistoryRepo) CreateMedicationHistory(medicationHistory *model
 	}
 	return medicationHistory, nil
 }
-func (m *medicationHistoryRepo) UpdateMedicationHistory(medication *models.MedicationHistory, medicationHistoryID uint, userID uint) error {
+
+func (m *medicationHistoryRepo) UpdateMedicationHistory(hasMedicationBeenTaken bool, wasMedicationMissed string, medicationHistoryID uint, userID uint) error {
+	err := m.DB.Model(&models.MedicationHistory{}).Select("has_medication_been_taken", "was_medication_missed").
+		Where("user_id = ? AND id = ?", userID, medicationHistoryID).
+		Updates(models.MedicationHistory{HasMedicationBeenTaken: hasMedicationBeenTaken, WasMedicationMissed: wasMedicationMissed}).Error
+	if err != nil {
+		return fmt.Errorf("could not update medication history: %v", err)
+	}
 	return nil
 }
-func (m *medicationHistoryRepo) GetAllMedicationHistory(userID uint) ([]models.MedicationHistory, error) {
-	return nil, nil
+
+func (m *medicationHistoryRepo) GetAllMedicationHistoryByUserID(userID uint) ([]models.MedicationHistory, error) {
+	var medicationHistories []models.MedicationHistory
+	err := m.DB.Order("medication_time desc").Where("user_id = ?", userID).Find(&medicationHistories).Error
+	if err != nil {
+		return nil, fmt.Errorf("could not get medication history: %v", err)
+	}
+	return medicationHistories, nil
 }

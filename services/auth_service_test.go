@@ -27,6 +27,8 @@ func setup(t *testing.T) func() {
 	mockMedicationRepository = mocks.NewMockMedicationRepository(ctrl)
 	mockMedicationHistoryRepository = mocks.NewMockMedicationHistoryRepository(ctrl)
 	testMedicationService = NewMedicationService(mockMedicationRepository, mockMedicationHistoryRepository, testConfig)
+
+	testMedicationHistoryService = NewMedicationHistoryService(mockMedicationHistoryRepository, testConfig)
 	return func() {
 		testAuthService = nil
 		testMedicationService = nil
