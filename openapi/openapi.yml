@@ -397,6 +397,35 @@ paths:
         500:
           description: Internal server error
           content: { }
+  /notifications/add-token:
+    post:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - device
+      summary: authorize device to receive notification
+      description: Supplies device token (from frontend)
+      operationId: authorizeDevice
+      requestBody:
+        description: user must be logged in to authorize token
+        content:
+          '*/*':
+            schema:
+              $ref: '#/components/schemas/AuthorizeDeviceRequest'
+        required: true
+      responses:
+        200:
+          description: your device can now receive notifications
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorizeDeviceResponse'
+        400:
+          description: Bad request from user
+          content: { }
+        500:
+          description: Internal server error
+          content: { }
 components:
   schemas:
     UserRequest:
@@ -464,7 +493,34 @@ components:
         confirmPassword:
           type: string
           format: password
-
+    AuthorizeDeviceRequest:
+      type: object
+      properties:
+        token:
+           type: string
+    AuthorizeDeviceResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: uint
+          example: 3
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+        user_id:
+          type: integer
+          format: uint
+          example: 3
+        is_viewed:
+          type: boolean
+          example: false
     ResetPasswordResponse:
       type: object
       properties:
