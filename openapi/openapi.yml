@@ -444,6 +444,84 @@ paths:
         500:
           description: Internal server error
           content: {}
+  /user/medication-history:
+    get:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - medication history
+      summary: Get all medication histories for user
+      description: This gets all medication history related to a logged in user.
+      operationId: getAllMedicationHistory
+      responses:
+        200:
+          description: medications retrieved successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MedicationHistoryResponse'
+        403:
+          description: Forbidden user
+          content: { }
+        500:
+          description: Internal server error
+          content: { }
+      x-codegen-request-body-name: medication
+  /user/medication-history/{medication_id}:
+    put:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - medication history
+      summary: update medication history by medicationID
+      description: This updates medication history related to a logged in user using the medicationID.
+      operationId: updateMedicationHistory
+      parameters:
+        - name: medication_id
+          in: path
+          description: 'The medicationID of the medication history that needs to be updated.'
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: update the medication history of a logged in user.
+        content:
+          '*/*':
+            schema:
+              type: object
+              properties:
+                has_medication_been_taken:
+                  type: boolean
+        required: true
+      responses:
+        200:
+          description: update medication history successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    nullable: true
+                  status:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: "medication history updated successfully"
+                  err:
+                    type: object
+                    nullable: true
+        400:
+          description: Invalid medication_id value in url path supplied or Bad request from user
+          content: { }
+        403:
+          description: Forbidden user
+          content: { }
+        500:
+          description: Internal server error
+          content: { }
   /notifications/add-token:
     post:
       security:
@@ -751,6 +829,61 @@ components:
         purpose_of_medication:
           type: string
           example: malaria treatment
+        user_id:
+          type: integer
+          description: owner of medication id
+          format: uint
+          example: 2
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    MedicationHistoryResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/medicationHistoryResponseData'
+        errors:
+          type: string
+          example: ""
+        message:
+          type: string
+          example: "medication history retrieved successfully"
+        status:
+          type: string
+          example: StatusOK
+    medicationHistoryResponseData:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: uint
+          example: 1
+        medication_name:
+          type: string
+          example: paracetamol
+        medication_id:
+          type: integer
+          format: uint
+          example: 7
+        medication_dosage:
+          type: integer
+          format: int
+          example: 2
+        medication_time:
+          type: string
+          description: medication time
+          format: date-time
+        has_medication_been_taken:
+          type: boolean
+          description: true meaning medication has been taken and false meaning otherwise
+          example: true
+        was_medication_missed:
+          type: string
+          description: a result of whether medication is taken or not
+          example: "NO"
         user_id:
           type: integer
           description: owner of medication id
