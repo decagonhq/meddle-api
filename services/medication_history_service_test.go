@@ -28,7 +28,7 @@ func Test_UpdateMedicationHistoryService(t *testing.T) {
 		{
 			name:                   "medication updates successfully case",
 			reqInput:               true,
-			dbInput:                "YES",
+			dbInput:                "NO",
 			dbError:                nil,
 			updateMedResponseError: nil,
 			buildStubs: func(repository *mocks.MockMedicationHistoryRepository, dbInput string, medicationID uint, userID uint, dbError error) {
@@ -38,7 +38,7 @@ func Test_UpdateMedicationHistoryService(t *testing.T) {
 		{
 			name:                   "error updating medication due server error",
 			reqInput:               true,
-			dbInput:                "YES",
+			dbInput:                "NO",
 			dbError:                gorm.ErrInvalidDB,
 			updateMedResponseError: errors.ErrInternalServerError,
 			buildStubs: func(repository *mocks.MockMedicationHistoryRepository, dbInput string, medicationID uint, userID uint, dbError error) {
