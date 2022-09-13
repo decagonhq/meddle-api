@@ -397,6 +397,53 @@ paths:
         500:
           description: Internal server error
           content: { }
+  /user/medications/search:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - medication
+      summary: Search medications by a user
+      operationId: SearchMedication
+      parameters:
+        - name: medicationName
+          in: query
+          description: 'Medication name'
+          schema:
+            type: string
+        - name: by
+          in: query
+          description: 'Medication prescribedBy'
+          schema:
+            type: string
+        - name: purpose
+          in: query
+          description: 'Medication purpose'
+          schema:
+            type: string
+        - name: duration
+          in: query
+          description: 'Medication duration'
+          schema:
+            type: integer
+        - name: dosage
+          in: query
+          description: 'Medication dosage'
+          schema:
+            type: integer
+      responses:
+        200:
+          description: medications retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MedicationResponse'
+        404:
+          description: Medication not found
+          content: {}
+        500:
+          description: Internal server error
+          content: {}
   /notifications/add-token:
     post:
       security:
@@ -497,7 +544,7 @@ components:
       type: object
       properties:
         token:
-           type: string
+          type: string
     AuthorizeDeviceResponse:
       type: object
       properties:
