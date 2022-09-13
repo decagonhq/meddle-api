@@ -14,7 +14,7 @@ func (s *Server) handleUpdateMedicationHistory() gin.HandlerFunc {
 			err.Respond(c)
 			return
 		}
-		medicationHistoryID, errr := strconv.ParseUint(c.Param("medicationHistoryID"), 10, 32)
+		medicationHistoryID, errr := strconv.ParseUint(c.Param("id"), 10, 32)
 		if errr != nil {
 			response.JSON(c, "invalid ID", http.StatusBadRequest, nil, errr)
 			return

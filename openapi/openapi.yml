@@ -467,7 +467,7 @@ paths:
           description: Internal server error
           content: { }
       x-codegen-request-body-name: medication
-  /user/medication-history/{medication_id}:
+  /user/medication-history/{id}:
     put:
       security:
         - bearerAuth: [ ]
@@ -477,9 +477,9 @@ paths:
       description: This updates medication history related to a logged in user using the medicationID.
       operationId: updateMedicationHistory
       parameters:
-        - name: medication_id
+        - name: id
           in: path
-          description: 'The medicationID of the medication history that needs to be updated.'
+          description: 'The id of the medication history that needs to be updated.'
           required: true
           schema:
             type: string
