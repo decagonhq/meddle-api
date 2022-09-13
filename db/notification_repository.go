@@ -11,7 +11,7 @@ import (
 type NotificationRepository interface {
 	AddNotificationToken(args *models.AddNotificationTokenArgs) (*models.FCMNotificationToken, error)
 	GetAllNextMedicationsToSendNotifications() ([]models.Medication, error)
-	GetNotificationTokens(userId int) ([]string, error)
+	GetSingleUserDeviceTokens(userId int) ([]string, error)
 }
 
 type notificationRepo struct {
@@ -45,7 +45,7 @@ func (db *notificationRepo) GetAllNextMedicationsToSendNotifications() ([]models
 	return medications, nil
 }
 
-func (db *notificationRepo) GetNotificationTokens(userId int) ([]string, error) {
+func (db *notificationRepo) GetSingleUserDeviceTokens(userId int) ([]string, error) {
 	var tokens []string
 
 	err := db.DB.Table("fcm_notification_tokens").Where("user_id = ?", userId).

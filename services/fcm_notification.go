@@ -20,8 +20,9 @@ import (
 type PushNotifier interface {
 	AuthorizeNotification(request *models.AddNotificationTokenArgs) (*models.FCMNotificationToken, *errors.Error)
 	CheckIfThereIsNextMedication()
-	SendPushNotification(registrationTokens []string, payload *models.PushPayload) (*messaging.MulticastMessage, error)
+	SendPushNotification(registrationTokens []string, payload *models.PushPayload) (*messaging.MulticastMessage, *errors.Error)
 	NotificationsCronJob()
+	GetSingleUserDeviceTokens(userId int) ([]string, *errors.Error)
 }
 
 type notificationService struct {
@@ -61,6 +62,14 @@ func (fcm *notificationService) AuthorizeNotification(request *models.AddNotific
 	return token, nil
 }
 
+func (fcm *notificationService) GetSingleUserDeviceTokens(userid int) ([]string, *errors.Error) {
+	tokens, err := fcm.notificationRepo.GetSingleUserDeviceTokens(userid)
+	if err != nil {
+		return nil, errors.ErrInternalServerError
+	}
+	return tokens, nil
+}
+
 // CheckIfThereIsNextMedication cron job
 //check all currently due medication in db
 func (fcm *notificationService) CheckIfThereIsNextMedication() {
@@ -73,7 +82,7 @@ func (fcm *notificationService) CheckIfThereIsNextMedication() {
 	//check db for all the time of notifications
 	for i := 0; i < len(medicationNotifications); i++ {
 		go func(i int) {
-			deviceTokens, err := fcm.notificationRepo.GetNotificationTokens(int((medicationNotifications)[i].UserID))
+			deviceTokens, err := fcm.notificationRepo.GetSingleUserDeviceTokens(int((medicationNotifications)[i].UserID))
 			if err != nil {
 				log.Printf("error retrieving device notification tokens: %v\n", err)
 				return
@@ -102,7 +111,7 @@ func (fcm *notificationService) CheckIfThereIsNextMedication() {
 	}
 }
 
-func (fcm *notificationService) SendPushNotification(registrationTokens []string, payload *models.PushPayload) (*messaging.MulticastMessage, error) {
+func (fcm *notificationService) SendPushNotification(registrationTokens []string, payload *models.PushPayload) (*messaging.MulticastMessage, *errors.Error) {
 
 	notification := &messaging.MulticastMessage{
 		Notification: &messaging.Notification{
@@ -152,7 +161,7 @@ func (fcm *notificationService) SendPushNotification(registrationTokens []string
 	_, err := fcm.Client.SendMulticast(context.Background(), notification)
 	if err != nil {
 		log.Fatalln(err)
-		return &messaging.MulticastMessage{}, err
+		return &messaging.MulticastMessage{}, errors.ErrInternalServerError
 	}
 
 	return notification, nil
