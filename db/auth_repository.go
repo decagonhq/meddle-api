@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+
 	"github.com/decagonhq/meddle-api/models"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -129,7 +130,25 @@ func (a *authRepo) UpdatePassword(password string, email string) error {
 }
 
 func (a *authRepo) DeleteUserByEmail(email string) error {
-	err := a.DB.Delete(&models.User{}, "email = ?", email).Error
+	user := &models.User{}
+	err := a.DB.Where("email = ?", email).Find(user).Error
+	if err != nil {
+		return fmt.Errorf("could not find user to delete: %v", err)
+	}
+	err = a.DB.Delete(&models.Medication{}, "user_id = ?", user.ID).Error
+	if err != nil {
+		return fmt.Errorf("could not delete user's medication: %v", err)
+	}
+	err = a.DB.Delete(&models.MedicationHistory{}, "user_id = ?", user.ID).Error
+	if err != nil {
+		return fmt.Errorf("could not delete user's medication history: %v", err)
+	}
+	err = a.DB.Delete(&models.BlackList{}, "email = ?", user.Email).Error
+	if err != nil {
+		return fmt.Errorf("could not delete user's medication: %v", err)
+	}
+
+	err = a.DB.Delete(&models.User{}, "email = ?", email).Error
 	if err != nil {
 		return fmt.Errorf("could not delete user: %v", err)
 	}
