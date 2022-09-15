@@ -37,7 +37,7 @@ func Test_CreateMedicationService(t *testing.T) {
 		MedicationPrescribedBy: "Dr Tolu",
 		MedicationStopDate:     startTime.AddDate(0, 0, 7),
 		MedicationStartTime:    startTime,
-		NextDosageTime:         time.Date(startTime.Add(time.Hour*time.Duration(8)).Year(), startTime.Add(time.Hour*time.Duration(8)).Month(), startTime.Add(time.Hour*time.Duration(8)).Day(), startTime.Add(time.Hour*time.Duration(8)).Hour(), 0, 0, 0, time.UTC),
+		NextDosageTime:         time.Date(startTime.Add(time.Hour*time.Duration(8)).Year(), startTime.Add(time.Hour*time.Duration(8)).Month(), startTime.Add(time.Hour*time.Duration(8)).Day(), startTime.Add(time.Hour*time.Duration(8)).Hour(), startTime.Add(time.Hour*time.Duration(8)).Minute(), 0, 0, time.UTC),
 		PurposeOfMedication:    "malaria treatment",
 	}
 	testCases := []struct {
@@ -616,7 +616,7 @@ func Test_UpdateMedicationService(t *testing.T) {
 		MedicationPrescribedBy: "Dr Tolu",
 		MedicationStopDate:     startTime.AddDate(0, 0, 7),
 		MedicationStartTime:    startTime,
-		NextDosageTime:         time.Date(startTime.Add(time.Hour*time.Duration(8)).Year(), startTime.Add(time.Hour*time.Duration(8)).Month(), startTime.Add(time.Hour*time.Duration(8)).Day(), startTime.Add(time.Hour*time.Duration(8)).Hour(), 0, 0, 0, time.UTC),
+		NextDosageTime:         time.Date(startTime.Add(time.Hour*time.Duration(8)).Year(), startTime.Add(time.Hour*time.Duration(8)).Month(), startTime.Add(time.Hour*time.Duration(8)).Day(), startTime.Add(time.Hour*time.Duration(8)).Hour(), startTime.Add(time.Hour*time.Duration(8)).Minute(), 0, 0, time.UTC),
 		PurposeOfMedication:    "malaria treatment",
 	}
 	testCases := []struct {
