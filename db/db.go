@@ -44,9 +44,13 @@ func getPostgresDB(c *config.Config) *gorm.DB {
 			Colorful:                  false,       // Disable color
 		},
 	)
-	postgresDB, err := gorm.Open(postgres.Open(postgresDSN), &gorm.Config{
+	gormConfig := &gorm.Config{
 		Logger: newLogger,
-	})
+	}
+	if c.Env == "prod" {
+		gormConfig = &gorm.Config{}
+	}
+	postgresDB, err := gorm.Open(postgres.Open(postgresDSN), gormConfig)
 	if err != nil {
 		log.Fatal(err)
 	}
