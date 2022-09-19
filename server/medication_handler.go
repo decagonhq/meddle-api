@@ -116,18 +116,15 @@ func (s *Server) handleUpdateMedication() gin.HandlerFunc {
 
 func (s *Server) handleFindMedication() gin.HandlerFunc {
 	return func(c *gin.Context) {
-
-		medicationName := c.Query("name")
-		medicationDosage := c.Query("dosage")
-		medicationDuration := c.Query("duration")
-		medicationPrescribedBy := c.Query("medication_prescribed_by")
-		medicationPurpose := c.Query("purpose_of_medication")
-
-		dosage,_ := strconv.Atoi(medicationDosage)
-		medDuration,_ := strconv.Atoi(medicationDuration)
-
-		medications, err := s.MedicationService.FindMedication(medicationName, medicationPrescribedBy, medicationPurpose, medDuration, dosage)
+		_, user, err := GetValuesFromContext(c)
 		if err != nil {
+			err.Respond(c)
+			return
+		}
+		medicationName := c.Query("name")
+
+		medications, errr := s.MedicationService.FindMedication(medicationName, int(user.ID))
+		if errr != nil {
 			log.Printf("Error1: %v", err.Error())
 			response.JSON(c, "", http.StatusInternalServerError, nil, errors.New("internal server error", http.StatusInternalServerError))
 			return
