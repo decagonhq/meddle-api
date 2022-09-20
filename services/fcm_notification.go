@@ -96,7 +96,7 @@ func (fcm *notificationService) CheckIfThereIsNextMedication() {
 			}
 
 			notification, err := fcm.SendPushNotification(deviceTokens, &models.PushPayload{
-				Body:  fmt.Sprintf("%s is due in %v", m.Name, m.NextDosageTime),
+				Body:  fmt.Sprintf("%s is due now", m.Name),
 				Title: fmt.Sprintf("Time to take %s", m.Name),
 				Data: map[string]string{
 					"medication_id": fmt.Sprintf("%v", m.ID),
