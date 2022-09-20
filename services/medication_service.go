@@ -22,7 +22,7 @@ type MedicationService interface {
 	GetAllMedications(userID uint) ([]models.MedicationResponse, *errors.Error)
 	CronUpdateMedicationForNextTime() error
 	UpdateMedication(request *models.UpdateMedicationRequest, medicationID uint, userID uint) *errors.Error
-	FindMedication(medicationName string, by string, purpose string, duration int, dosage int) (*[]models.Medication, error)
+	FindMedication(medicationName string, userId int) (*[]models.Medication, error)
 }
 
 // medicationService struct
@@ -207,9 +207,9 @@ func (m *medicationService) CreateMedicationHistory(medications []models.Medicat
 	}
 }
 
-func (m *medicationService) FindMedication(medicationName, by, purpose string, duration int, dosage int) (*[]models.Medication, error) {
+func (m *medicationService) FindMedication(medicationName string, userId int) (*[]models.Medication, error) {
 	var medicationResponses []models.MedicationResponse
-	medications, err := m.medicationRepo.FindMedication(medicationName, by, purpose, duration, dosage)
+	medications, err := m.medicationRepo.FindMedication(medicationName, userId)
 	if err != nil {
 		return nil, errors.ErrInternalServerError
 	}
