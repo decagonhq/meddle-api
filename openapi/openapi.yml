@@ -624,8 +624,13 @@ components:
         token:
           type: string
     AuthorizeDeviceResponse:
-      type: string
+      type: object
       properties:
+        data:
+          $ref: '#/components/schemas/AuthorizeDeviceResponse'
+        errors:
+          type: string
+          example: ""
         message:
           type: string
           example: device authorized successfully
