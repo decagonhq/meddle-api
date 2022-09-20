@@ -20,7 +20,7 @@ jobs:
 
       - name: Build
         run: |
-          echo ${{secrets.MEDDLE_AWS_KEY}} >> meddle.pem
+          echo '${{secrets.MEDDLE_AWS_KEY}}' >> meddle.pem
           go build -v ./...
       - name: Test
         run: |
