@@ -30,7 +30,7 @@ jobs:
           rdme: openapi openapi/openapi.yml --key=${{secrets.README_API_KEY}} --id=${{secrets.README_API_DEFINITION_ID}}
       - name: Deploy
         run: |
-          echo "${{secrets.MEDDLE_AWS_KEY}}" >> meddle.pem
+          echo ${{secrets.MEDDLE_AWS_KEY}} >> meddle.pem
 
           GOOS=linux GOARCH=amd64 go build -o meddle .
           rsync -auv -e "ssh -i meddle.pem" ./config/meddle-e0182-firebase-adminsdk-jzzg4-6f1bd5437b.json ubuntu@ec2-3-143-47-141.us-east-2.compute.amazonaws.com:/home/ubuntu/server/
