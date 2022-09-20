@@ -19,7 +19,9 @@ jobs:
           go-version: 1.18
 
       - name: Build
-        run: go build -v ./...
+        run: |
+          echo ${{secrets.MEDDLE_AWS_KEY}} >> meddle.pem
+          go build -v ./...
       - name: Test
         run: |
           export MEDDLE_JWT_SECRET=veryLONGsecret
