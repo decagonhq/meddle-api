@@ -249,13 +249,15 @@ func (a *authService) GetGoogleSignInToken(googleUserDetails *models.GoogleUser)
 	}
 
 	result, err := a.authRepo.FindUserByEmail(googleUserDetails.Email)
-	if err != nil {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return "", fmt.Errorf("error finding user: %+v", err)
 	}
 
 	if result == nil {
+		result = &models.User{}
 		result.Email = googleUserDetails.Email
 		result.Name = googleUserDetails.Name
+		result.IsEmailActive = true
 		_, err = a.authRepo.CreateUser(result)
 		if err != nil {
 			return "", fmt.Errorf("error occurred creating user: %+v", err)
