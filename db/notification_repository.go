@@ -1,7 +1,9 @@
 package db
 
 import (
+	"errors"
 	"fmt"
+
 	"github.com/decagonhq/meddle-api/models"
 	"gorm.io/gorm"
 )
@@ -25,9 +27,14 @@ func NewNotificationRepo(db *GormDB) NotificationRepository {
 func (db *notificationRepo) AddNotificationToken(args *models.AddNotificationTokenArgs) (*models.FCMNotificationToken, error) {
 	var fcmToken models.FCMNotificationToken
 
+	err := db.DB.Where("user_id = ?", args.UserID).First(&fcmToken).Error
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+
 	fcmToken.Token = args.Token
 	fcmToken.UserID = args.UserID
-	err := db.DB.Create(&fcmToken).Error
+	err = db.DB.Save(&fcmToken).Error
 	if err != nil {
 		return nil, fmt.Errorf("could not create notification: %v", err)
 	}
@@ -38,7 +45,8 @@ func (db *notificationRepo) AddNotificationToken(args *models.AddNotificationTok
 func (db *notificationRepo) GetAllNextMedicationsToSendNotifications() ([]models.Medication, error) {
 	var medications []models.Medication
 
-	err := db.DB.Where("date_trunc('hour', next_dosage_time) = date_trunc('hour', now())").Where("is_medication_done = false").Find(&medications).Error
+	err := db.DB.Where("date_trunc('minute', next_dosage_time) = date_trunc('minute', now())").
+		Where("is_medication_done = false").Find(&medications).Error
 	if err != nil {
 		return nil, fmt.Errorf("could not get next medication: %v", err)
 	}

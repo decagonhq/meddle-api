@@ -2,11 +2,13 @@ package server
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+	"time"
+
 	"github.com/decagonhq/meddle-api/models"
 	"github.com/decagonhq/meddle-api/server/response"
 	"github.com/gin-gonic/gin"
-	"net/http"
-	"time"
 )
 
 func (s *Server) authorizeNotificationsForDevice() gin.HandlerFunc {
@@ -25,24 +27,28 @@ func (s *Server) authorizeNotificationsForDevice() gin.HandlerFunc {
 			return
 		}
 		tokenArgument.UserID = userId
-		deviceToken, err := s.PushNotification.AuthorizeNotification(&tokenArgument)
+		_, err = s.PushNotification.AuthorizeNotification(&tokenArgument)
 		if err != nil {
 			err.Respond(c)
 			return
 		}
 		go func() {
 			time.Sleep(time.Second * 3)
-			message := fmt.Sprintf("welcome %v ,your device has been enabled", user.Name)
+			message := "We will remind you to take your medications when it's due."
 			pushPayload := &models.PushPayload{
-				Title: "Welcome Message",
+				Title: fmt.Sprintf("Hello %s 👋", user.Name),
 				Body:  message,
+				Data: map[string]string{
+					"medication_id": "23",
+				},
+				Category: models.WelcomeCategory,
 			}
+			// fmt.Printf("notification payload: %v\ntokenArgument: %+v", pushPayload, tokenArgument)
 			_, err = s.PushNotification.SendPushNotification([]string{tokenArgument.Token}, pushPayload)
 			if err != nil {
-				err.Respond(c)
-				return
+				log.Printf("error sending notification: %v", err)
 			}
 		}()
-		response.JSON(c, "device authorized to receive notification successfully", http.StatusCreated, deviceToken, nil)
+		response.JSON(c, "device authorized to receive notification successfully", http.StatusCreated, nil, nil)
 	}
 }

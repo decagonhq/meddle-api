@@ -1,5 +1,12 @@
 package models
 
+type PushNotificationCategory string
+
+const (
+	NextMedicationCategory PushNotificationCategory = "NEXT_MEDICATION_CATEGORY"
+	WelcomeCategory        PushNotificationCategory = "WELCOME_CATEGORY"
+)
+
 type FCMNotificationToken struct {
 	Model
 	UserID   uint   `json:"user_id"`
@@ -13,8 +20,9 @@ type AddNotificationTokenArgs struct {
 }
 
 type PushPayload struct {
-	Title       string            `json:"title"`
-	Body        string            `json:"body"`
-	Data        map[string]string `json:"data"`
-	ClickAction string            `json:"clickAction"`
+	Title       string                   `json:"title"`
+	Body        string                   `json:"body"`
+	Data        map[string]string        `json:"data"`
+	ClickAction string                   `json:"clickAction"`
+	Category    PushNotificationCategory `json:"category"`
 }
