@@ -624,28 +624,15 @@ components:
         token:
           type: string
     AuthorizeDeviceResponse:
-      type: object
+      type: string
       properties:
-        id:
-          type: integer
-          format: uint
-          example: 3
-        created_at:
+        message:
           type: string
-          format: date-time
-        updated_at:
+          example: device authorized successfully
+        status:
           type: string
-          format: date-time
-        deleted_at:
-          type: string
-          format: date-time
-        user_id:
-          type: integer
-          format: uint
-          example: 3
-        is_viewed:
-          type: boolean
-          example: false
+          example: Created
+
     ResetPasswordResponse:
       type: object
       properties:
