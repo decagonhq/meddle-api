@@ -22,11 +22,6 @@ jobs:
           ssh-private-key: ${{ secrets.MEDDLE_AWS_KEY }}
       - name: Deploy
         run: |
-          #mkdir ~/.ssh
-          #touch ~/.ssh/known_hosts
-          #ssh-keyscan ec2-3-143-47-141.us-east-2.compute.amazonaws.com
-          #echo -n "${{secrets.MEDDLE_AWS_KEY}}" > meddle.pem
-
           rsync -auv ./config/meddle-e0182-firebase-adminsdk-jzzg4-6f1bd5437b.json ubuntu@ec2-3-143-47-141.us-east-2.compute.amazonaws.com:/home/ubuntu/server/
           rsync -auv ./server/templates/* ubuntu@ec2-3-143-47-141.us-east-2.compute.amazonaws.com:/home/ubuntu/server/templates/
           GOOS=linux GOARCH=amd64 go build -o meddle .
