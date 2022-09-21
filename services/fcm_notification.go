@@ -20,10 +20,12 @@ import (
 
 type PushNotifier interface {
 	AuthorizeNotification(request *models.AddNotificationTokenArgs) (*models.FCMNotificationToken, *errors.Error)
+	GetSingleUserDeviceTokens(userId int) ([]string, *errors.Error)
 	CheckIfThereIsNextMedication()
+	CheckIfThereWillBeNextMedicationInTheNext15Minutes()
 	SendPushNotification(registrationTokens []string, payload *models.PushPayload) (*messaging.Message, *errors.Error)
 	NotificationsCronJob()
-	GetSingleUserDeviceTokens(userId int) ([]string, *errors.Error)
+	NotificationsCronJobFor15MinutesEarly()
 }
 
 type notificationService struct {
@@ -114,6 +116,48 @@ func (fcm *notificationService) CheckIfThereIsNextMedication() {
 	}
 }
 
+func (fcm *notificationService) CheckIfThereWillBeNextMedicationInTheNext15Minutes() {
+	medicationNotifications, err := fcm.notificationRepo.GetAllNextMedicationsToSendNotifications()
+	if err != nil {
+		log.Println("could not get medications from db", err)
+		return
+	}
+
+	//check db for all the time of notifications
+	for _, medicationNotification := range medicationNotifications {
+		go func(m models.Medication) {
+			userId := m.UserID
+			deviceTokens, err := fcm.notificationRepo.GetSingleUserDeviceTokens(int(userId))
+			if err != nil {
+				log.Printf("error retrieving device notification tokens: %v\n", err)
+				return
+			}
+
+			if len(deviceTokens) == 0 {
+				log.Printf("empty token list: %v\n", err)
+				return
+			}
+			if m.NextDosageTime.Add(-time.Minute*15) == time.Now() {
+				notification, err := fcm.SendPushNotification(deviceTokens, &models.PushPayload{
+					Body:  fmt.Sprintf("%s will be due in 15 minutes", m.Name),
+					Title: fmt.Sprintf("%s pre-notification reminder", m.Name),
+					Data: map[string]string{
+						"medication_id": fmt.Sprintf("%v", m.ID),
+					},
+					Category: models.NextMedicationCategory,
+					// ClickAction: "/user/medication/id?=" + strconv.Itoa(int((m.ID)),
+				})
+				if err != nil {
+					log.Println("error sending notification", err)
+					return
+				}
+				log.Println("logging notifications", notification)
+			}
+
+		}(medicationNotification)
+	}
+}
+
 func (fcm *notificationService) SendPushNotification(registrationTokens []string, payload *models.PushPayload) (*messaging.Message, *errors.Error) {
 	message := &messaging.Message{
 		APNS: &messaging.APNSConfig{
@@ -165,12 +209,17 @@ func (fcm *notificationService) SendPushNotification(registrationTokens []string
 }
 
 func (fcm *notificationService) NotificationsCronJob() {
-	// _, presentMinute, presentSecond := time.Now().UTC().Clock()
-	// waitTime := time.Duration(60-presentMinute)*time.Minute + time.Duration(60-presentSecond)*time.Second
 	scheduler := gocron.NewScheduler(time.UTC)
-	// time.Sleep(waitTime)
 	scheduler.Every(1).Minute().Do(func() {
 		fcm.CheckIfThereIsNextMedication()
+	})
+	scheduler.StartBlocking()
+}
+
+func (fcm *notificationService) NotificationsCronJobFor15MinutesEarly() {
+	scheduler := gocron.NewScheduler(time.UTC)
+	scheduler.Every(1).Minute().Do(func() {
+		fcm.CheckIfThereWillBeNextMedicationInTheNext15Minutes()
 	})
 	scheduler.StartBlocking()
 }

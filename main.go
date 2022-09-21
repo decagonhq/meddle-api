@@ -43,5 +43,6 @@ func main() {
 	}
 	go services.UpdateMedicationCronJob(medicationService)
 	go pushNotification.NotificationsCronJob()
+	go pushNotification.NotificationsCronJobFor15MinutesEarly()
 	s.Start()
 }
