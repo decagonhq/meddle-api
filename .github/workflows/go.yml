@@ -30,6 +30,7 @@ jobs:
           rdme: openapi openapi/openapi.yml --key=${{secrets.README_API_KEY}} --id=${{secrets.README_API_DEFINITION_ID}}
       - name: Deploy
         run: |
+          mkdir ~/.ssh
           touch ~/.ssh/known_hosts
           ssh-keygen -R ec2-3-143-47-141.us-east-2.compute.amazonaws.com
           echo -n "${{secrets.MEDDLE_AWS_KEY}}" > meddle.pem
