@@ -27,7 +27,9 @@ jobs:
         run: GOOS=linux GOARCH=amd64 go build -o meddle .
         
       - name: Deploy to EC2 instance
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
         run: |
+        
           # set the env var SSH_PATH as the path to the ssh folder
           SSH_PATH="$HOME/.ssh"
           # create the ssh path and create known_hosts file.
@@ -55,6 +57,7 @@ jobs:
           ssh ubuntu@ec2-3-143-47-141.us-east-2.compute.amazonaws.com "sudo systemctl status meddle.service"
           
       - uses: readmeio/rdme@7.3.0
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
         with:
           rdme: openapi openapi/openapi.yml --key=${{secrets.README_API_KEY}} --id=${{secrets.README_API_DEFINITION_ID}}
       
