@@ -148,15 +148,12 @@ func (fcm *notificationService) SendPushNotification(registrationTokens []string
 	res, err := fcm.Client.Send(context.Background(), message)
 	if err != nil {
 		log.Printf("error sending message: %v\n", err)
-
-		log.Printf("result from message 1: %v\n", res)
 		return nil, errors.ErrInternalServerError
 	}
 
 	log.Printf("result from message 2: %v\n", res)
 	// d, err := fcm.Client.SendMulticast(context.Background(), notification)
 	// if err != nil {
-	// 	log.Fatalln(err)
 	// 	return &messaging.MulticastMessage{}, errors.ErrInternalServerError
 	// }
 
