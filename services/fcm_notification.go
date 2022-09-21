@@ -25,7 +25,6 @@ type PushNotifier interface {
 	CheckIfThereWillBeNextMedicationInTheNext15Minutes()
 	SendPushNotification(registrationTokens []string, payload *models.PushPayload) (*messaging.Message, *errors.Error)
 	NotificationsCronJob()
-	NotificationsCronJobFor15MinutesEarly()
 }
 
 type notificationService struct {
@@ -96,22 +95,38 @@ func (fcm *notificationService) CheckIfThereIsNextMedication() {
 				log.Printf("empty token list: %v\n", err)
 				return
 			}
-			nextDosageTime := m.NextDosageTime.Add(time.Hour).Format(time.Kitchen)
-			notification, err := fcm.SendPushNotification(deviceTokens, &models.PushPayload{
-				Body:  fmt.Sprintf("%s is due by %v", m.Name, nextDosageTime),
-				Title: fmt.Sprintf("Time to take %s", m.Name),
-				Data: map[string]string{
-					"medication_id": fmt.Sprintf("%v", m.ID),
-				},
-				Category: models.NextMedicationCategory,
-				// ClickAction: "/user/medication/id?=" + strconv.Itoa(int((m.ID)),
-			})
-			if err != nil {
-				log.Println("error sending notification", err)
-				return
+			if m.NextDosageTime.Add(-time.Minute*15) == time.Now() {
+				notification, err := fcm.SendPushNotification(deviceTokens, &models.PushPayload{
+					Body:  fmt.Sprintf("%s will be due in 15 minutes", m.Name),
+					Title: fmt.Sprintf("%s pre-notification reminder", m.Name),
+					Data: map[string]string{
+						"medication_id": fmt.Sprintf("%v", m.ID),
+					},
+					Category: models.NextMedicationCategory,
+					// ClickAction: "/user/medication/id?=" + strconv.Itoa(int((m.ID)),
+				})
+				if err != nil {
+					log.Println("error sending notification", err)
+					return
+				}
+				log.Println("logging notifications", notification)
+			} else if m.NextDosageTime == time.Now() {
+				nextDosageTime := m.NextDosageTime.Add(time.Hour).Format(time.Kitchen)
+				notification, err := fcm.SendPushNotification(deviceTokens, &models.PushPayload{
+					Body:  fmt.Sprintf("%s is due by %v", m.Name, nextDosageTime),
+					Title: fmt.Sprintf("Time to take %s", m.Name),
+					Data: map[string]string{
+						"medication_id": fmt.Sprintf("%v", m.ID),
+					},
+					Category: models.NextMedicationCategory,
+					// ClickAction: "/user/medication/id?=" + strconv.Itoa(int((m.ID)),
+				})
+				if err != nil {
+					log.Println("error sending notification", err)
+					return
+				}
+				log.Println("logging notifications", notification)
 			}
-
-			log.Println("logging notifications", notification)
 		}(medicationNotification)
 	}
 }
@@ -212,14 +227,6 @@ func (fcm *notificationService) NotificationsCronJob() {
 	scheduler := gocron.NewScheduler(time.UTC)
 	scheduler.Every(1).Minute().Do(func() {
 		fcm.CheckIfThereIsNextMedication()
-	})
-	scheduler.StartBlocking()
-}
-
-func (fcm *notificationService) NotificationsCronJobFor15MinutesEarly() {
-	scheduler := gocron.NewScheduler(time.UTC)
-	scheduler.Every(1).Minute().Do(func() {
-		fcm.CheckIfThereWillBeNextMedicationInTheNext15Minutes()
 	})
 	scheduler.StartBlocking()
 }
