@@ -94,9 +94,9 @@ func (fcm *notificationService) CheckIfThereIsNextMedication() {
 				log.Printf("empty token list: %v\n", err)
 				return
 			}
-
+			nextDosageTime := m.NextDosageTime.Add(time.Hour).Format(time.Kitchen)
 			notification, err := fcm.SendPushNotification(deviceTokens, &models.PushPayload{
-				Body:  fmt.Sprintf("%s is due by %v", m.Name, m.NextDosageTime.Format(time.Kitchen)),
+				Body:  fmt.Sprintf("%s is due by %v", m.Name, nextDosageTime),
 				Title: fmt.Sprintf("Time to take %s", m.Name),
 				Data: map[string]string{
 					"medication_id": fmt.Sprintf("%v", m.ID),
@@ -148,15 +148,12 @@ func (fcm *notificationService) SendPushNotification(registrationTokens []string
 	res, err := fcm.Client.Send(context.Background(), message)
 	if err != nil {
 		log.Printf("error sending message: %v\n", err)
-
-		log.Printf("result from message 1: %v\n", res)
 		return nil, errors.ErrInternalServerError
 	}
 
 	log.Printf("result from message 2: %v\n", res)
 	// d, err := fcm.Client.SendMulticast(context.Background(), notification)
 	// if err != nil {
-	// 	log.Fatalln(err)
 	// 	return &messaging.MulticastMessage{}, errors.ErrInternalServerError
 	// }
 
