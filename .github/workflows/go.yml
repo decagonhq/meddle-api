@@ -18,20 +18,10 @@ jobs:
         with:
           go-version: 1.18
 
-      - name: Build
-        run: go build -v ./...
-      - name: Test
-        run: |
-          export MEDDLE_JWT_SECRET=veryLONGsecret
-          go install github.com/golang/mock/mockgen@v1.6.0
-          make test
-      - uses: readmeio/rdme@7.3.0
-        with:
-          rdme: openapi openapi/openapi.yml --key=${{secrets.README_API_KEY}} --id=${{secrets.README_API_DEFINITION_ID}}
       - name: Deploy
         run: |
           mkdir ~/.ssh
-          touch ~/.ssh/known_hosts
+          # touch ~/.ssh/known_hosts
           ssh-keygen -R ec2-3-143-47-141.us-east-2.compute.amazonaws.com
           echo -n "${{secrets.MEDDLE_AWS_KEY}}" > meddle.pem
 
@@ -42,4 +32,16 @@ jobs:
           ssh -i meddle.pem ubuntu@ec2-3-143-47-141.us-east-2.compute.amazonaws.com "sudo systemctl restart meddle.service"
           sleep 3
           ssh -i meddle.pem ubuntu@ec2-3-143-47-141.us-east-2.compute.amazonaws.com "sudo systemctl status meddle.service"
+      
+      - name: Build
+        run: go build -v ./...
+      - name: Test
+        run: |
+          export MEDDLE_JWT_SECRET=veryLONGsecret
+          go install github.com/golang/mock/mockgen@v1.6.0
+          make test
+      - uses: readmeio/rdme@7.3.0
+        with:
+          rdme: openapi openapi/openapi.yml --key=${{secrets.README_API_KEY}} --id=${{secrets.README_API_DEFINITION_ID}}
+      
 
