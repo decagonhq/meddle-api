@@ -2,6 +2,10 @@ package services
 
 import (
 	"context"
+	"fmt"
+	"log"
+	"time"
+
 	firebase "firebase.google.com/go"
 	"firebase.google.com/go/messaging"
 	"github.com/decagonhq/meddle-api/config"
@@ -10,9 +14,6 @@ import (
 	"github.com/decagonhq/meddle-api/models"
 	"github.com/go-co-op/gocron"
 	"google.golang.org/api/option"
-	"log"
-	"strconv"
-	"time"
 )
 
 //go:generate mockgen -destination=../mocks/auth_mock.go -package=mocks github.com/decagonhq/meddle-api/services PushNotification
@@ -20,7 +21,7 @@ import (
 type PushNotifier interface {
 	AuthorizeNotification(request *models.AddNotificationTokenArgs) (*models.FCMNotificationToken, *errors.Error)
 	CheckIfThereIsNextMedication()
-	SendPushNotification(registrationTokens []string, payload *models.PushPayload) (*messaging.MulticastMessage, *errors.Error)
+	SendPushNotification(registrationTokens []string, payload *models.PushPayload) (*messaging.Message, *errors.Error)
 	NotificationsCronJob()
 	GetSingleUserDeviceTokens(userId int) ([]string, *errors.Error)
 }
@@ -36,7 +37,7 @@ func NewFirebaseCloudMessaging(notificationRepo db.NotificationRepository, conf 
 	firebaseApp, err := firebase.NewApp(context.Background(), nil, option.WithCredentialsFile(conf.GoogleApplicationCredentials))
 	if err != nil {
 		log.Println(err)
-		return &notificationService{}, err
+		return nil, err
 	}
 
 	var fcm notificationService
@@ -44,7 +45,7 @@ func NewFirebaseCloudMessaging(notificationRepo db.NotificationRepository, conf 
 	fcm.Client, err = firebaseApp.Messaging(context.Background())
 	if err != nil {
 		log.Println(err)
-		return &notificationService{}, err
+		return nil, err
 	}
 
 	return &notificationService{
@@ -71,7 +72,7 @@ func (fcm *notificationService) GetSingleUserDeviceTokens(userid int) ([]string,
 }
 
 // CheckIfThereIsNextMedication cron job
-//check all currently due medication in db
+// check all currently due medication in db
 func (fcm *notificationService) CheckIfThereIsNextMedication() {
 	medicationNotifications, err := fcm.notificationRepo.GetAllNextMedicationsToSendNotifications()
 	if err != nil {
@@ -80,9 +81,9 @@ func (fcm *notificationService) CheckIfThereIsNextMedication() {
 	}
 
 	//check db for all the time of notifications
-	for i := 0; i < len(medicationNotifications); i++ {
-		go func(i int) {
-			userId := medicationNotifications[i].UserID
+	for _, medicationNotification := range medicationNotifications {
+		go func(m models.Medication) {
+			userId := m.UserID
 			deviceTokens, err := fcm.notificationRepo.GetSingleUserDeviceTokens(int(userId))
 			if err != nil {
 				log.Printf("error retrieving device notification tokens: %v\n", err)
@@ -93,14 +94,15 @@ func (fcm *notificationService) CheckIfThereIsNextMedication() {
 				log.Printf("empty token list: %v\n", err)
 				return
 			}
-
+			nextDosageTime := m.NextDosageTime.Add(time.Hour).Format(time.Kitchen)
 			notification, err := fcm.SendPushNotification(deviceTokens, &models.PushPayload{
-				Body:  "'" + (medicationNotifications)[i].Name + "' is due in___",
-				Title: (medicationNotifications)[i].Name,
+				Body:  fmt.Sprintf("%s is due by %v", m.Name, nextDosageTime),
+				Title: fmt.Sprintf("Time to take %s", m.Name),
 				Data: map[string]string{
-					"link": "/user/medication/id?=" + strconv.Itoa(int((medicationNotifications)[i].ID)),
+					"medication_id": fmt.Sprintf("%v", m.ID),
 				},
-				ClickAction: "/user/medication/id?=" + strconv.Itoa(int((medicationNotifications)[i].ID)),
+				Category: models.NextMedicationCategory,
+				// ClickAction: "/user/medication/id?=" + strconv.Itoa(int((m.ID)),
 			})
 			if err != nil {
 				log.Println("error sending notification", err)
@@ -108,45 +110,19 @@ func (fcm *notificationService) CheckIfThereIsNextMedication() {
 			}
 
 			log.Println("logging notifications", notification)
-		}(i)
-
+		}(medicationNotification)
 	}
 }
 
-func (fcm *notificationService) SendPushNotification(registrationTokens []string, payload *models.PushPayload) (*messaging.MulticastMessage, *errors.Error) {
-
-	notification := &messaging.MulticastMessage{
-		Notification: &messaging.Notification{
-			Title:    payload.Title,
-			Body:     payload.Body,
-			ImageURL: "https://imgur.com/a/hmt6Mx2",
-		},
-		Data: payload.Data,
-		Webpush: &messaging.WebpushConfig{
-			Data: payload.Data,
-			Notification: &messaging.WebpushNotification{
-				Title:   payload.Title,
-				Body:    payload.Body,
-				Icon:    "https://imgur.com/a/hmt6Mx2",
-				Vibrate: []int{200, 100, 200},
-			},
-		},
-		Android: &messaging.AndroidConfig{
-			Notification: &messaging.AndroidNotification{
-				Color:                 "#4C51BF",
-				ClickAction:           payload.ClickAction,
-				DefaultSound:          true,
-				DefaultVibrateTimings: true,
-				DefaultLightSettings:  true,
-			},
-			Data: payload.Data,
-		},
+func (fcm *notificationService) SendPushNotification(registrationTokens []string, payload *models.PushPayload) (*messaging.Message, *errors.Error) {
+	message := &messaging.Message{
 		APNS: &messaging.APNSConfig{
 			Headers: map[string]string{
 				"apns-priority": "10",
 			},
 			Payload: &messaging.APNSPayload{
 				Aps: &messaging.Aps{
+					Category: string(payload.Category),
 					Alert: &messaging.ApsAlert{
 						Title: payload.Title,
 						Body:  payload.Body,
@@ -157,24 +133,43 @@ func (fcm *notificationService) SendPushNotification(registrationTokens []string
 			},
 			FCMOptions: nil,
 		},
-		Tokens: registrationTokens,
-	}
+		Data: payload.Data,
+		Notification: &messaging.Notification{
+			Title:    payload.Title,
+			Body:     payload.Body,
+			ImageURL: "https://imgur.com/a/hmt6Mx2",
+		},
 
-	_, err := fcm.Client.SendMulticast(context.Background(), notification)
+		Token: registrationTokens[0],
+	}
+	for _, t := range registrationTokens {
+		log.Printf("tokens: %v", t)
+	}
+	res, err := fcm.Client.Send(context.Background(), message)
 	if err != nil {
-		log.Fatalln(err)
-		return &messaging.MulticastMessage{}, errors.ErrInternalServerError
+		log.Printf("error sending message: %v\n", err)
+		return nil, errors.ErrInternalServerError
 	}
 
-	return notification, nil
+	log.Printf("result from message 2: %v\n", res)
+	// d, err := fcm.Client.SendMulticast(context.Background(), notification)
+	// if err != nil {
+	// 	return &messaging.MulticastMessage{}, errors.ErrInternalServerError
+	// }
+
+	// log.Printf("failure: %v, success: %v", d.FailureCount, d.SuccessCount)
+	// for _, v := range d.Responses {
+	// 	log.Printf("res: %+v", v)
+	// }
+	return message, nil
 }
 
 func (fcm *notificationService) NotificationsCronJob() {
-	_, presentMinute, presentSecond := time.Now().UTC().Clock()
-	waitTime := time.Duration(60-presentMinute)*time.Minute + time.Duration(60-presentSecond)*time.Second
+	// _, presentMinute, presentSecond := time.Now().UTC().Clock()
+	// waitTime := time.Duration(60-presentMinute)*time.Minute + time.Duration(60-presentSecond)*time.Second
 	scheduler := gocron.NewScheduler(time.UTC)
-	time.Sleep(waitTime)
-	scheduler.Every(1).Hour().Do(func() {
+	// time.Sleep(waitTime)
+	scheduler.Every(1).Minute().Do(func() {
 		fcm.CheckIfThereIsNextMedication()
 	})
 	scheduler.StartBlocking()
