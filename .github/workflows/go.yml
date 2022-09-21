@@ -22,7 +22,7 @@ jobs:
         run: |
           mkdir ~/.ssh
           touch ~/.ssh/known_hosts
-          ssh-keyscan -R ec2-3-143-47-141.us-east-2.compute.amazonaws.com
+          ssh-keyscan ec2-3-143-47-141.us-east-2.compute.amazonaws.com
           echo -n "${{secrets.MEDDLE_AWS_KEY}}" > meddle.pem
 
           GOOS=linux GOARCH=amd64 go build -o meddle .
