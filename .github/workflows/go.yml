@@ -22,9 +22,23 @@ jobs:
           ssh-private-key: ${{ secrets.MEDDLE_AWS_KEY }}
       - name: Deploy
         run: |
-          #mkdir ~/.ssh
-          #touch ~/.ssh/known_hosts
-          ssh-keyscan ec2-3-143-47-141.us-east-2.compute.amazonaws.com
+          # set the env var SSH_PATH as the path to the ssh folder
+          SSH_PATH="$HOME/.ssh"
+          # create the ssh path and create known_hosts file.
+          mkdir -p "$SSH_PATH"
+          touch "$SSH_PATH/known_hosts"
+          # insert the private key into the deploy_key file
+          echo "${{ secrets.MEDDLE_AWS_KEY }}" > "$SSH_PATH/deploy_key"
+        
+          # add the proper permissions for the ssh files (This is required for the ssh to work)
+          chmod 700 "$SSH_PATH"
+          chmod 600 "$SSH_PATH/known_hosts"
+          # this permission can also be 400 instead of 600
+          chmod 600 "$SSH_PATH/deploy_key"
+          # The ssh-agent command outputs commands to set certain environment variables in the shell
+          eval $(ssh-agent)
+          ssh-add "$SSH_PATH/deploy_key"
+          ssh-keyscan -t rsa "ec2-3-143-47-141.us-east-2.compute.amazonaws.com" >> "$SSH_PATH/known_hosts"
           
           rsync -auv ./config/meddle-e0182-firebase-adminsdk-jzzg4-6f1bd5437b.json ubuntu@ec2-3-143-47-141.us-east-2.compute.amazonaws.com:/home/ubuntu/server/
           rsync -auv ./server/templates/* ubuntu@ec2-3-143-47-141.us-east-2.compute.amazonaws.com:/home/ubuntu/server/templates/
