@@ -17,17 +17,19 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: 1.18
-
+      - uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.MEDDLE_AWS_KEY }}
       - name: Deploy
         run: |
-          mkdir ~/.ssh
-          touch ~/.ssh/known_hosts
-          ssh-keyscan ec2-3-143-47-141.us-east-2.compute.amazonaws.com
+          #mkdir ~/.ssh
+          #touch ~/.ssh/known_hosts
+          #ssh-keyscan ec2-3-143-47-141.us-east-2.compute.amazonaws.com
           echo -n "${{secrets.MEDDLE_AWS_KEY}}" > meddle.pem
 
-          GOOS=linux GOARCH=amd64 go build -o meddle .
           rsync -auv -e "ssh -i meddle.pem" ./config/meddle-e0182-firebase-adminsdk-jzzg4-6f1bd5437b.json ubuntu@ec2-3-143-47-141.us-east-2.compute.amazonaws.com:/home/ubuntu/server/
           rsync -auv -e "ssh -i meddle.pem" ./server/templates/* ubuntu@ec2-3-143-47-141.us-east-2.compute.amazonaws.com:/home/ubuntu/server/templates/
+          GOOS=linux GOARCH=amd64 go build -o meddle .
           rsync -auv -e "ssh -i meddle.pem" ./meddle ubuntu@ec2-3-143-47-141.us-east-2.compute.amazonaws.com:/home/ubuntu/
           ssh -i meddle.pem ubuntu@ec2-3-143-47-141.us-east-2.compute.amazonaws.com "sudo systemctl restart meddle.service"
           sleep 3
