@@ -17,10 +17,16 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: 1.18
-      - uses: webfactory/ssh-agent@v0.5.4
-        with:
-          ssh-private-key: ${{ secrets.MEDDLE_AWS_KEY }}
-      - name: Deploy
+
+      - name: Test
+        run: |
+          export MEDDLE_JWT_SECRET=veryLONGsecret
+          go install github.com/golang/mock/mockgen@v1.6.0
+          make test
+      - name: Build
+        run: GOOS=linux GOARCH=amd64 go build -o meddle .
+        
+      - name: Deploy to EC2 instance
         run: |
           # set the env var SSH_PATH as the path to the ssh folder
           SSH_PATH="$HOME/.ssh"
@@ -42,19 +48,12 @@ jobs:
           
           rsync -auv ./config/meddle-e0182-firebase-adminsdk-jzzg4-6f1bd5437b.json ubuntu@ec2-3-143-47-141.us-east-2.compute.amazonaws.com:/home/ubuntu/server/
           rsync -auv ./server/templates/* ubuntu@ec2-3-143-47-141.us-east-2.compute.amazonaws.com:/home/ubuntu/server/templates/
-          GOOS=linux GOARCH=amd64 go build -o meddle .
+
           rsync -auv ./meddle ubuntu@ec2-3-143-47-141.us-east-2.compute.amazonaws.com:/home/ubuntu/
           ssh ubuntu@ec2-3-143-47-141.us-east-2.compute.amazonaws.com "sudo systemctl restart meddle.service"
           sleep 3
           ssh ubuntu@ec2-3-143-47-141.us-east-2.compute.amazonaws.com "sudo systemctl status meddle.service"
-      
-      - name: Build
-        run: go build -v ./...
-      - name: Test
-        run: |
-          export MEDDLE_JWT_SECRET=veryLONGsecret
-          go install github.com/golang/mock/mockgen@v1.6.0
-          make test
+          
       - uses: readmeio/rdme@7.3.0
         with:
           rdme: openapi openapi/openapi.yml --key=${{secrets.README_API_KEY}} --id=${{secrets.README_API_DEFINITION_ID}}
