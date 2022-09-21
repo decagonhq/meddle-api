@@ -94,9 +94,9 @@ func (fcm *notificationService) CheckIfThereIsNextMedication() {
 				log.Printf("empty token list: %v\n", err)
 				return
 			}
-
+			nextDosageTime := m.NextDosageTime.Add(time.Hour).Format(time.Kitchen)
 			notification, err := fcm.SendPushNotification(deviceTokens, &models.PushPayload{
-				Body:  fmt.Sprintf("%s is due by %v", m.Name, m.NextDosageTime.Format(time.Kitchen)),
+				Body:  fmt.Sprintf("%s is due by %v", m.Name, nextDosageTime),
 				Title: fmt.Sprintf("Time to take %s", m.Name),
 				Data: map[string]string{
 					"medication_id": fmt.Sprintf("%v", m.ID),
